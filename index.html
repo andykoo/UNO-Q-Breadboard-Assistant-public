@@ -217,6 +217,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 #t-sim>#ipoSec{position:sticky;top:-12px;z-index:5;margin:-12px 0 10px;padding:10px 0 8px;background:var(--paper);border-bottom:2px solid var(--line);box-shadow:0 3px 8px #0001;max-height:230px;overflow:visible;box-sizing:border-box}
 #t-sim>#ipoSec h5{margin:0 0 6px}
 #code{min-height:260px;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:transparent;color:#e8f0ec;tab-size:2;white-space:pre;overflow:auto;position:relative;z-index:1;display:block}
+#code::selection{background:#f59e0b;color:#111}
 .codewrap{position:relative;background:#1d2626;border-radius:10px;overflow:hidden}
 #codeHL{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden}
 .hlb{position:absolute;left:0;right:0;border-left:4px solid}
@@ -1189,7 +1190,8 @@ function flowTick(){ flowRaf=0; if(!SIM.running) return; renderCanvas(); if(SIM.
 function srcFrames(){ const st=String(new Error().stack||''); const out=[];
   st.split('\n').forEach(l=>{ const m=l.match(/<anonymous>:(\d+):\d+\)?\s*$/)||l.match(/> Function:(\d+):\d+\s*$/); if(m){ const i=parseInt(m[1],10)-SRC_OFF; if(i>=0) out.push(i); } });
   return out; }   // 由內而外：最前面是實際讀寫的那一行，最後面是 loop() 裡的那一行
-function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; SIM.execLine=frames[frames.length-1]; SIM.execAt=performance.now(); }
+function selectCodeLine(line){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; const end=start+(lines[line]||'').length; ta.focus({preventScroll:true}); ta.setSelectionRange(start,end); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); }
+function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; const line=frames[frames.length-1]; const changed=line!==SIM.execLine; SIM.execLine=line; SIM.execAt=performance.now(); if(changed){ SIM.focusLine=-1; SIM.focusStage=''; selectCodeLine(line); hlSig=''; schedule(); } }
 const ipoFlowOn=()=>!$('ipoFlow')||$('ipoFlow').checked;
 function inputPulse(inp){ if(!ipoFlowOn()) return; const now=performance.now();
   if(SIM.pulses.some(p=>p.inp&&p.inp.id===inp.id&&now-p.t0<500)) return;
@@ -1644,7 +1646,7 @@ function jumpToCodeStage(stage){
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
-  SIM.focusLine=line; SIM.focusStage=stage; SIM.execLine=line; runScrollLine=line; hlSig=''; updateIpoBar(); updateCodeHL();
+  selectCodeLine(line); SIM.focusLine=line; SIM.focusStage=stage; SIM.execLine=line; runScrollLine=line; hlSig=''; updateIpoBar(); updateCodeHL();
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
