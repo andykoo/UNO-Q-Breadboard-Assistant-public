@@ -1275,7 +1275,12 @@ function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
   [['I','rgba(37,99,235,.42)','#60a5fa'],['P','rgba(124,58,237,.45)','#c4b5fd'],['O','rgba(217,72,15,.45)','#fdba74']].forEach(([k,bg,bd])=>{
     [...new Set(L[k])].forEach(i=>{ if(first[k]===undefined) first[k]=i; h+=`<div class="hlb" style="top:${f1(pt+i*lh-ta.scrollTop)}px;height:${f1(lh)}px;background:${bg};border-left-color:${bd}"></div>`; });
     if(first[k]!==undefined) h+=`<div class="hlt" style="top:${f1(pt+first[k]*lh-ta.scrollTop)}px;background:${bd}">${k}</div>`; });
-  if(activeLine>=0) h+=`<div class="runline" style="top:${f1(pt+activeLine*lh-ta.scrollTop)}px"></div><div class="runTag" style="top:${f1(pt+activeLine*lh-ta.scrollTop)}px">${SIM.focusLine>=0?'跳轉':'RUN'}</div>`;
+  if(activeLine>=0){
+    const range=SIM.focusLine>=0&&SIM.focusRange?SIM.focusRange:[activeLine,activeLine];
+    const a=Math.max(0,range[0]), b=Math.min(L.lines?L.lines.length-1:ta.value.split(/\r?\n/).length-1,range[1]);
+    for(let i=a;i<=b;i++) h+=`<div class="runline" style="top:${f1(pt+i*lh-ta.scrollTop)}px;height:${f1(lh)}px"></div>`;
+    h+=`<div class="runTag" style="top:${f1(pt+a*lh-ta.scrollTop)}px">${SIM.focusLine>=0?'跳轉':'RUN'}</div>`;
+  }
   box.innerHTML=h;
   if(activeLine>=0&&activeLine!==runScrollLine&&(SIM.focusLine>=0||performance.now()-lastTyped>500)){
     runScrollLine=activeLine;
@@ -1651,9 +1656,10 @@ function jumpToCodeStage(stage){
   const ta=$('code'), lines=ta.value.split(/\r?\n/), re=new RegExp('=====\\s*'+stage+'\\b','i');
   const line=lines.findIndex(x=>re.test(x));
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
+  const range=codeMap()[stage]||[line,line];
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
-  ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
-  selectCodeLine(line); SIM.focusLine=line; SIM.focusStage=stage; SIM.execLine=line; runScrollLine=line; hlSig=''; updateIpoBar(); updateCodeHL();
+  ta.scrollTo({top:Math.max(0,range[0]*lh-ta.clientHeight*.25),behavior:'smooth'});
+  SIM.focusLine=range[0]; SIM.focusRange=range; SIM.focusStage=stage; SIM.execLine=range[0]; runScrollLine=range[0]; hlSig=''; selectCodeLine(range[0]); updateIpoBar(); updateCodeHL();
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
@@ -1803,7 +1809,7 @@ function lcdScreen(c,x,y,w){
   return `<image href="${L.url}" x="${x}" y="${y}" width="${w}" height="${w}" style="image-rendering:pixelated"/>`;
 }
 function inp(c){ if(!INPUTS[c.id]) INPUTS[c.id]=c.type==='pot'?{v:.5}:c.type==='ldr'?{v:.6}:c.type==='sonar'?{d:30}:c.type==='dht'?{t:26,h:60}:{}; return INPUTS[c.id]; }
-const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0,focusLine:-1,focusStage:''};
+const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null};
 const STOP={stop:true};
 function pinOf(n){ return BD().pinOf(n); }
 function ps(id){ return SIM.P[id]||(SIM.P[id]={mode:'INPUT',v:0,pwm:null,tone:0}); }
@@ -2061,7 +2067,7 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:''}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
+  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
