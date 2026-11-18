@@ -194,6 +194,11 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 #simBanner .rec{color:#dc2626;animation:bl 1s infinite}
 #simBanner.boot{background:#fef3c7;border-color:#f59e0b}
 #simBanner.boot .rec{color:#d97706}
+#simBanner.boot{left:50%;top:50%;transform:translate(-50%,-50%);z-index:15;display:none;flex-direction:column;gap:14px;min-width:min(560px,calc(100% - 40px));padding:24px 30px;border:3px solid #f59e0b;border-radius:18px;box-shadow:0 12px 36px #5b3b0040;background:#fff8dc;text-align:center}
+#simBanner.boot .rec{font-size:24px;line-height:1}
+#simBanner.boot #simBannerTxt{font-size:19px;line-height:1.5;font-weight:900;color:#7c4300;white-space:normal}
+#simBanner.boot #bStop2{background:#b91c1c;color:#fff;border:0;border-radius:10px;padding:10px 24px;font-size:15px;font-weight:800;box-shadow:0 2px 5px #7f1d1d55}
+#simBanner.boot #bStop2:hover{background:#991b1b}
 @keyframes bl{50%{opacity:.25}}
 .tb button.run{background:#15803d;border-color:#15803d}
 .tb button.run.on{background:#b91c1c;border-color:#b91c1c}
