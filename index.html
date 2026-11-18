@@ -23,6 +23,8 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .brand{display:flex;align-items:center;gap:10px;font-weight:900;letter-spacing:.5px;white-space:nowrap}
 .brand .tag{font-family:var(--mono);font-size:11px;background:var(--accent);color:#fff;padding:2px 7px;border-radius:99px;font-weight:700}
 .brand small{display:block;font-weight:500;font-size:10px;color:#9fb3ae;letter-spacing:1.5px}
+.credit{font-size:11px;color:#c7d5d1;white-space:nowrap;font-weight:500}
+.credit a{color:#ffd166;text-decoration:underline;text-underline-offset:2px}
 #palette{display:block}
 .pgrp{margin-bottom:10px;border-radius:12px;padding:8px 8px 9px;border:1.5px solid}
 .pgrp.I{background:#eaf2ff;border-color:#93c5fd}.pgrp.P{background:#f1ecff;border-color:#c4b5fd}.pgrp.O{background:#fff1e6;border-color:#fdba74}
@@ -198,12 +200,14 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
   #left{order:1}#stage{order:2;height:60vh}#right{order:3}
   .tb{max-width:55vw}
   .brand small{display:none}
+  .credit{display:none}
 }
 </style>
 </head>
 <body>
 <header>
   <div class="brand"><span class="tag" id="brandTag">UNO Q</span><div>麵包板接線助手<small id="brandSub">ARDUINO UNO Q · BREADBOARD WIRING</small></div></div>
+  <div class="credit">原創製作：黃信惠的瘋狂教室 · <a href="https://tool.davidhuanglab.com/arduino-breadboard/" target="_blank" rel="noopener">參考來源：Arduino 麵包板接線助手</a></div>
   <select id="boardSel" aria-label="開發板" title="切換開發板"><option value="unoq">Arduino UNO Q</option><option value="hub8735">HUB 8735 ultra</option></select>
   <input id="projName" value="未命名專案" aria-label="專案名稱">
   <div class="tb">
