@@ -80,6 +80,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 #ipoStage{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:#fff;font-size:13px}
 #ipoStage .stageLabel{color:var(--muted);font-size:11px}
 #ipoStage strong{font-size:15px}
+#ipoStage .stageReason{display:block;margin-left:auto;color:inherit;font-size:11.5px;font-weight:500;text-align:right;line-height:1.4}
 #ipoStage.stage-I{border-color:#60a5fa;background:#eff6ff;color:#1e40af}
 #ipoStage.stage-P{border-color:#a78bfa;background:#f5f3ff;color:#5b21b6}
 #ipoStage.stage-O{border-color:#fb923c;background:#fff7ed;color:#9a3412}
@@ -302,7 +303,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabpane" id="t-sim">
       <div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
-      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoStage" class="stage-wait"><span class="stageLabel">目前運行到</span><strong id="ipoStageText">尚未執行</strong></div><div id="ipoBar"><div class="ic"><span class="ipo I">I</span><div id="ibI"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo P">P</span><div id="ibP"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo O">O</span><div id="ibO"></div></div></div></div>
+      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoStage" class="stage-wait"><span class="stageLabel">目前運行到</span><strong id="ipoStageText">尚未執行</strong><span class="stageReason" id="ipoStageReason">尚未執行模擬</span></div><div id="ipoBar"><div class="ic"><span class="ipo I">I</span><div id="ibI"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo P">P</span><div id="ibP"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo O">O</span><div id="ibO"></div></div></div></div>
       <h5>互動控制</h5><div id="simCtrls"></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
@@ -1117,16 +1118,22 @@ function ioValue(c){ const v=inp(c);
 function updateIpoBar(){
   const sec=$('ipoSec'); if(!SIM.running){ sec.style.display='none'; return; } sec.style.display='';
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-  let stage='wait', stageText='loop() 待機：等待輸入';
+  let stage='wait', stageText='loop() 待機：等待輸入', stageReason='等待輸入條件改變';
   if(SIM.phase==='setup'){ stage='setup'; stageText='setup() 初始化：準備硬體'; }
   else if(FX.flowO.size||FX.glowO.size){ stage='O'; stageText='O 輸出：更新元件或螢幕'; }
   else if(FX.boardP||FX.rules.size){ stage='P'; stageText='P 處理：判斷規則'; }
   else if(FX.flowI.size||FX.glowI.size||FX.obGlow.size){ stage='I'; stageText='I 輸入：讀取感測器'; }
-  const stageBox=$('ipoStage'); stageBox.className='stage-'+stage; $('ipoStageText').textContent=stageText;
   const item=(c)=>`<span class="iv${glowing(c)||FX.flowI.has(c.id)?' on':''}">${esc(compName(c))}：<b>${esc(ioValue(c))}</b></span>`;
   let I=ipoComps('I').map(item);
   Object.keys(BD().onboard).forEach(id=>{ if(SIM.obRead&&SIM.obRead[id]) I.push(`<span class="iv">${esc(BD().onboard[id].label)}：<b>${SIM.pressed['ob_'+id]?'按下':'放開'}</b></span>`); });
   const rs=validRules();
+  if(stage==='setup') stageReason='setup() 尚未完成，程式還沒有進入 loop()。';
+  else if(stage==='I') stageReason='正在讀取按鈕或感測器輸入。';
+  else if(stage==='P') stageReason='正在比對 P 規則，判斷條件是否成立。';
+  else if(stage==='O') stageReason='規則已成立，正在更新 LCD 或其他輸出。';
+  else if(!rs.length) stageReason='沒有 P 規則，請到 AI 提示詞建立規則。';
+  else { const waiting=rs.filter(r=>evalCond(r)===false); stageReason=waiting.length?`等待條件成立：${condPhrase(waiting[0])}。規則不成立時，輸出維持原狀。`:'等待下一次輸入變化。'; }
+  const stageBox=$('ipoStage'); stageBox.className='stage-'+stage; $('ipoStageText').textContent=stageText; $('ipoStageReason').textContent=stageReason;
   const P=rs.length?rs.map((r,k)=>{ const ok=evalCond(r); return `<span class="iv ${ok?'ok':'no'}${FX.rules.has(k)?' on':''}">${ok?'✔':'✖'} 規則 ${k+1}：${esc(r.cond==='always'?'隨時':condPhrase(r))} → ${esc(outName(r))} ${esc(actPhrase(r,ok?r.act:(r.els||'none'),ok?r.aval:r.eval))}</span>`; })
     :['<span class="iv dim">依程式判斷。在右側「AI 提示詞」寫下 P 規則，這裡會即時顯示哪條規則成立。</span>'];
   const O=ipoComps('O').map(item);
