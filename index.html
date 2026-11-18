@@ -2073,7 +2073,7 @@ function genCode(){
   buzz.forEach((c,i)=>a(`bool buz${i+1}On = false;  // ${compName(c)} 響或安靜`));
   servos.forEach((c,i)=>a(`int servo${i+1}Angle = 90;  // ${compName(c)} 角度 0–180`));
   if(oledMsg) a('String oledMsg = "";      // OLED 要顯示的文字');
-  if(lcds.length){ a('bool eyesOpen = true;     // LCD 機器人眼睛：張開或閉上'); a('bool shownEyes = true;    // LCD 目前畫的狀態'); }
+  if(lcds.length){ a('bool eyesOpen = true;     // LCD 機器人眼睛：張開或閉上'); a('bool shownEyes = true;    // LCD 目前畫的狀態'); a('bool lcdFirstFrame = true; // 第一次 loop 才繪製畫面'); }
   a('');
   sonars.forEach((c,i)=>{ a(`// 讀取超音波距離（公分）\nlong readDistance${i+1}() {\n  digitalWrite(TRIG${i+1}, LOW);\n  delayMicroseconds(2);\n  digitalWrite(TRIG${i+1}, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(TRIG${i+1}, LOW);\n  long duration = pulseIn(ECHO${i+1}, HIGH, 30000);\n  return duration / 58;\n}\n`); });
   if(lcds.length) [
@@ -2129,7 +2129,6 @@ function genCode(){
     '  lcdCommand(0x21); delay(10);           // IPS 面板要開反相，顏色才正確',
     '  lcdCommand(0x13); delay(10);           // 一般顯示模式',
     '  lcdCommand(0x29); delay(120);          // 開啟顯示',
-    '  lcdFillRect(0, 0, 240, 240, LCD_BLACK);',
     '}',
     'void drawEyes(bool open) {',
     '  lcdFillRect(66, 92, 36, 40, LCD_CYAN);',
@@ -2164,9 +2163,10 @@ function genCode(){
   const obIds=Object.keys(BD().onboard).filter(id=>rules.some(r=>r.inp==='ob_'+id));
   obIds.forEach(id=>a(`  pinMode(${PINS[id].num}, INPUT);   // 板上功能鍵`));
   if(oleds.length){ a('  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);'); a('  display.setTextColor(SSD1306_WHITE);'); }
-  if(lcds.length){ a('  lcdInit();          // LCD 初始化（約 0.5 秒）'); a('  drawRobotFace();'); }
+  if(lcds.length){ a('  lcdInit();          // LCD 初始化（約 0.5 秒），不在 setup 繪圖'); }
   a(`  ${SER}.println("${BD().short} start");`); a('}'); a('');
   a('void loop() {');
+  if(lcds.length){ a('  if (lcdFirstFrame) {'); a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);'); a('    drawRobotFace();'); a('    lcdFirstFrame = false;'); a('  }'); }
   // ===== I 輸入 =====
   a('  // ===== I 輸入：讀取感測器，存進變數 =====');
   btns.forEach((c,i)=>a(`  bool pressed${i+1} = digitalRead(BTN${i+1}) == LOW;   // ${compName(c)}：按下 = true`));
