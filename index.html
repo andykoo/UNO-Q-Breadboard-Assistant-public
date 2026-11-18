@@ -134,6 +134,11 @@ aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 #stage{position:relative;overflow:hidden;background:radial-gradient(#e6dfc6 1px,transparent 1px) 0 0/18px 18px,#f6f1df;touch-action:none}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
+#monitorPanel{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(620px,calc(100% - 24px));display:none;z-index:16;background:#1d2626f2;border:2px solid #5b706b;border-radius:12px;padding:7px 9px;box-shadow:0 8px 24px #0005;pointer-events:auto}
+#monitorPanel.on{display:block}
+#monitorPanel h5{margin:0 0 5px;color:#d7ebe4;font-size:12px;display:flex;align-items:center;justify-content:space-between}
+#monitorPanel .iconbtn{color:#d7ebe4}
+#monitorPanel #con{height:110px;margin:0}
 .floatbar{position:absolute;display:flex;gap:4px;background:#fffdf6ee;border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:0 2px 8px #0001}
 .floatbar button{border:0;background:transparent;border-radius:7px;padding:5px 9px;cursor:pointer;font-size:12.5px;white-space:nowrap}
 .floatbar button:hover{background:#efe9d4}
@@ -282,6 +287,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="floatbar" id="layerBar">
       <button id="tView" title="切換實體接線／IPO 流程圖">IPO 流程圖</button><button id="tWires" class="on">電線</button><button id="tParts" class="on">元件</button><button id="tOrder">電線在上</button>
     </div>
+    <div id="monitorPanel"><h5>序列監控 Monitor <button class="iconbtn" id="bClr">清除</button></h5><pre id="con"></pre></div>
   </section>
   <aside id="right">
     <div id="selCard"></div>
@@ -309,8 +315,6 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <h5>互動控制</h5><div id="simCtrls"></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
-      <h5>序列監控 Monitor <button class="iconbtn" id="bClr">清除</button></h5>
-      <pre id="con"></pre>
       <p class="note">模擬器支援常用的 Arduino 語法與函式（pinMode、digitalWrite/Read、analogRead/Write、delay、millis、tone、pulseIn、Servo／AmebaServo、Adafruit_SSD1306、DHT、Monitor／Serial）。類別、指標、static 區域變數等進階語法不支援；整數除法會以小數計算。</p>
     </div>
     <div class="tabpane" id="t-pins"></div>
@@ -2017,6 +2021,7 @@ function stopSim(silent){ if(!SIM.run) return; SIM.run.stop=true; SIM.run=null; 
 function updateSimUI(){
   const r=SIM.running; $('bRun').disabled=false; $('bRun').textContent=r?'↻ 重新執行':'▶ 執行'; $('bStop').disabled=!r;
   $('bSim').textContent=r?'■ 停止模擬':'▶ 模擬'; $('bSim').classList.toggle('on',r);
+  $('monitorPanel').classList.toggle('on',r);
   $('simBanner').style.display=r?'flex':'none';
   const boot=r&&SIM.phase==='setup';
   $('simBannerTxt').textContent=boot?'開機中：正在執行 setup()，完成後 loop() 才會讀取輸入':'模擬中・點住按鈕、上下拖曳旋鈕';
