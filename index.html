@@ -85,6 +85,8 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 #ipoBar .ic.current:nth-child(1){background:#dbeafe;color:#1e40af}
 #ipoBar .ic.current:nth-child(3){background:#ede9fe;color:#5b21b6}
 #ipoBar .ic.current:nth-child(5){background:#ffedd5;color:#9a3412}
+#ipoBar .ic.focused{background:#fef3c7!important;color:#92400e!important;outline:3px solid #f59e0b;outline-offset:1px}
+#ipoBar .ic.focused .stageNow{display:inline-block;background:#f59e0b}
 .stageNow{display:none;margin-left:auto;padding:1px 5px;border-radius:5px;background:currentColor;color:#fff;font-size:10px;font-weight:800;white-space:nowrap}
 #ipoBar .ic.current .stageNow{display:inline-block}
 .stageLamp{display:none;width:10px;height:10px;margin-left:5px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px currentColor;opacity:.25}
@@ -1167,7 +1169,7 @@ function updateIpoBar(){
   else if(stage==='O') stageReason='規則已成立，正在更新 LCD 或其他輸出。';
   else if(!rs.length) stageReason='沒有 P 規則，請到 AI 提示詞建立規則。';
   else { const waiting=rs.filter(r=>evalCond(r)===false); stageReason=waiting.length?`等待條件成立：${condPhrase(waiting[0])}。規則不成立時，輸出維持原狀。`:'等待下一次輸入變化。'; }
-  document.querySelectorAll('[data-ipo-stage]').forEach(el=>{ const on=el.dataset.ipoStage===stage; el.classList.toggle('current',on); const mark=el.querySelector('.stageNow'); if(mark) mark.textContent=on?'目前':''; const reason=el.querySelector('.stageReason'); if(reason) reason.innerHTML=on?`<b>原因：</b>${esc(stageText+'。'+stageReason)}`:''; });
+  document.querySelectorAll('[data-ipo-stage]').forEach(el=>{ const on=el.dataset.ipoStage===stage, focused=el.dataset.ipoStage===SIM.focusStage; el.classList.toggle('current',on); el.classList.toggle('focused',focused); const mark=el.querySelector('.stageNow'); if(mark) mark.textContent=focused?'已選':on?'目前':''; const reason=el.querySelector('.stageReason'); if(reason) reason.innerHTML=on?`<b>原因：</b>${esc(stageText+'。'+stageReason)}`:''; });
   const P=rs.length?rs.map((r,k)=>{ const ok=evalCond(r); return `<span class="iv ${ok?'ok':'no'}${FX.rules.has(k)?' on':''}">${ok?'✔':'✖'} 規則 ${k+1}：${esc(r.cond==='always'?'隨時':condPhrase(r))} → ${esc(outName(r))} ${esc(actPhrase(r,ok?r.act:(r.els||'none'),ok?r.aval:r.eval))}</span>`; })
     :['<span class="iv dim">依程式判斷。在右側「AI 提示詞」寫下 P 規則，這裡會即時顯示哪條規則成立。</span>'];
   const O=ipoComps('O').map(item);
@@ -1260,7 +1262,7 @@ let hlSig='';
 function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
   const activeLine=SIM.focusLine>=0?SIM.focusLine:SIM.execLine;
   const sig=SIM.running?JSON.stringify(FX.lines)+'|'+activeLine+'|'+ta.scrollTop:'';
-  if(sig===hlSig) return; hlSig=sig; if(!SIM.running){ box.innerHTML=''; return; }
+  if(sig===hlSig) return; hlSig=sig; if(!SIM.running&&SIM.focusLine<0){ box.innerHTML=''; return; }
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25, pt=parseFloat(cs.paddingTop)+parseFloat(cs.borderTopWidth);
   let h=''; const first={};
   [['I','rgba(37,99,235,.42)','#60a5fa'],['P','rgba(124,58,237,.45)','#c4b5fd'],['O','rgba(217,72,15,.45)','#fdba74']].forEach(([k,bg,bd])=>{
@@ -1642,7 +1644,7 @@ function jumpToCodeStage(stage){
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
-  SIM.focusLine=line; SIM.execLine=line; runScrollLine=line; hlSig=''; updateCodeHL();
+  SIM.focusLine=line; SIM.focusStage=stage; SIM.execLine=line; runScrollLine=line; hlSig=''; updateIpoBar(); updateCodeHL();
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
@@ -1792,7 +1794,7 @@ function lcdScreen(c,x,y,w){
   return `<image href="${L.url}" x="${x}" y="${y}" width="${w}" height="${w}" style="image-rendering:pixelated"/>`;
 }
 function inp(c){ if(!INPUTS[c.id]) INPUTS[c.id]=c.type==='pot'?{v:.5}:c.type==='ldr'?{v:.6}:c.type==='sonar'?{d:30}:c.type==='dht'?{t:26,h:60}:{}; return INPUTS[c.id]; }
-const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0,focusLine:-1};
+const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0,focusLine:-1,focusStage:''};
 const STOP={stop:true};
 function pinOf(n){ return BD().pinOf(n); }
 function ps(id){ return SIM.P[id]||(SIM.P[id]={mode:'INPUT',v:0,pwm:null,tone:0}); }
@@ -2050,7 +2052,7 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
+  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:''}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
