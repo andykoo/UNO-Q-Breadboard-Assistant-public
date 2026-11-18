@@ -196,6 +196,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 #codeHL{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .hlb{position:absolute;left:0;right:0;border-left:4px solid}
 .hlt{position:absolute;right:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;border-radius:4px;padding:0 5px;z-index:2}
+.runTag{position:absolute;left:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;background:#f59e0b;border-radius:4px;padding:0 5px;z-index:2}
 .runline{position:absolute;left:0;right:0;border-left:4px solid #f59e0b;background:#fef3c766;height:17px;pointer-events:none;z-index:1}
 #ipoBar .ic{border-radius:8px;padding:2px 4px;transition:background .2s}
 #ipoBar .ic.lit:nth-child(1){background:#dbeafe}#ipoBar .ic.lit:nth-child(3){background:#ede9fe}#ipoBar .ic.lit:nth-child(5){background:#ffedd5}
@@ -1237,15 +1238,20 @@ function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
   [['I','rgba(37,99,235,.42)','#60a5fa'],['P','rgba(124,58,237,.45)','#c4b5fd'],['O','rgba(217,72,15,.45)','#fdba74']].forEach(([k,bg,bd])=>{
     [...new Set(L[k])].forEach(i=>{ if(first[k]===undefined) first[k]=i; h+=`<div class="hlb" style="top:${f1(pt+i*lh-ta.scrollTop)}px;height:${f1(lh)}px;background:${bg};border-left-color:${bd}"></div>`; });
     if(first[k]!==undefined) h+=`<div class="hlt" style="top:${f1(pt+first[k]*lh-ta.scrollTop)}px;background:${bd}">${k}</div>`; });
-  if(SIM.execLine>=0) h+=`<div class="runline" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px"></div><div class="hlt" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px;background:#f59e0b">RUN</div>`;
+  if(SIM.execLine>=0) h+=`<div class="runline" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px"></div><div class="runTag" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px">RUN</div>`;
   box.innerHTML=h;
+  if(SIM.execLine>=0&&SIM.execLine!==runScrollLine&&performance.now()-lastTyped>500){
+    runScrollLine=SIM.execLine;
+    const lineTop=pt+SIM.execLine*lh, viewTop=ta.scrollTop, viewBottom=viewTop+ta.clientHeight-lh;
+    if(lineTop<viewTop||lineTop>viewBottom) ta.scrollTo({top:Math.max(0,lineTop-ta.clientHeight*.35),behavior:'smooth'});
+  }
   // 新出現的區塊不在畫面內時，捲到看得到的位置
   const newest=L.O.length?L.O:L.P.length?L.P:L.I; const key=(L.O.length?'O':L.P.length?'P':'I')+newest.join(',');
   if(newest.length&&key!==scrollKey&&performance.now()-lastTyped>3000){ scrollKey=key;
     const a=Math.min(...newest), b=Math.max(...newest), top=ta.scrollTop, hgt=ta.clientHeight;
     if(a*lh<top||(b+1)*lh>top+hgt){ ta.scrollTo({top:Math.max(0,a*lh-hgt/4),behavior:'smooth'}); }
     const pane=$('t-sim'); if(pane.classList.contains('on')){ const r=ta.getBoundingClientRect(), pr=pane.getBoundingClientRect(); if(r.bottom>pr.bottom||r.top<pr.top) pane.scrollTo({top:pane.scrollTop+(r.top-pr.top)-60,behavior:'smooth'}); } } }
-let scrollKey='', lastTyped=0;
+let scrollKey='', lastTyped=0, runScrollLine=-1;
 function compRing(c,k){ let x,y,w,h;
   if(TYPES[c.type].bb){ x=colX(c.col)-12; w=colX(c.col+TYPES[c.type].w-1)+12-x; y=ROWS.a-12; h=ROWS.h-ROWS.a+24; }
   else { const W={oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164}, Hh={oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172}; x=c.x-16; y=c.y-24; w=W[c.type]; h=Hh[c.type]; }
@@ -2005,14 +2011,14 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0}); lcdSetup(); hlSig=''; scrollKey='';
+  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
     if(!f.loop) throw new Error('找不到 loop() 函式');
     SIM.phase='setup'; updateSimUI(); const ts=performance.now();
     if(f.setup) await f.setup();
-    if(!run.stop){ SIM.phase='loop'; updateSimUI(); schedule(); log(`… setup() 花了 ${((performance.now()-ts)/1000).toFixed(1)} 秒完成，開始執行 loop()，現在才會讀取輸入`,'dim'); }
+    if(!run.stop){ SIM.phase='loop'; updateSimUI(); schedule(); log(`setup() 花了 ${((performance.now()-ts)/1000).toFixed(1)} 秒完成，已進入 loop()；等待「LCD 初始畫面完成」後再操作`,'dim'); }
     while(!run.stop){ await f.loop(); await api.__y(true); }
   }catch(e){ if(e!==STOP){ const msg='執行錯誤：'+(e&&e.message||e); log('✖ '+msg,'err'); toast(msg); } }
   if(SIM.run===run){ SIM.running=false; SIM.run=null; updateAudio(); updateSimUI(); schedule(); log('■ 模擬停止','sys'); }
