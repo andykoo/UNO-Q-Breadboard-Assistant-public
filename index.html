@@ -75,6 +75,14 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 #ipoBar .iv.ok{color:#5b21b6;font-weight:700;white-space:normal}
 #ipoBar .iv.no{color:#8b80b5;white-space:normal}
 #ipoBar .iv.dim{color:var(--muted);white-space:normal}
+#ipoStage{display:flex;align-items:center;gap:8px;margin:0 0 8px;padding:8px 10px;border:2px solid var(--line);border-radius:10px;background:#fff;font-size:13px}
+#ipoStage .stageLabel{color:var(--muted);font-size:11px}
+#ipoStage strong{font-size:15px}
+#ipoStage.stage-I{border-color:#60a5fa;background:#eff6ff;color:#1e40af}
+#ipoStage.stage-P{border-color:#a78bfa;background:#f5f3ff;color:#5b21b6}
+#ipoStage.stage-O{border-color:#fb923c;background:#fff7ed;color:#9a3412}
+#ipoStage.stage-setup{border-color:#f59e0b;background:#fffbeb;color:#92400e}
+#ipoStage.stage-wait{border-color:#94a3b8;background:#f8fafc;color:#475569}
 #boardSel{background:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:6px 8px;color:#fff;font-weight:700;cursor:pointer}
 #boardSel option{background:#1d2a2a;color:#fff}
 #projName{background:#2a3a3a;border:1px solid #3b4d4d;border-radius:8px;padding:6px 10px;color:#fff;width:170px}
@@ -292,7 +300,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabpane" id="t-sim">
       <div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
-      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic"><span class="ipo I">I</span><div id="ibI"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo P">P</span><div id="ibP"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo O">O</span><div id="ibO"></div></div></div></div>
+      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoStage" class="stage-wait"><span class="stageLabel">目前運行到</span><strong id="ipoStageText">尚未執行</strong></div><div id="ipoBar"><div class="ic"><span class="ipo I">I</span><div id="ibI"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo P">P</span><div id="ibP"></div></div><span class="ar">↓</span><div class="ic"><span class="ipo O">O</span><div id="ibO"></div></div></div></div>
       <h5>互動控制</h5><div id="simCtrls"></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
@@ -1107,6 +1115,12 @@ function ioValue(c){ const v=inp(c);
 function updateIpoBar(){
   const sec=$('ipoSec'); if(!SIM.running){ sec.style.display='none'; return; } sec.style.display='';
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  let stage='wait', stageText='loop() 待機：等待輸入';
+  if(SIM.phase==='setup'){ stage='setup'; stageText='setup() 初始化：準備硬體'; }
+  else if(FX.flowO.size||FX.glowO.size){ stage='O'; stageText='O 輸出：更新元件或螢幕'; }
+  else if(FX.boardP||FX.rules.size){ stage='P'; stageText='P 處理：判斷規則'; }
+  else if(FX.flowI.size||FX.glowI.size||FX.obGlow.size){ stage='I'; stageText='I 輸入：讀取感測器'; }
+  const stageBox=$('ipoStage'); stageBox.className='stage-'+stage; $('ipoStageText').textContent=stageText;
   const item=(c)=>`<span class="iv${glowing(c)||FX.flowI.has(c.id)?' on':''}">${esc(compName(c))}：<b>${esc(ioValue(c))}</b></span>`;
   let I=ipoComps('I').map(item);
   Object.keys(BD().onboard).forEach(id=>{ if(SIM.obRead&&SIM.obRead[id]) I.push(`<span class="iv">${esc(BD().onboard[id].label)}：<b>${SIM.pressed['ob_'+id]?'按下':'放開'}</b></span>`); });
