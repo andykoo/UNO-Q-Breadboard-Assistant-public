@@ -46,6 +46,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .pLinks a{color:#5b21b6;font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .item .ipo{margin-right:2px}
 .ipoH{font-size:12.5px;line-height:1.6;color:var(--ink);background:#faf6e8;border-radius:10px;padding:8px 10px}
+.functionCard{border:2px solid var(--teal);border-radius:12px;background:#fff;padding:10px 12px;margin:10px 0}.functionCard h4{margin:0 0 7px;color:var(--teal-d);font-size:14px}.functionGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.functionGrid label{font-size:11.5px;color:var(--muted)}.functionGrid input,.functionGrid textarea{width:100%;box-sizing:border-box;margin-top:3px;border:1px solid var(--line);border-radius:7px;padding:6px;font-size:12px;background:#fff}.functionGrid textarea{min-height:48px;resize:vertical}.functionGrid .wide{grid-column:1/-1}
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{flex:1;border:0;background:#fff;padding:7px 4px;cursor:pointer;font-size:12.5px;color:var(--muted)}
 .seg button+button{border-left:1px solid var(--line)}
@@ -354,6 +355,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
     <div class="tabpane" id="t-prompt">
       <div class="ipoH"><b>先設計規則，再產生流程圖與程式。</b>硬體元件由接線帶入；你只要說清楚輸入、判斷和輸出。</div>
+      <div class="functionCard"><h4>功能設定：這個專案要完成什麼功能？</h4><div class="functionGrid"><label class="wide">功能名稱<input id="fnName" placeholder="例如：按鈕控制機器人表情"></label><label>為什麼要做？<textarea id="fnWhy" placeholder="例如：讓學生了解按鈕如何控制 LCD"></textarea></label><label>功能用途<textarea id="fnUse" placeholder="例如：按下按鈕閉眼，放開按鈕張眼"></textarea></label></div></div>
       <details class="hardwareSummary" open><summary>硬體元件（依接線自動帶入）</summary><div class="hardwareCols"><div><b class="hI">I 輸入</b><div id="hardwareIAuto"></div></div><div><b class="hO">O 輸出</b><div id="hardwareOAuto"></div></div></div></details>
       <div class="field"><label>希望 AI 怎麼幫我</label><div class="seg" id="lvl"><button data-l="full">完整程式</button><button data-l="fill">架構填空</button><button data-l="ask">只問我問題</button></div></div>
       <details class="ipobox I compactIo"><summary class="ipot"><span class="ipo I">I</span>輸入：我要感測什麼？<small>展開設定每個輸入的目的</small></summary><div class="auto" id="ipoIAuto"></div>
@@ -1129,8 +1131,8 @@ const COND_UNIT=(t,cond)=>cond==='every'?'毫秒':t==='sonar'&&(cond==='gt'||con
 const ACT_OPTS={led:[['on','亮'],['off','熄滅'],['blink','閃爍'],['follow','亮度跟著輸入']],buzzer:[['on','響'],['off','安靜'],['beep','嗶嗶叫']],
   servo:[['angle','轉到（度）'],['follow','角度跟著輸入']],oled:[['show','顯示文字'],['clear','清除文字']],lcd:[['open','張開眼睛'],['close','閉上眼睛'],['blink','眨眼']]};
 const LEVELS={full:'完整程式',fill:'架構填空',ask:'只問我問題'};
-const defaultIpo=()=>({level:'full',i:'',p:'',o:'',rules:[],details:{I:{},O:{}}});
-function normIpo(q){ q=Object.assign(defaultIpo(),q||{}); if(!Array.isArray(q.rules)) q.rules=[]; if(!LEVELS[q.level]) q.level='full'; if(!q.details||typeof q.details!=='object') q.details={I:{},O:{}}; q.details.I=q.details.I||{}; q.details.O=q.details.O||{}; return q; }
+const defaultIpo=()=>({level:'full',i:'',p:'',o:'',rules:[],function:{name:'',why:'',use:''},details:{I:{},O:{}}});
+function normIpo(q){ q=Object.assign(defaultIpo(),q||{}); if(!Array.isArray(q.rules)) q.rules=[]; if(!LEVELS[q.level]) q.level='full'; if(!q.function||typeof q.function!=='object') q.function={name:'',why:'',use:''}; q.function.name=q.function.name||'';q.function.why=q.function.why||'';q.function.use=q.function.use||''; if(!q.details||typeof q.details!=='object') q.details={I:{},O:{}}; q.details.I=q.details.I||{}; q.details.O=q.details.O||{}; return q; }
 const byId=id=>state.comps.find(c=>c.id===id);
 const ipoComps=k=>state.comps.filter(c=>IPO_OF[c.type]===k);
 function inpType(r){ if(r.inp==='timer') return 'timer'; if(String(r.inp).startsWith('ob_')) return 'ob'; const c=byId(r.inp); return c?c.type:null; }
@@ -1582,7 +1584,7 @@ const LEVEL_TEXT={
 3. 三個部分都想清楚後，再一步一步帶我寫出程式，程式分成 I 輸入、P 處理、O 輸出三段`};
 function promptText(){
   const q=normIpo(state.ipo), ins=ipoComps('I'), outs=ipoComps('O'), rs=validRules();
-  const L=[BD().promptHead,'請用 IPO（I 輸入 → P 處理 → O 輸出）的方式協助我完成這個專案。',''];
+  const L=[BD().promptHead,'請用 IPO（I 輸入 → P 處理 → O 輸出）的方式協助我完成這個專案。','【功能設定】',`- 功能名稱：${q.function.name||'（尚未設定）'}`,`- 為什麼要做：${q.function.why||'（尚未設定）'}`,`- 功能用途：${q.function.use||'（尚未設定）'}`,''];
   L.push('【I 輸入：要感測什麼】'); (ins.length?ins:[null]).forEach(c=>{if(!c){L.push('- （還沒有輸入元件）');return;}L.push('- '+compLine(c));if(q.details.I[c.id])L.push('  使用者補充：'+q.details.I[c.id]);});
   Object.keys(BD().onboard).forEach(id=>{ if(rs.some(r=>r.inp==='ob_'+id)) L.push(`- ${BD().onboard[id].label}：開發板內建，${pinWord(id)}，按下時讀到 LOW`); });
   if(q.i.trim()) L.push('我想感測：'+q.i.trim()); L.push('');
@@ -1610,9 +1612,10 @@ function ruleRow(r,k){ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g
    <div class="say">${ruleValid(r)?esc(ruleText(r)):'這條規則還不完整：請選好輸入和輸出元件。'}</div></div>`; }
 function renderIPO(force){
   pruneRules(); const q=state.ipo;
-  const sig=B_ID+'|'+state.comps.map(c=>c.id+c.type+compName(c)+Object.values(c.pins).join()).join('|')+'|'+JSON.stringify(q.rules);
+  const sig=B_ID+'|'+state.comps.map(c=>c.id+c.type+compName(c)+Object.values(c.pins).join()).join('|')+'|'+JSON.stringify(q.rules)+'|'+JSON.stringify(q.function);
   document.querySelectorAll('#lvl button').forEach(b=>b.classList.toggle('on',b.dataset.l===q.level));
   ['i','p','o'].forEach(k=>{ const el=$('ipo'+k.toUpperCase()); if(document.activeElement!==el&&el.value!==q[k]) el.value=q[k]; });
+  [['fnName','name'],['fnWhy','why'],['fnUse','use']].forEach(([id,k])=>{const el=$(id);if(el&&document.activeElement!==el&&el.value!==q.function[k])el.value=q.function[k];});
   if(force||sig!==ipoSig){ ipoSig=sig;
     const line=(c,k)=>`<div class="ioGuide"><span class="ipo ${IPO_OF[c.type]}">${IPO_OF[c.type]}</span><span class="ioText"><b>${compName(c)}・${Object.values(c.pins).map(pinLabel).join('、')||'Qwiic'}</b><br><span style="color:var(--muted)">${k==='I'?'請說明要感測什麼、何時算觸發':'請說明希望這個輸出做什麼、顯示什麼結果'}</span><input data-io-detail="${k}" data-id="${c.id}" value="${flowEsc(q.details[k][c.id]||'')}" placeholder="${k==='I'?'例如：按下按鈕時觸發':'例如：閉上眼睛並顯示提示文字'}"></span></div>`;
     const chip=c=>`<div><span class="ipo ${IPO_OF[c.type]}">${IPO_OF[c.type]}</span><span>${compName(c)}・${Object.values(c.pins).map(pinLabel).join('、')||'Qwiic'}</span></div>`;
@@ -1749,6 +1752,7 @@ function jumpToCodeStage(stage){
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
 ['i','p','o'].forEach(k=>$('ipo'+k.toUpperCase()).addEventListener('input',e=>{ state.ipo[k]=e.target.value; persist(); $('promptTxt').value=promptText(); if(k==='p') $('ruleErr').textContent=''; }));
+[['fnName','name'],['fnWhy','why'],['fnUse','use']].forEach(([id,k])=>$(id).addEventListener('input',e=>{state.ipo.function[k]=e.target.value;persist();$('promptTxt').value=promptText();}));
 ['ipoIAuto','ipoOAuto'].forEach(id=>$(id).addEventListener('input',e=>{const el=e.target.closest('[data-io-detail]');if(!el)return;const k=el.dataset.ioDetail;state.ipo.details[k][el.dataset.id]=el.value;persist();$('promptTxt').value=promptText();}));
 $('ruleList').addEventListener('focusout',e=>{ if(e.target.matches('input[data-rk]')) ipoChanged(true); });
 $('bAddRule').onclick=()=>{ if(!ipoComps('O').length){ toast('先在左側 O 區加入輸出元件，才能寫規則'); return; } state.ipo.rules.push(newRule()); $('ruleErr').textContent=''; ipoChanged(true); };
