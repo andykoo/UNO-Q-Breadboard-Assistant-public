@@ -1775,6 +1775,11 @@ function transpile(src){
     const fi=s.indexOf(head), sp=fi<0?null:fnSpan(s,fi);
     if(fi>=0&&sp) s=s.slice(0,sp[0])+'{ __simLcdFillRect(...arguments); }'+s.slice(sp[1]);
   }
+  if(fns.has('lcdSpiWrite')){
+    const head='async function __DEF_lcdSpiWrite(';
+    const fi=s.indexOf(head), sp=fi<0?null:fnSpan(s,fi);
+    if(fi>=0&&sp) s=s.slice(0,sp[0])+'{ __simLcdSpiWrite(...arguments); }'+s.slice(sp[1]);
+  }
   const protoRe=new RegExp(`(^|[;}\\n])[ \\t]*${T_CORE}${T_SEP}(\\w+)\\s*\\(([^()]*)\\)\\s*;`,'gm');
   s=s.replace(protoRe,'$1');
   // 陣列
@@ -1793,7 +1798,7 @@ function transpile(src){
   while(grew){ grew=false; fns.forEach(n=>{ if(asy.has(n)) return; const b=bodies[n]||'';
     const calls=m=>new RegExp('(?<![\\w.$])'+m+'\\s*\\(').test(b);
     // 需要非同步：會呼叫 delay、會呼叫非同步函式，或迴圈裡會呼叫自訂函式（讓畫面能更新、停止鍵按得動）
-    if(/(?<![\w.$])(delay|delayMicroseconds)\s*\(/.test(b)||[...asy].some(calls)||(/\b(for|while|do)\b/.test(b)&&[...fns].some(m=>m!==n&&calls(m)))){ asy.add(n); grew=true; } }); }
+    if(/(?<![\w.$])(delay|delayMicroseconds)\s*\(/.test(b)||[...asy].some(calls)||/\b(for|while|do)\b/.test(b)||(/\b(for|while|do)\b/.test(b)&&[...fns].some(m=>m!==n&&calls(m)))){ asy.add(n); grew=true; } }); }
   const syncFns=[...fns].filter(n=>!asy.has(n));
   const names=['delay','delayMicroseconds',...[...fns].filter(n=>asy.has(n))].map(n=>n.replace(/\$/g,'\\$'));
   s=s.replace(new RegExp(`(?<![\\w.$])(${names.join('|')})\\s*\\(`,'g'),'await $1(');
@@ -1847,6 +1852,7 @@ function makeApi(run){
   A.__y=async(force)=>{ chk(); if(force||++yc%400===0||performance.now()-last>30){ last=performance.now(); gc=0; await new Promise(r=>setTimeout(r,0)); chk(); } };
   A.__g=()=>{ if(++gc>8e7){ gc=0; throw new Error('函式裡的迴圈跑太久，可能是無窮迴圈'); } };
   A.__simLcdFillRect=(x,y,w,h,color)=>{ const x0=Math.max(0,Math.trunc(x)), y0=Math.max(0,Math.trunc(y)), x1=Math.min(240,x0+Math.max(0,Math.trunc(w))), y1=Math.min(240,y0+Math.max(0,Math.trunc(h))), v=Number(color)&0xFFFF; Object.values(SIM.lcd||{}).forEach(L=>{ for(let yy=y0;yy<y1;yy++) for(let xx=x0;xx<x1;xx++) L.buf[yy*240+xx]=v; L.dirty=true; outputChange(L.c); }); schedule(); };
+  A.__simLcdSpiWrite=v=>{ const b=Number(v)&255; Object.values(SIM.lcd||{}).forEach(L=>{ if(!pinV(L.c.pins.cs)) lcdByte(L,b,pinV(L.c.pins.dc)); }); };
   A.__int=v=>typeof v==='number'?Math.trunc(v):v;
   A.delay=async ms=>{ ms=Number(ms)||0; const end=performance.now()+ms; while(true){ chk(); const left=end-performance.now(); if(left<=0) break; await new Promise(r=>setTimeout(r,Math.min(left,40))); } chk(); };
   A.delayMicroseconds=async us=>{ if(us>=2000) return A.delay(us/1000); return A.__y(); };
