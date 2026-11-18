@@ -78,14 +78,15 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 #ipoBar .iv.no{color:#8b80b5;white-space:normal}
 #ipoBar .iv.dim{color:var(--muted);white-space:normal}
 #ipoBar .ic{position:relative}
+#ipoBar .ic{flex-wrap:wrap}
 #ipoBar .ic.current{outline:2px solid currentColor;outline-offset:1px}
 #ipoBar .ic.current:nth-child(1){background:#dbeafe;color:#1e40af}
 #ipoBar .ic.current:nth-child(3){background:#ede9fe;color:#5b21b6}
 #ipoBar .ic.current:nth-child(5){background:#ffedd5;color:#9a3412}
 .stageNow{display:none;margin-left:auto;padding:1px 5px;border-radius:5px;background:currentColor;color:#fff;font-size:10px;font-weight:800;white-space:nowrap}
 #ipoBar .ic.current .stageNow{display:inline-block}
-#ipoReason{margin-top:7px;padding:7px 9px;border-left:3px solid var(--teal);border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;line-height:1.5}
-#ipoReason b{color:var(--ink)}
+.stageReason{display:none;flex-basis:100%;margin:5px 0 2px;padding:6px 8px;border-left:3px solid currentColor;border-radius:6px;background:#f8fafc;color:#475569;font-size:11.5px;line-height:1.45}
+#ipoBar .ic.current .stageReason{display:block}
 #boardSel{background:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:6px 8px;color:#fff;font-weight:700;cursor:pointer}
 #boardSel option{background:#1d2a2a;color:#fff}
 #projName{background:#2a3a3a;border:1px solid #3b4d4d;border-radius:8px;padding:6px 10px;color:#fff;width:170px}
@@ -190,6 +191,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 #codeHL{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
 .hlb{position:absolute;left:0;right:0;border-left:4px solid}
 .hlt{position:absolute;right:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;border-radius:4px;padding:0 5px;z-index:2}
+.runline{position:absolute;left:0;right:0;border-left:4px solid #f59e0b;background:#fef3c766;height:17px;pointer-events:none;z-index:1}
 #ipoBar .ic{border-radius:8px;padding:2px 4px;transition:background .2s}
 #ipoBar .ic.lit:nth-child(1){background:#dbeafe}#ipoBar .ic.lit:nth-child(3){background:#ede9fe}#ipoBar .ic.lit:nth-child(5){background:#ffedd5}
 #ipoBar .iv.ok.on{background:#ddd6fe;border-radius:5px;padding:0 4px}
@@ -303,7 +305,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabpane" id="t-sim">
       <div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
-      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span></div></div><div id="ipoReason"><b>原因：</b><span id="ipoStageReason">尚未執行模擬</span></div></div>
+      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><div class="stageReason" id="ipoReasonO"></div></div></div></div>
       <h5>互動控制</h5><div id="simCtrls"></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
@@ -1118,8 +1120,8 @@ function ioValue(c){ const v=inp(c);
 function updateIpoBar(){
   const sec=$('ipoSec'); if(!SIM.running){ sec.style.display='none'; return; } sec.style.display='';
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-  let stage='wait', stageText='loop() 待機：等待輸入', stageReason='等待輸入條件改變';
-  if(SIM.phase==='setup'){ stage='setup'; stageText='setup() 初始化：準備硬體'; }
+  let stage='wait', stageText='loop() 待機：等待輸入', stageReason='等待輸入條件改變', inSetup=SIM.phase==='setup';
+  if(inSetup){ stage='I'; stageText='setup() 初始化：準備硬體'; }
   else if(FX.flowO.size||FX.glowO.size){ stage='O'; stageText='O 輸出：更新元件或螢幕'; }
   else if(FX.boardP||FX.rules.size){ stage='P'; stageText='P 處理：判斷規則'; }
   else if(FX.flowI.size||FX.glowI.size||FX.obGlow.size){ stage='I'; stageText='I 輸入：讀取感測器'; }
@@ -1127,14 +1129,13 @@ function updateIpoBar(){
   let I=ipoComps('I').map(item);
   Object.keys(BD().onboard).forEach(id=>{ if(SIM.obRead&&SIM.obRead[id]) I.push(`<span class="iv">${esc(BD().onboard[id].label)}：<b>${SIM.pressed['ob_'+id]?'按下':'放開'}</b></span>`); });
   const rs=validRules();
-  if(stage==='setup') stageReason='setup() 尚未完成，程式還沒有進入 loop()。';
+  if(inSetup) stageReason='setup() 尚未完成，程式還沒有進入 loop()。';
   else if(stage==='I') stageReason='正在讀取按鈕或感測器輸入。';
   else if(stage==='P') stageReason='正在比對 P 規則，判斷條件是否成立。';
   else if(stage==='O') stageReason='規則已成立，正在更新 LCD 或其他輸出。';
   else if(!rs.length) stageReason='沒有 P 規則，請到 AI 提示詞建立規則。';
   else { const waiting=rs.filter(r=>evalCond(r)===false); stageReason=waiting.length?`等待條件成立：${condPhrase(waiting[0])}。規則不成立時，輸出維持原狀。`:'等待下一次輸入變化。'; }
-  document.querySelectorAll('[data-ipo-stage]').forEach(el=>{ const on=el.dataset.ipoStage===stage; el.classList.toggle('current',on); const mark=el.querySelector('.stageNow'); if(mark) mark.textContent=on?'目前':''; });
-  $('ipoStageReason').textContent=stageText+'。'+stageReason;
+  document.querySelectorAll('[data-ipo-stage]').forEach(el=>{ const on=el.dataset.ipoStage===stage; el.classList.toggle('current',on); const mark=el.querySelector('.stageNow'); if(mark) mark.textContent=on?'目前':''; const reason=el.querySelector('.stageReason'); if(reason) reason.innerHTML=on?`<b>原因：</b>${esc(stageText+'。'+stageReason)}`:''; });
   const P=rs.length?rs.map((r,k)=>{ const ok=evalCond(r); return `<span class="iv ${ok?'ok':'no'}${FX.rules.has(k)?' on':''}">${ok?'✔':'✖'} 規則 ${k+1}：${esc(r.cond==='always'?'隨時':condPhrase(r))} → ${esc(outName(r))} ${esc(actPhrase(r,ok?r.act:(r.els||'none'),ok?r.aval:r.eval))}</span>`; })
     :['<span class="iv dim">依程式判斷。在右側「AI 提示詞」寫下 P 規則，這裡會即時顯示哪條規則成立。</span>'];
   const O=ipoComps('O').map(item);
@@ -1154,6 +1155,7 @@ function flowTick(){ flowRaf=0; if(!SIM.running) return; renderCanvas(); if(SIM.
 function srcFrames(){ const st=String(new Error().stack||''); const out=[];
   st.split('\n').forEach(l=>{ const m=l.match(/<anonymous>:(\d+):\d+\)?\s*$/)||l.match(/> Function:(\d+):\d+\s*$/); if(m){ const i=parseInt(m[1],10)-SRC_OFF; if(i>=0) out.push(i); } });
   return out; }   // 由內而外：最前面是實際讀寫的那一行，最後面是 loop() 裡的那一行
+function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; SIM.execLine=frames[frames.length-1]; SIM.execAt=performance.now(); }
 const ipoFlowOn=()=>!$('ipoFlow')||$('ipoFlow').checked;
 function inputPulse(inp){ if(!ipoFlowOn()) return; const now=performance.now();
   if(SIM.pulses.some(p=>p.inp&&p.inp.id===inp.id&&now-p.t0<500)) return;
@@ -1224,13 +1226,14 @@ function computeFX(){ if(!SIM.running) return EMPTY_FX; const now=performance.no
   return fx; }
 let hlSig='';
 function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
-  const L=FX.lines, sig=SIM.running?JSON.stringify(L)+'|'+ta.scrollTop:'';
+  const L=FX.lines, sig=SIM.running?JSON.stringify(L)+'|'+SIM.execLine+'|'+ta.scrollTop:'';
   if(sig===hlSig) return; hlSig=sig; if(!SIM.running){ box.innerHTML=''; return; }
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25, pt=parseFloat(cs.paddingTop)+parseFloat(cs.borderTopWidth);
   let h=''; const first={};
   [['I','rgba(37,99,235,.42)','#60a5fa'],['P','rgba(124,58,237,.45)','#c4b5fd'],['O','rgba(217,72,15,.45)','#fdba74']].forEach(([k,bg,bd])=>{
     [...new Set(L[k])].forEach(i=>{ if(first[k]===undefined) first[k]=i; h+=`<div class="hlb" style="top:${f1(pt+i*lh-ta.scrollTop)}px;height:${f1(lh)}px;background:${bg};border-left-color:${bd}"></div>`; });
     if(first[k]!==undefined) h+=`<div class="hlt" style="top:${f1(pt+first[k]*lh-ta.scrollTop)}px;background:${bd}">${k}</div>`; });
+  if(SIM.execLine>=0) h+=`<div class="runline" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px"></div><div class="hlt" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px;background:#f59e0b">RUN</div>`;
   box.innerHTML=h;
   // 新出現的區塊不在畫面內時，捲到看得到的位置
   const newest=L.O.length?L.O:L.P.length?L.P:L.I; const key=(L.O.length?'O':L.P.length?'P':'I')+newest.join(',');
@@ -1740,7 +1743,7 @@ function lcdScreen(c,x,y,w){
   return `<image href="${L.url}" x="${x}" y="${y}" width="${w}" height="${w}" style="image-rendering:pixelated"/>`;
 }
 function inp(c){ if(!INPUTS[c.id]) INPUTS[c.id]=c.type==='pot'?{v:.5}:c.type==='ldr'?{v:.6}:c.type==='sonar'?{d:30}:c.type==='dht'?{t:26,h:60}:{}; return INPUTS[c.id]; }
-const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{}};
+const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0};
 const STOP={stop:true};
 function pinOf(n){ return BD().pinOf(n); }
 function ps(id){ return SIM.P[id]||(SIM.P[id]={mode:'INPUT',v:0,pwm:null,tone:0}); }
@@ -1804,6 +1807,11 @@ function transpile(src){
   }
   if(fns.has('lcdSpiWrite')){
     const head='async function __DEF_lcdSpiWrite(';
+    const fi=s.indexOf(head), sp=fi<0?null:fnSpan(s,fi);
+    if(fi>=0&&sp) s=s.slice(0,sp[0])+'{ __simLcdSpiWrite(...arguments); }'+s.slice(sp[1]);
+  }
+  if(fns.has('spiWriteByte')){
+    const head='async function __DEF_spiWriteByte(';
     const fi=s.indexOf(head), sp=fi<0?null:fnSpan(s,fi);
     if(fi>=0&&sp) s=s.slice(0,sp[0])+'{ __simLcdSpiWrite(...arguments); }'+s.slice(sp[1]);
   }
@@ -1878,8 +1886,8 @@ function makeApi(run){
   let gc=0;
   A.__y=async(force)=>{ chk(); if(force||++yc%400===0||performance.now()-last>30){ last=performance.now(); gc=0; await new Promise(r=>setTimeout(r,0)); chk(); } };
   A.__g=()=>{ if(++gc>8e7){ gc=0; throw new Error('函式裡的迴圈跑太久，可能是無窮迴圈'); } };
-  A.__simLcdFillRect=(x,y,w,h,color)=>{ const x0=Math.max(0,Math.trunc(x)), y0=Math.max(0,Math.trunc(y)), x1=Math.min(240,x0+Math.max(0,Math.trunc(w))), y1=Math.min(240,y0+Math.max(0,Math.trunc(h))), v=Number(color)&0xFFFF; Object.values(SIM.lcd||{}).forEach(L=>{ for(let yy=y0;yy<y1;yy++) for(let xx=x0;xx<x1;xx++) L.buf[yy*240+xx]=v; L.dirty=true; outputChange(L.c); }); schedule(); };
-  A.__simLcdSpiWrite=v=>{ const b=Number(v)&255; Object.values(SIM.lcd||{}).forEach(L=>{ if(!pinV(L.c.pins.cs)) lcdByte(L,b,pinV(L.c.pins.dc)); }); };
+  A.__simLcdFillRect=(x,y,w,h,color)=>{ markExec(); const x0=Math.max(0,Math.trunc(x)), y0=Math.max(0,Math.trunc(y)), x1=Math.min(240,x0+Math.max(0,Math.trunc(w))), y1=Math.min(240,y0+Math.max(0,Math.trunc(h))), v=Number(color)&0xFFFF; Object.values(SIM.lcd||{}).forEach(L=>{ for(let yy=y0;yy<y1;yy++) for(let xx=x0;xx<x1;xx++) L.buf[yy*240+xx]=v; L.dirty=true; outputChange(L.c); }); schedule(); };
+  A.__simLcdSpiWrite=v=>{ markExec(); const b=Number(v)&255; Object.values(SIM.lcd||{}).forEach(L=>{ if(!pinV(L.c.pins.cs)) lcdByte(L,b,pinV(L.c.pins.dc)); }); };
   A.__int=v=>typeof v==='number'?Math.trunc(v):v;
   A.delay=async ms=>{ ms=Number(ms)||0; const end=performance.now()+ms; while(true){ chk(); const left=end-performance.now(); if(left<=0) break; await new Promise(r=>setTimeout(r,Math.min(left,40))); } chk(); };
   A.delayMicroseconds=async us=>{ if(us>=2000) return A.delay(us/1000); return A.__y(); };
@@ -1889,7 +1897,7 @@ function makeApi(run){
   A.pinMode=(p,m)=>{ const id=pid(p,'pinMode'); if(!id) return; ps(id).mode=m;
     if(m==='OUTPUT'&&compsOnPin(id).some(c=>c.type==='button'||c.type==='pot'||c.type==='ldr'||(c.type==='sonar'&&c.pins.echo===id))) warnOnce('outin'+id,`${pinLabel(id)} 接的是輸入元件，卻被設成 OUTPUT`);
     schedule(); };
-  A.digitalWrite=(p,v)=>{ const id=pid(p,'digitalWrite'); if(!id) return; const s=ps(id); v=v?1:0; const prev=s.v; s.v=v; s.pwm=null;
+  A.digitalWrite=(p,v)=>{ markExec(); const id=pid(p,'digitalWrite'); if(!id) return; const s=ps(id); v=v?1:0; const prev=s.v; s.v=v; s.pwm=null;
     if(SIM.lcdPins[id]){ if(s.mode!=='OUTPUT') warnOnce('lpm'+id,`${pinLabel(id)} 接的是 LCD，要先用 pinMode(…, OUTPUT) 設成輸出`); lcdWire(id,v,prev); return; }
     const bi=BD().builtins[id];
     if(bi){ SIM.bl[id]=bi.activeLow?(v?0:1):v; if(bi.msg) warnOnce('bi'+id,bi.msg); schedule(); if(!PINS[id]) return; }
@@ -1903,7 +1911,7 @@ function makeApi(run){
     else s.pwm=v;
     const bi=BD().builtins[id]; if(bi){ SIM.bl[id]=s.pwm!=null?s.pwm/255:s.v; schedule(); }
     s.mode='OUTPUT'; if(!compsOnPin(id).length&&!bi) warnOnce('nc'+id,`程式在 ${pinLabel(id)} 輸出，但接線圖中這個腳位沒有接元件`); schedule(); };
-  A.digitalRead=p=>{ const id=pid(p,'digitalRead'); if(!id) return 0; const s=ps(id); const cs=compsOnPin(id);
+  A.digitalRead=p=>{ markExec(); const id=pid(p,'digitalRead'); if(!id) return 0; const s=ps(id); const cs=compsOnPin(id);
     const b=cs.find(c=>c.type==='button');
     const ob=BD().onboard[id]; if(!b&&ob&&ob.type==='button'){ SIM.obRead[id]=1; const pv=SIM.pressed['ob_'+id]?1:0; if((SIM.lastIn['ob_'+id]===undefined?0:SIM.lastIn['ob_'+id])!==pv) inputPulse({id:'ob_'+id}); SIM.lastIn['ob_'+id]=pv; return pv?0:1; }
     if(b){ readMark(b,SIM.pressed[b.id]?0:1); if(SIM.pressed[b.id]) return 0; if(s.mode==='INPUT_PULLUP') return 1; warnOnce('float'+id,`${pinLabel(id)} 的按鈕沒有設定 INPUT_PULLUP，沒按的時候讀值會亂跳`); return Math.random()<.5?1:0; }
@@ -1993,7 +2001,7 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup'}); lcdSetup(); hlSig=''; scrollKey='';
+  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0}); lcdSetup(); hlSig=''; scrollKey='';
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
