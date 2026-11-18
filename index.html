@@ -133,10 +133,15 @@ aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 .ck.info b{color:var(--teal)}
 #stage{position:relative;overflow:hidden;background:radial-gradient(#e6dfc6 1px,transparent 1px) 0 0/18px 18px,#f6f1df;touch-action:none}
 #left,#right{transition:width .2s,opacity .2s}
-body.leftCollapsed main{grid-template-columns:0 1fr 370px}
-body.rightCollapsed main{grid-template-columns:300px 1fr 0}
-body.leftCollapsed.rightCollapsed main{grid-template-columns:0 1fr 0}
-body.leftCollapsed #left,body.rightCollapsed #right{display:none}
+body.leftCollapsed main{grid-template-columns:44px 1fr 370px}
+body.rightCollapsed main{grid-template-columns:300px 1fr 44px}
+body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
+#left.collapsed .sec,#left.collapsed #monitorPanel,#right.collapsed>*:not(.sideHeader){display:none}
+.sideHeader{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;background:#1d2a2a;color:#f3eedb;font-size:12px;font-weight:700;flex:none}
+.sideHeader .sideToggle{border:1px solid #5b706b;background:#2a3a3a;color:#f3eedb;border-radius:7px;padding:4px 7px;cursor:pointer;font-size:11px;white-space:nowrap}
+.collapsed .sideHeader{height:100%;padding:8px 5px;justify-content:flex-start;align-items:flex-start}
+.collapsed .sideHeader span{display:none}
+.collapsed .sideHeader .sideToggle{font-size:18px;padding:2px 5px}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
 #monitorPanel{position:relative;width:auto;margin:12px 14px;display:none;background:#1d2626f2;border:2px solid #5b706b;border-radius:12px;padding:7px 9px;box-shadow:0 8px 24px #0005;pointer-events:auto}
@@ -242,8 +247,6 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
   <select id="boardSel" aria-label="開發板" title="切換開發板"><option value="unoq">Arduino UNO Q</option><option value="hub8735">HUB 8735 ultra</option></select>
   <input id="projName" value="未命名專案" aria-label="專案名稱">
   <div class="tb">
-    <button id="toggleLeft" class="sideToggle">收起左側</button>
-    <button id="toggleRight" class="sideToggle">收起右側</button>
     <button id="bSim" class="run">▶ 模擬</button>
     <button id="bHelp">操作教學</button>
     <button id="bExample">載入範例</button>
@@ -261,6 +264,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 </header>
 <main>
   <aside id="left">
+    <div class="sideHeader"><span>左側工具</span><button id="toggleLeft" class="sideToggle" title="收起左側">收起</button></div>
     <div class="sec">
       <h3><span class="n">01</span>元件與腳位</h3>
       <div id="palette"></div>
@@ -298,6 +302,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </section>
   <aside id="right">
+    <div class="sideHeader"><span>右側工具</span><button id="toggleRight" class="sideToggle" title="收起右側">收起</button></div>
     <div id="selCard"></div>
     <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="prompt">AI 提示詞</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
     <div class="tabpane on" id="t-wiring"></div>
@@ -1637,8 +1642,8 @@ $('tView').onclick=e=>{viewMode=viewMode==='ipo'?'phys':'ipo';e.target.textConte
 $('tOrder').onclick=e=>{wiresTop=!wiresTop;e.target.textContent=wiresTop?'電線在下':'電線在上';renderCanvas();};
 $('bLock').onclick=e=>{locked=!locked;e.target.classList.toggle('on',locked);e.target.textContent=locked?'已鎖定':'鎖定編輯';$('stage').classList.toggle('locked',locked);$('bAdd').disabled=locked;toast(locked?'已鎖定：只能檢視':'已解除鎖定');};
 $('bFull').onclick=()=>{try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>toast('此環境不支援全螢幕'));else document.exitFullscreen();}catch(e){toast('此環境不支援全螢幕');}};
-$('toggleLeft').onclick=()=>{ const collapsed=document.body.classList.toggle('leftCollapsed'); $('toggleLeft').textContent=collapsed?'展開左側':'收起左側'; requestAnimationFrame(fit); };
-$('toggleRight').onclick=()=>{ const collapsed=document.body.classList.toggle('rightCollapsed'); $('toggleRight').textContent=collapsed?'展開右側':'收起右側'; requestAnimationFrame(fit); };
+$('toggleLeft').onclick=()=>{ const collapsed=$('left').classList.toggle('collapsed'); document.body.classList.toggle('leftCollapsed',collapsed); $('toggleLeft').textContent=collapsed?'›':'收起'; $('toggleLeft').title=collapsed?'展開左側':'收起左側'; requestAnimationFrame(fit); };
+$('toggleRight').onclick=()=>{ const collapsed=$('right').classList.toggle('collapsed'); document.body.classList.toggle('rightCollapsed',collapsed); $('toggleRight').textContent=collapsed?'‹':'收起'; $('toggleRight').title=collapsed?'展開右側':'收起右側'; requestAnimationFrame(fit); };
 $('projName').addEventListener('input',e=>{state.name=e.target.value;persist();});
 
 /* 存檔 / 開啟 / 匯出 */
