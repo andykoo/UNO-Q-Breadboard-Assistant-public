@@ -42,6 +42,8 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .pgrp.I .palette button.sel{border-color:#2563eb;background:#eff6ff;box-shadow:0 0 0 2px #2563eb33}
 .pgrp.O .palette button.sel{border-color:#d9480f;background:#fff4e6;box-shadow:0 0 0 2px #d9480f33}
 .pboard{font-size:12px;line-height:1.5;background:#fff;color:#4c1d95;border-radius:10px;padding:8px 10px;box-shadow:0 1px 2px #0000000f}
+.pLinks{margin-top:7px;padding-top:6px;border-top:1px dashed #ddd6fe;font-size:11.5px;line-height:1.6}
+.pLinks a{color:#5b21b6;font-weight:700;text-decoration:underline;text-underline-offset:2px;cursor:pointer}
 .item .ipo{margin-right:2px}
 .ipoH{font-size:12.5px;line-height:1.6;color:var(--ink);background:#faf6e8;border-radius:10px;padding:8px 10px}
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
@@ -1335,7 +1337,7 @@ function renderPalette(){
   const btn=t=>`<button data-type="${t}" class="${t===selType?'sel':''}">${ICONS[t]}<span>${TYPES[t].name.replace(' I2C','').replace('HC-SR04','')}</span></button>`;
   const grp=(k,desc)=>{ const ts=TYPE_ORDER.filter(t=>IPO_OF[t]===k); return ts.length?`<div class="pgrp ${k}"><div class="pgh"><span class="ipo ${k}">${k}</span>${IPO_NAME[k]}<small>${desc}</small></div><div class="palette">${ts.map(btn).join('')}</div></div>`:''; };
   $('palette').innerHTML=grp('I','感測、讀取外界')+'<div class="pgflow">↓</div>'+
-    `<div class="pgrp P"><div class="pgh"><span class="ipo P">P</span>處理<small>開發板依規則判斷</small></div><div class="pboard">${BD().name} 負責處理。規則寫在右側「AI 提示詞」的 P 欄，程式會依規則自動產生。</div></div><div class="pgflow">↓</div>`+
+    `<div class="pgrp P"><div class="pgh"><span class="ipo P">P</span>處理<small>開發板依規則判斷</small></div><div class="pboard">${BD().name} 負責處理。規則寫在右側「AI 提示詞」的 P 欄，程式會依規則自動產生。<div class="pLinks">AI 提示詞：<a href="#" data-ai-level="full">完整程式</a> ／ <a href="#" data-ai-level="fill">架構填空</a> ／ <a href="#" data-ai-level="ask">只問我問題</a></div></div></div><div class="pgflow">↓</div>`+
     grp('O','動作、顯示');
   $('typeHint').textContent=TYPES[selType].hint;
 }
@@ -1577,7 +1579,7 @@ function editComp(id){
 }
 function delComp(id){if(locked)return;const c=state.comps.find(k=>k.id===id);state.comps=state.comps.filter(k=>k.id!==id);if(selectedId===id)selectedId=null;compsChanged();persist();renderAll();toast(`已刪除 ${compName(c)}`);}
 
-$('palette').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;selType=b.dataset.type;renderPalette();renderFields();});
+$('palette').addEventListener('click',e=>{ const link=e.target.closest('[data-ai-level]'); if(link){e.preventDefault();state.ipo.level=link.dataset.aiLevel;ipoChanged(false);const tab=document.querySelector('.tabs button[data-t="prompt"]');if(tab)tab.click();$('lvl').scrollIntoView({block:'nearest'});return;} const b=e.target.closest('button');if(!b)return;selType=b.dataset.type;renderPalette();renderFields(); });
 $('bAdd').onclick=addComp;
 $('pinFields').addEventListener('change',e=>{ if(e.target.matches('select[data-sig]')) renderFields(true); });
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;e.stopPropagation();const id=b.dataset.id||b.closest('.item').dataset.id;
@@ -1980,7 +1982,7 @@ async function runSim(){
   const code=$('code').value; state.code=code; persist();
   let prog;
   try{ prog=compile(transpile(code)); }
-  catch(e){ log('✖ 程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）','err'); return; }
+  catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
   Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup'}); lcdSetup(); hlSig=''; scrollKey='';
@@ -1992,7 +1994,7 @@ async function runSim(){
     if(f.setup) await f.setup();
     if(!run.stop){ SIM.phase='loop'; updateSimUI(); schedule(); log(`… setup() 花了 ${((performance.now()-ts)/1000).toFixed(1)} 秒完成，開始執行 loop()，現在才會讀取輸入`,'dim'); }
     while(!run.stop){ await f.loop(); await api.__y(true); }
-  }catch(e){ if(e!==STOP) log('✖ 執行錯誤：'+(e&&e.message||e),'err'); }
+  }catch(e){ if(e!==STOP){ const msg='執行錯誤：'+(e&&e.message||e); log('✖ '+msg,'err'); toast(msg); } }
   if(SIM.run===run){ SIM.running=false; SIM.run=null; updateAudio(); updateSimUI(); schedule(); log('■ 模擬停止','sys'); }
 }
 function stopSim(silent){ if(!SIM.run) return; SIM.run.stop=true; SIM.run=null; SIM.running=false; updateAudio(); updateSimUI(); schedule(); if(!silent) log('■ 模擬停止','sys'); }
@@ -2040,7 +2042,7 @@ $('code').addEventListener('scroll',()=>{ if(SIM.running) updateCodeHL(); });
 $('code').addEventListener('keydown',()=>{ lastTyped=performance.now(); });
 $('code').addEventListener('input',()=>{ state.code=$('code').value; if(state.codeAuto){ state.codeAuto=false; updateCodeTag(); } persist(); });
 $('code').addEventListener('keydown',e=>{ if(e.key==='Tab'){ e.preventDefault(); const t=e.target,a=t.selectionStart; t.setRangeText('  ',a,t.selectionEnd,'end'); t.dispatchEvent(new Event('input')); } });
-$('bRun').onclick=()=>runSim();
+$('bRun').onclick=()=>{ const tab=document.querySelector('.tabs button[data-t="sim"]'); if(tab)tab.click(); runSim().catch(e=>{log('✖ 模擬啟動失敗：'+(e&&e.message||e),'err');toast('模擬啟動失敗，請查看序列監控');}); };
 $('bStop').onclick=()=>stopSim(); $('bStop2').onclick=()=>stopSim();
 $('bClr').onclick=()=>{ $('con').innerHTML=''; conLine=null; };
 $('bSim').onclick=()=>{ if(SIM.running){ stopSim(); return; } document.querySelector('.tabs button[data-t=sim]').click(); runSim(); };
