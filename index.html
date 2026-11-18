@@ -142,6 +142,7 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 #left.collapsed .sec,#left.collapsed #monitorPanel,#right.collapsed>*:not(.sideHeader){display:none}
 #leftMenu{display:block}
 #left.simRunning #leftMenu{display:none}
+#left.simRunning{overflow:hidden}
 .sideHeader{position:absolute;top:6px;right:8px;z-index:20;padding:0;background:transparent;color:#f3eedb;font-size:12px;font-weight:700}
 .sideHeader span{display:none}
 .sideHeader .sideToggle{border:1px solid #5b706b;background:#2a3a3a;color:#f3eedb;border-radius:7px;padding:2px 6px;cursor:pointer;font-size:18px;line-height:1;white-space:nowrap}
@@ -150,11 +151,11 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 .collapsed .sideHeader .sideToggle{font-size:18px;padding:2px 5px}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
-#monitorPanel{position:absolute;inset:0;width:auto;margin:0;display:none;background:#1d2626f2;border:0;border-radius:0;padding:14px;box-shadow:none;overflow:auto;pointer-events:auto}
+#monitorPanel{position:absolute;inset:0;width:auto;height:100%;box-sizing:border-box;margin:0;display:none;background:#1d2626f2;border:0;border-radius:0;padding:14px;box-shadow:none;overflow:auto;pointer-events:auto}
 #monitorPanel.on{display:block}
 #monitorPanel h5{margin:0 0 5px;color:#d7ebe4;font-size:12px;display:flex;align-items:center;justify-content:space-between}
 #monitorPanel .iconbtn{color:#d7ebe4}
-#monitorPanel #con{height:110px;margin:0}
+#monitorPanel #con{height:calc(100% - 28px);min-height:110px;margin:0}
 .floatbar{position:absolute;display:flex;gap:4px;background:#fffdf6ee;border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:0 2px 8px #0001}
 .floatbar button{border:0;background:transparent;border-radius:7px;padding:5px 9px;cursor:pointer;font-size:12.5px;white-space:nowrap}
 .floatbar button:hover{background:#efe9d4}
