@@ -132,9 +132,14 @@ aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 .ck.err{background:#fdeceb}.ck.err b{color:var(--err)}
 .ck.info b{color:var(--teal)}
 #stage{position:relative;overflow:hidden;background:radial-gradient(#e6dfc6 1px,transparent 1px) 0 0/18px 18px,#f6f1df;touch-action:none}
+#left,#right{transition:width .2s,opacity .2s}
+body.leftCollapsed main{grid-template-columns:0 1fr 370px}
+body.rightCollapsed main{grid-template-columns:300px 1fr 0}
+body.leftCollapsed.rightCollapsed main{grid-template-columns:0 1fr 0}
+body.leftCollapsed #left,body.rightCollapsed #right{display:none}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
-#monitorPanel{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);width:min(620px,calc(100% - 24px));display:none;z-index:16;background:#1d2626f2;border:2px solid #5b706b;border-radius:12px;padding:7px 9px;box-shadow:0 8px 24px #0005;pointer-events:auto}
+#monitorPanel{position:relative;width:auto;margin:12px 14px;display:none;background:#1d2626f2;border:2px solid #5b706b;border-radius:12px;padding:7px 9px;box-shadow:0 8px 24px #0005;pointer-events:auto}
 #monitorPanel.on{display:block}
 #monitorPanel h5{margin:0 0 5px;color:#d7ebe4;font-size:12px;display:flex;align-items:center;justify-content:space-between}
 #monitorPanel .iconbtn{color:#d7ebe4}
@@ -237,6 +242,8 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
   <select id="boardSel" aria-label="開發板" title="切換開發板"><option value="unoq">Arduino UNO Q</option><option value="hub8735">HUB 8735 ultra</option></select>
   <input id="projName" value="未命名專案" aria-label="專案名稱">
   <div class="tb">
+    <button id="toggleLeft" class="sideToggle">收起左側</button>
+    <button id="toggleRight" class="sideToggle">收起右側</button>
     <button id="bSim" class="run">▶ 模擬</button>
     <button id="bHelp">操作教學</button>
     <button id="bExample">載入範例</button>
@@ -269,6 +276,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <h3><span class="n">03</span><span id="chkTitle">UNO Q 電壓與腳位檢查</span></h3>
       <div class="checks" id="checks"></div>
     </div>
+    <div id="monitorPanel"><h5>序列監控 Monitor <button class="iconbtn" id="bClr">清除</button></h5><pre id="con"></pre></div>
   </aside>
   <section id="stage">
     <svg id="cv" xmlns="http://www.w3.org/2000/svg">
@@ -288,7 +296,6 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="floatbar" id="layerBar">
       <button id="tView" title="切換實體接線／IPO 流程圖">IPO 流程圖</button><button id="tWires" class="on">電線</button><button id="tParts" class="on">元件</button><button id="tOrder">電線在上</button>
     </div>
-    <div id="monitorPanel"><h5>序列監控 Monitor <button class="iconbtn" id="bClr">清除</button></h5><pre id="con"></pre></div>
   </section>
   <aside id="right">
     <div id="selCard"></div>
@@ -1630,6 +1637,8 @@ $('tView').onclick=e=>{viewMode=viewMode==='ipo'?'phys':'ipo';e.target.textConte
 $('tOrder').onclick=e=>{wiresTop=!wiresTop;e.target.textContent=wiresTop?'電線在下':'電線在上';renderCanvas();};
 $('bLock').onclick=e=>{locked=!locked;e.target.classList.toggle('on',locked);e.target.textContent=locked?'已鎖定':'鎖定編輯';$('stage').classList.toggle('locked',locked);$('bAdd').disabled=locked;toast(locked?'已鎖定：只能檢視':'已解除鎖定');};
 $('bFull').onclick=()=>{try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>toast('此環境不支援全螢幕'));else document.exitFullscreen();}catch(e){toast('此環境不支援全螢幕');}};
+$('toggleLeft').onclick=()=>{ const collapsed=document.body.classList.toggle('leftCollapsed'); $('toggleLeft').textContent=collapsed?'展開左側':'收起左側'; requestAnimationFrame(fit); };
+$('toggleRight').onclick=()=>{ const collapsed=document.body.classList.toggle('rightCollapsed'); $('toggleRight').textContent=collapsed?'展開右側':'收起右側'; requestAnimationFrame(fit); };
 $('projName').addEventListener('input',e=>{state.name=e.target.value;persist();});
 
 /* 存檔 / 開啟 / 匯出 */
