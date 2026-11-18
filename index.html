@@ -181,6 +181,7 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 .tabpane{display:none;padding:12px 14px;overflow:auto;flex:1}
 .tabpane.on{display:block}
 #t-flow{padding:10px 12px;background:#fbf8ec}
+.hardwareSummary{border:1.5px solid var(--line);border-radius:10px;background:#fffdf6;padding:8px 10px;margin:10px 0}.hardwareSummary summary{cursor:pointer;font-weight:800;color:var(--teal-d);font-size:13px}.hardwareCols{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px}.hardwareCols>div{min-width:0}.hardwareCols b{font-size:11.5px}.hI{color:#2563eb}.hO{color:#d9480f}.hardwareCols .auto{margin-top:3px}.compactIo{padding:7px 9px}.compactIo summary{list-style:none;cursor:pointer}.compactIo summary::-webkit-details-marker{display:none}.compactIo summary:after{content:'＋';float:right;color:var(--muted)}.compactIo[open] summary:after{content:'−'}.compactIo[open] .ipot{margin-bottom:6px}
 .flowbar{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
 .flowbar .btn{padding:6px 9px;font-size:12px}
 .flowbar .btn.on{background:var(--teal);color:#fff}
@@ -344,7 +345,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
   <aside id="right">
     <div class="sideHeader"><span>右側工具</span><button id="toggleRight" class="sideToggle" title="收起右側">☰</button></div>
     <div id="selCard"></div>
-    <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="flow">流程圖</button><button data-t="prompt">AI 提示詞</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
+    <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="flow">流程圖</button><button data-t="prompt">規則設計</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
     <div class="tabpane on" id="t-wiring"></div>
     <div class="tabpane" id="t-flow">
       <div class="flowbar"><button class="btn ghost" data-flow-add="I">＋ I 輸入</button><button class="btn ghost" data-flow-add="P">＋ P 處理</button><button class="btn ghost" data-flow-add="O">＋ O 輸出</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">恢復原本版面</button></div>
@@ -352,15 +353,16 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="flowlayout"><div class="flowcanvas" id="flowCanvas"><svg id="flowSvg" viewBox="0 0 600 460" preserveAspectRatio="none"><defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="flowLinks"></g></svg><div id="flowNodes"></div></div><div class="flowinspect" id="flowInspect"><h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div></div></div>
     </div>
     <div class="tabpane" id="t-prompt">
-      <div class="ipoH"><b>先用 IPO 想清楚，再問 AI。</b>依序寫 I 輸入、P 處理規則、O 輸出，最下面會組成完整的 AI 提示詞。</div>
+      <div class="ipoH"><b>先設計規則，再產生流程圖與程式。</b>硬體元件由接線帶入；你只要說清楚輸入、判斷和輸出。</div>
+      <details class="hardwareSummary" open><summary>硬體元件（依接線自動帶入）</summary><div class="hardwareCols"><div><b class="hI">I 輸入</b><div id="hardwareIAuto"></div></div><div><b class="hO">O 輸出</b><div id="hardwareOAuto"></div></div></div></details>
       <div class="field"><label>希望 AI 怎麼幫我</label><div class="seg" id="lvl"><button data-l="full">完整程式</button><button data-l="fill">架構填空</button><button data-l="ask">只問我問題</button></div></div>
-      <div class="ipobox I"><div class="ipot"><span class="ipo I">I</span>輸入：我要感測什麼？<small>元件依接線自動帶入</small></div><div class="auto" id="ipoIAuto"></div>
-        <textarea id="ipoI" placeholder="想偵測什麼、為什麼？例如：用超音波偵測有沒有人靠近門口"></textarea></div>
+      <details class="ipobox I compactIo"><summary class="ipot"><span class="ipo I">I</span>輸入：我要感測什麼？<small>展開設定每個輸入的目的</small></summary><div class="auto" id="ipoIAuto"></div>
+        <textarea id="ipoI" placeholder="想偵測什麼、為什麼？例如：用超音波偵測有沒有人靠近門口"></textarea></details>
       <div class="ipobox P"><div class="ipot"><span class="ipo P">P</span>處理：我的規則是什麼？<small>當…就…否則…</small></div><div id="ruleList"></div>
         <button class="btn ghost wide" id="bAddRule" style="margin-top:2px">＋ 新增規則</button>
         <textarea id="ipoP" placeholder="其他規則或想法，例如：連續按兩下就關燈、晚上才啟動"></textarea><div class="ruleErr" id="ruleErr"></div></div>
-      <div class="ipobox O"><div class="ipot"><span class="ipo O">O</span>輸出：我要產生什麼結果？<small>元件依接線自動帶入</small></div><div class="auto" id="ipoOAuto"></div>
-        <textarea id="ipoO" placeholder="希望看到、聽到什麼？例如：有人靠近時亮紅燈並嗶一聲"></textarea></div>
+      <details class="ipobox O compactIo"><summary class="ipot"><span class="ipo O">O</span>輸出：我要產生什麼結果？<small>展開設定每個輸出的目的</small></summary><div class="auto" id="ipoOAuto"></div>
+        <textarea id="ipoO" placeholder="希望看到、聽到什麼？例如：有人靠近時亮紅燈並嗶一聲"></textarea></details>
       <h5 class="fullh">完整 AI 提示詞<span style="font-weight:400;color:var(--muted);font-size:11.5px">（自動組合，複製後貼給 AI）</span></h5>
       <textarea id="promptTxt" readonly></textarea>
       <button class="btn wide" id="bCopyPrompt">複製完整 AI 提示詞</button>
@@ -1609,6 +1611,9 @@ function renderIPO(force){
   ['i','p','o'].forEach(k=>{ const el=$('ipo'+k.toUpperCase()); if(document.activeElement!==el&&el.value!==q[k]) el.value=q[k]; });
   if(force||sig!==ipoSig){ ipoSig=sig;
     const line=(c,k)=>`<div class="ioGuide"><span class="ipo ${IPO_OF[c.type]}">${IPO_OF[c.type]}</span><span class="ioText"><b>${compName(c)}・${Object.values(c.pins).map(pinLabel).join('、')||'Qwiic'}</b><br><span style="color:var(--muted)">${k==='I'?'請說明要感測什麼、何時算觸發':'請說明希望這個輸出做什麼、顯示什麼結果'}</span><input data-io-detail="${k}" data-id="${c.id}" value="${flowEsc(q.details[k][c.id]||'')}" placeholder="${k==='I'?'例如：按下按鈕時觸發':'例如：閉上眼睛並顯示提示文字'}"></span></div>`;
+    const chip=c=>`<div><span class="ipo ${IPO_OF[c.type]}">${IPO_OF[c.type]}</span><span>${compName(c)}・${Object.values(c.pins).map(pinLabel).join('、')||'Qwiic'}</span></div>`;
+    $('hardwareIAuto').innerHTML=ipoComps('I').map(chip).join('')||'<div class="none">尚未接入輸入元件</div>';
+    $('hardwareOAuto').innerHTML=ipoComps('O').map(chip).join('')||'<div class="none">尚未接入輸出元件</div>';
     $('ipoIAuto').innerHTML=ipoComps('I').map(c=>line(c,'I')).join('')||'<div class="none">還沒有輸入元件（從左側 I 區加入）</div>';
     $('ipoOAuto').innerHTML=ipoComps('O').map(c=>line(c,'O')).join('')||'<div class="none">還沒有輸出元件（從左側 O 區加入）</div>';
     const vr=validRules(), cnt={}; vr.forEach((r,k)=>{ (cnt[r.out]=cnt[r.out]||[]).push(k+1); });
