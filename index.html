@@ -25,6 +25,8 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .brand small{display:block;font-weight:500;font-size:10px;color:#9fb3ae;letter-spacing:1.5px}
 .credit{font-size:11px;color:#c7d5d1;white-space:nowrap;font-weight:500}
 .credit a{color:#ffd166;text-decoration:underline;text-underline-offset:2px}
+.creditBanner{height:38px;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 14px;background:#fff3c4;color:#5b3b00;border-bottom:2px solid #e7b93c;font-size:13px;font-weight:700;text-align:center;position:relative;z-index:4}
+.creditBanner a{color:#075e65;text-decoration:underline;text-underline-offset:3px}
 #palette{display:block}
 .pgrp{margin-bottom:10px;border-radius:12px;padding:8px 8px 9px;border:1.5px solid}
 .pgrp.I{background:#eaf2ff;border-color:#93c5fd}.pgrp.P{background:#f1ecff;border-color:#c4b5fd}.pgrp.O{background:#fff1e6;border-color:#fdba74}
@@ -79,7 +81,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .tb button{background:#2a3a3a;border:1px solid #3b4d4d;color:#f3eedb;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
 .tb button:hover{background:#344848}
 .tb button.on{background:var(--accent);border-color:var(--accent)}
-main{display:grid;grid-template-columns:300px 1fr 370px;height:calc(100% - 56px)}
+main{display:grid;grid-template-columns:300px 1fr 370px;height:calc(100% - 94px)}
 aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 #right{border-right:0;border-left:1px solid var(--line);display:flex;flex-direction:column}
 .sec{padding:14px 14px 10px;border-bottom:1px solid var(--line)}
@@ -225,6 +227,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
   </div>
   <input type="file" id="fileIn" accept=".json,application/json" hidden>
 </header>
+<div class="creditBanner">原創製作：黃信惠的瘋狂教室　｜　參考來源：<a href="https://tool.davidhuanglab.com/arduino-breadboard/" target="_blank" rel="noopener">Arduino 麵包板接線助手</a></div>
 <main>
   <aside id="left">
     <div class="sec">
