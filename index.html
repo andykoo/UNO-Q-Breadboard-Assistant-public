@@ -1283,7 +1283,9 @@ function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
   if(newest.length&&key!==scrollKey&&performance.now()-lastTyped>3000){ scrollKey=key;
     const a=Math.min(...newest), b=Math.max(...newest), top=ta.scrollTop, hgt=ta.clientHeight;
     if(a*lh<top||(b+1)*lh>top+hgt){ ta.scrollTo({top:Math.max(0,a*lh-hgt/4),behavior:'smooth'}); }
-    const pane=$('t-sim'); if(pane.classList.contains('on')){ const r=ta.getBoundingClientRect(), pr=pane.getBoundingClientRect(); if(r.bottom>pr.bottom||r.top<pr.top) pane.scrollTo({top:pane.scrollTop+(r.top-pr.top)-60,behavior:'smooth'}); } } }
+    // 不再捲動右側外層模擬區；互動元件只更新程式碼框自己的反光位置，
+    // 保留 IPO 狀態與程式碼標題在原位，讓使用者能持續看到完整流程。
+  } }
 let scrollKey='', lastTyped=0, runScrollLine=-1;
 function compRing(c,k){ let x,y,w,h;
   if(TYPES[c.type].bb){ x=colX(c.col)-12; w=colX(c.col+TYPES[c.type].w-1)+12-x; y=ROWS.a-12; h=ROWS.h-ROWS.a+24; }
