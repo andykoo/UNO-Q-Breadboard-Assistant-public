@@ -132,15 +132,16 @@ aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 .ck.err{background:#fdeceb}.ck.err b{color:var(--err)}
 .ck.info b{color:var(--teal)}
 #stage{position:relative;overflow:hidden;background:radial-gradient(#e6dfc6 1px,transparent 1px) 0 0/18px 18px,#f6f1df;touch-action:none}
-#left,#right{transition:width .2s,opacity .2s}
+#left,#right{position:relative;transition:width .2s,opacity .2s}
 body.leftCollapsed main{grid-template-columns:44px 1fr 370px}
 body.rightCollapsed main{grid-template-columns:300px 1fr 44px}
 body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 #left.collapsed .sec,#left.collapsed #monitorPanel,#right.collapsed>*:not(.sideHeader){display:none}
-.sideHeader{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 10px;background:#1d2a2a;color:#f3eedb;font-size:12px;font-weight:700;flex:none}
-.sideHeader .sideToggle{border:1px solid #5b706b;background:#2a3a3a;color:#f3eedb;border-radius:7px;padding:4px 7px;cursor:pointer;font-size:11px;white-space:nowrap}
-.collapsed .sideHeader{height:100%;padding:8px 5px;justify-content:flex-start;align-items:flex-start}
-.collapsed .sideHeader span{display:none}
+.sideHeader{position:absolute;top:6px;right:8px;z-index:20;padding:0;background:transparent;color:#f3eedb;font-size:12px;font-weight:700}
+.sideHeader span{display:none}
+.sideHeader .sideToggle{border:1px solid #5b706b;background:#2a3a3a;color:#f3eedb;border-radius:7px;padding:2px 6px;cursor:pointer;font-size:18px;line-height:1;white-space:nowrap}
+#left>.sec:first-of-type h3{padding-right:38px}
+.collapsed .sideHeader{position:relative;top:auto;right:auto;height:100%;padding:8px 5px;display:flex;justify-content:flex-start;align-items:flex-start}
 .collapsed .sideHeader .sideToggle{font-size:18px;padding:2px 5px}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
@@ -264,7 +265,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 </header>
 <main>
   <aside id="left">
-    <div class="sideHeader"><span>左側工具</span><button id="toggleLeft" class="sideToggle" title="收起左側">收起</button></div>
+    <div class="sideHeader"><span>左側工具</span><button id="toggleLeft" class="sideToggle" title="收起左側">☰</button></div>
     <div class="sec">
       <h3><span class="n">01</span>元件與腳位</h3>
       <div id="palette"></div>
@@ -302,7 +303,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
   </section>
   <aside id="right">
-    <div class="sideHeader"><span>右側工具</span><button id="toggleRight" class="sideToggle" title="收起右側">收起</button></div>
+    <div class="sideHeader"><span>右側工具</span><button id="toggleRight" class="sideToggle" title="收起右側">☰</button></div>
     <div id="selCard"></div>
     <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="prompt">AI 提示詞</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
     <div class="tabpane on" id="t-wiring"></div>
@@ -1642,8 +1643,8 @@ $('tView').onclick=e=>{viewMode=viewMode==='ipo'?'phys':'ipo';e.target.textConte
 $('tOrder').onclick=e=>{wiresTop=!wiresTop;e.target.textContent=wiresTop?'電線在下':'電線在上';renderCanvas();};
 $('bLock').onclick=e=>{locked=!locked;e.target.classList.toggle('on',locked);e.target.textContent=locked?'已鎖定':'鎖定編輯';$('stage').classList.toggle('locked',locked);$('bAdd').disabled=locked;toast(locked?'已鎖定：只能檢視':'已解除鎖定');};
 $('bFull').onclick=()=>{try{if(!document.fullscreenElement)document.documentElement.requestFullscreen().catch(()=>toast('此環境不支援全螢幕'));else document.exitFullscreen();}catch(e){toast('此環境不支援全螢幕');}};
-$('toggleLeft').onclick=()=>{ const collapsed=$('left').classList.toggle('collapsed'); document.body.classList.toggle('leftCollapsed',collapsed); $('toggleLeft').textContent=collapsed?'›':'收起'; $('toggleLeft').title=collapsed?'展開左側':'收起左側'; requestAnimationFrame(fit); };
-$('toggleRight').onclick=()=>{ const collapsed=$('right').classList.toggle('collapsed'); document.body.classList.toggle('rightCollapsed',collapsed); $('toggleRight').textContent=collapsed?'‹':'收起'; $('toggleRight').title=collapsed?'展開右側':'收起右側'; requestAnimationFrame(fit); };
+$('toggleLeft').onclick=()=>{ const collapsed=$('left').classList.toggle('collapsed'); document.body.classList.toggle('leftCollapsed',collapsed); $('toggleLeft').textContent=collapsed?'›':'☰'; $('toggleLeft').title=collapsed?'展開左側':'收起左側'; requestAnimationFrame(fit); };
+$('toggleRight').onclick=()=>{ const collapsed=$('right').classList.toggle('collapsed'); document.body.classList.toggle('rightCollapsed',collapsed); $('toggleRight').textContent=collapsed?'‹':'☰'; $('toggleRight').title=collapsed?'展開右側':'收起右側'; requestAnimationFrame(fit); };
 $('projName').addEventListener('input',e=>{state.name=e.target.value;persist();});
 
 /* 存檔 / 開啟 / 匯出 */
