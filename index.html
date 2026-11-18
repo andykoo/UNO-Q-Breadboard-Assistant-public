@@ -137,6 +137,8 @@ body.leftCollapsed main{grid-template-columns:44px 1fr 370px}
 body.rightCollapsed main{grid-template-columns:300px 1fr 44px}
 body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 #left.collapsed .sec,#left.collapsed #monitorPanel,#right.collapsed>*:not(.sideHeader){display:none}
+#leftMenu{display:block}
+#left.simRunning #leftMenu{display:none}
 .sideHeader{position:absolute;top:6px;right:8px;z-index:20;padding:0;background:transparent;color:#f3eedb;font-size:12px;font-weight:700}
 .sideHeader span{display:none}
 .sideHeader .sideToggle{border:1px solid #5b706b;background:#2a3a3a;color:#f3eedb;border-radius:7px;padding:2px 6px;cursor:pointer;font-size:18px;line-height:1;white-space:nowrap}
@@ -145,7 +147,7 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 .collapsed .sideHeader .sideToggle{font-size:18px;padding:2px 5px}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
-#monitorPanel{position:relative;width:auto;margin:12px 14px;display:none;background:#1d2626f2;border:2px solid #5b706b;border-radius:12px;padding:7px 9px;box-shadow:0 8px 24px #0005;pointer-events:auto}
+#monitorPanel{position:absolute;inset:0;width:auto;margin:0;display:none;background:#1d2626f2;border:0;border-radius:0;padding:14px;box-shadow:none;overflow:auto;pointer-events:auto}
 #monitorPanel.on{display:block}
 #monitorPanel h5{margin:0 0 5px;color:#d7ebe4;font-size:12px;display:flex;align-items:center;justify-content:space-between}
 #monitorPanel .iconbtn{color:#d7ebe4}
@@ -266,6 +268,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 <main>
   <aside id="left">
     <div class="sideHeader"><span>左側工具</span><button id="toggleLeft" class="sideToggle" title="收起左側">☰</button></div>
+    <div id="leftMenu">
     <div class="sec">
       <h3><span class="n">01</span>元件與腳位</h3>
       <div id="palette"></div>
@@ -280,6 +283,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="sec">
       <h3><span class="n">03</span><span id="chkTitle">UNO Q 電壓與腳位檢查</span></h3>
       <div class="checks" id="checks"></div>
+    </div>
     </div>
     <div id="monitorPanel"><h5>序列監控 Monitor <button class="iconbtn" id="bClr">清除</button></h5><pre id="con"></pre></div>
   </aside>
@@ -2042,7 +2046,7 @@ function stopSim(silent){ if(!SIM.run) return; SIM.run.stop=true; SIM.run=null; 
 function updateSimUI(){
   const r=SIM.running; $('bRun').disabled=false; $('bRun').textContent=r?'↻ 重新執行':'▶ 執行'; $('bStop').disabled=!r;
   $('bSim').textContent=r?'■ 停止模擬':'▶ 模擬'; $('bSim').classList.toggle('on',r);
-  $('monitorPanel').classList.toggle('on',r);
+  $('left').classList.toggle('simRunning',r); $('monitorPanel').classList.toggle('on',r);
   $('simBanner').style.display=r?'flex':'none';
   const boot=r&&SIM.phase==='setup';
   $('simBannerTxt').textContent=boot?'開機中：正在執行 setup()，完成後 loop() 才會讀取輸入':'模擬中・點住按鈕、上下拖曳旋鈕';
