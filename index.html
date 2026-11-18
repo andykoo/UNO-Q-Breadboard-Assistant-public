@@ -1191,7 +1191,11 @@ function srcFrames(){ const st=String(new Error().stack||''); const out=[];
   st.split('\n').forEach(l=>{ const m=l.match(/<anonymous>:(\d+):\d+\)?\s*$/)||l.match(/> Function:(\d+):\d+\s*$/); if(m){ const i=parseInt(m[1],10)-SRC_OFF; if(i>=0) out.push(i); } });
   return out; }   // 由內而外：最前面是實際讀寫的那一行，最後面是 loop() 裡的那一行
 function selectCodeLine(line){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; const end=start+(lines[line]||'').length; ta.focus({preventScroll:true}); ta.setSelectionRange(start,end); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); }
-function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; const line=frames[frames.length-1]; const changed=line!==SIM.execLine; SIM.execLine=line; SIM.execAt=performance.now(); if(changed){ SIM.focusLine=-1; SIM.focusStage=''; selectCodeLine(line); hlSig=''; schedule(); } }
+function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; const line=frames[frames.length-1]; const changed=line!==SIM.execLine; SIM.execLine=line; SIM.execAt=performance.now(); if(changed){
+  // 使用者點選 IPO 後，指定的區塊優先於模擬器目前執行行；不要在這裡清除 focusLine。
+  if(SIM.focusLine<0){ selectCodeLine(line); hlSig=''; }
+  schedule(); }
+}
 const ipoFlowOn=()=>!$('ipoFlow')||$('ipoFlow').checked;
 function inputPulse(inp){ if(!ipoFlowOn()) return; const now=performance.now();
   if(SIM.pulses.some(p=>p.inp&&p.inp.id===inp.id&&now-p.t0<500)) return;
@@ -1264,7 +1268,7 @@ let hlSig='';
 function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
   const L=FX.lines;
   const activeLine=SIM.focusLine>=0?SIM.focusLine:SIM.execLine;
-  const sig=SIM.running?JSON.stringify(FX.lines)+'|'+activeLine+'|'+ta.scrollTop:'';
+  const sig=JSON.stringify(FX.lines)+'|'+activeLine+'|'+ta.scrollTop+'|'+SIM.focusStage+'|'+SIM.running;
   if(sig===hlSig) return; hlSig=sig; if(!SIM.running&&SIM.focusLine<0){ box.innerHTML=''; return; }
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25, pt=parseFloat(cs.paddingTop)+parseFloat(cs.borderTopWidth);
   let h=''; const first={};
