@@ -80,6 +80,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 #ipoBar .ic{position:relative}
 #ipoBar .ic{flex-wrap:wrap}
 #ipoBar .ic.current{outline:2px solid currentColor;outline-offset:1px}
+#ipoBar .ic.current{animation:ipoRowPulse .85s ease-in-out infinite}
 #ipoBar .ic.current:nth-child(1){background:#dbeafe;color:#1e40af}
 #ipoBar .ic.current:nth-child(3){background:#ede9fe;color:#5b21b6}
 #ipoBar .ic.current:nth-child(5){background:#ffedd5;color:#9a3412}
@@ -88,6 +89,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .stageLamp{display:none;width:10px;height:10px;margin-left:5px;border-radius:50%;background:currentColor;box-shadow:0 0 0 3px currentColor;opacity:.25}
 #ipoBar .ic.current .stageLamp{display:inline-block;animation:stageBlink .75s ease-in-out infinite}
 @keyframes stageBlink{0%,100%{opacity:.25;transform:scale(.75)}50%{opacity:1;transform:scale(1.15);box-shadow:0 0 0 5px currentColor}}
+@keyframes ipoRowPulse{0%,100%{filter:brightness(1);box-shadow:0 0 0 0 currentColor}50%{filter:brightness(1.12);box-shadow:0 0 0 4px currentColor}}
 .stageReason{display:none;flex-basis:100%;margin:5px 0 2px;padding:6px 8px;border-left:3px solid currentColor;border-radius:6px;background:#f8fafc;color:#475569;font-size:11.5px;line-height:1.45}
 #ipoBar .ic.current .stageReason{display:block}
 #boardSel{background:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:6px 8px;color:#fff;font-weight:700;cursor:pointer}
@@ -1146,7 +1148,7 @@ function ioValue(c){ const v=inp(c);
 function updateIpoBar(){
   const sec=$('ipoSec'); if(!SIM.running){ sec.style.display='none'; return; } sec.style.display='';
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-  let stage='wait', stageText='loop() 待機：等待輸入', stageReason='等待輸入條件改變', inSetup=SIM.phase==='setup';
+  let stage='I', stageText='I 輸入：等待輸入', stageReason='等待輸入條件改變', inSetup=SIM.phase==='setup';
   if(inSetup){ stage='I'; stageText='setup() 初始化：準備硬體'; }
   else if(FX.flowO.size||FX.glowO.size){ stage='O'; stageText='O 輸出：更新元件或螢幕'; }
   else if(FX.boardP||FX.rules.size){ stage='P'; stageText='P 處理：判斷規則'; }
@@ -1156,7 +1158,7 @@ function updateIpoBar(){
   Object.keys(BD().onboard).forEach(id=>{ if(SIM.obRead&&SIM.obRead[id]) I.push(`<span class="iv">${esc(BD().onboard[id].label)}：<b>${SIM.pressed['ob_'+id]?'按下':'放開'}</b></span>`); });
   const rs=validRules();
   if(inSetup) stageReason='setup() 尚未完成，程式還沒有進入 loop()。';
-  else if(stage==='I') stageReason='正在讀取按鈕或感測器輸入。';
+  else if(stage==='I') stageReason=(FX.flowI.size||FX.glowI.size||FX.obGlow.size)?'正在讀取按鈕或感測器輸入。':'等待輸入條件改變。';
   else if(stage==='P') stageReason='正在比對 P 規則，判斷條件是否成立。';
   else if(stage==='O') stageReason='規則已成立，正在更新 LCD 或其他輸出。';
   else if(!rs.length) stageReason='沒有 P 規則，請到 AI 提示詞建立規則。';
