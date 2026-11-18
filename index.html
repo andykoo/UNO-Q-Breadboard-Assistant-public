@@ -211,6 +211,8 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 .simbar .btn{padding:7px 10px}
 .simbar .btn:disabled{opacity:.45;cursor:default}
 #t-sim h5{margin:14px 0 6px;font-size:12.5px;color:var(--teal-d);display:flex;align-items:center;justify-content:space-between}
+#t-sim>#ipoSec{position:sticky;top:-12px;z-index:5;margin:-12px -14px 10px;padding:10px 14px 8px;background:var(--paper);border-bottom:2px solid var(--line);box-shadow:0 3px 8px #0001}
+#t-sim>#ipoSec h5{margin:0 0 6px}
 #code{min-height:260px;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:transparent;color:#e8f0ec;tab-size:2;white-space:pre;overflow:auto;position:relative;z-index:1;display:block}
 .codewrap{position:relative;background:#1d2626;border-radius:10px;overflow:hidden}
 #codeHL{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
@@ -337,9 +339,9 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
       <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div>
-      <h5>互動控制</h5><div id="simCtrls"></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
+      <h5>互動控制</h5><div id="simCtrls"></div>
       <p class="note">模擬器支援常用的 Arduino 語法與函式（pinMode、digitalWrite/Read、analogRead/Write、delay、millis、tone、pulseIn、Servo／AmebaServo、Adafruit_SSD1306、DHT、Monitor／Serial）。類別、指標、static 區域變數等進階語法不支援；整數除法會以小數計算。</p>
     </div>
     <div class="tabpane" id="t-pins"></div>
