@@ -1262,6 +1262,7 @@ function computeFX(){ if(!SIM.running) return EMPTY_FX; const now=performance.no
   return fx; }
 let hlSig='';
 function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
+  const L=FX.lines;
   const activeLine=SIM.focusLine>=0?SIM.focusLine:SIM.execLine;
   const sig=SIM.running?JSON.stringify(FX.lines)+'|'+activeLine+'|'+ta.scrollTop:'';
   if(sig===hlSig) return; hlSig=sig; if(!SIM.running&&SIM.focusLine<0){ box.innerHTML=''; return; }
