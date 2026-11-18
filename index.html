@@ -141,6 +141,11 @@ aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 .ck.info b{color:var(--teal)}
 #stage{position:relative;overflow:hidden;background:radial-gradient(#e6dfc6 1px,transparent 1px) 0 0/18px 18px,#f6f1df;touch-action:none}
 #left,#right{position:relative;transition:width .2s,opacity .2s}
+body.flowExpanded main{grid-template-columns:300px 1fr}
+body.flowExpanded #stage{display:none}
+body.flowExpanded #right{grid-column:2;border-left:0}
+body.flowExpanded #right .tabs{position:sticky;top:0;z-index:8}
+body.flowExpanded #t-flow{min-height:calc(100% - 46px)}
 body.leftCollapsed main{grid-template-columns:44px 1fr 370px}
 body.rightCollapsed main{grid-template-columns:300px 1fr 44px}
 body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
@@ -341,7 +346,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="flow">流程圖</button><button data-t="prompt">AI 提示詞</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
     <div class="tabpane on" id="t-wiring"></div>
     <div class="tabpane" id="t-flow">
-      <div class="flowbar"><button class="btn ghost" data-flow-add="I">＋ I 輸入</button><button class="btn ghost" data-flow-add="P">＋ P 處理</button><button class="btn ghost" data-flow-add="O">＋ O 輸出</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button></div>
+      <div class="flowbar"><button class="btn ghost" data-flow-add="I">＋ I 輸入</button><button class="btn ghost" data-flow-add="P">＋ P 處理</button><button class="btn ghost" data-flow-add="O">＋ O 輸出</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">恢復原本版面</button></div>
       <p class="flowhint">先新增節點，再拖曳排列；菱形請按右鍵選「連接是／否分支」，要接入菱形則選「指定上游輸入」。一般連線按「連線」後依序點兩個節點。</p>
       <div class="flowlayout"><div class="flowcanvas" id="flowCanvas"><svg id="flowSvg" viewBox="0 0 600 460" preserveAspectRatio="none"><defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="flowLinks"></g></svg><div id="flowNodes"></div></div><div class="flowinspect" id="flowInspect"><h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div></div></div>
     </div>
@@ -1705,9 +1710,10 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
   if(b.dataset.act==='edit'){if(locked){toast('目前為鎖定狀態');return;}editComp(id);} if(b.dataset.act==='del')delComp(id);});
 $('list').addEventListener('click',e=>{if(e.target.closest('[data-act]'))return;const it=e.target.closest('.item');if(!it)return;selectedId=selectedId===it.dataset.id?null:it.dataset.id;renderAll();});
 $('bShowAll').onclick=()=>{selectedId=null;renderAll();};
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));document.body.classList.toggle('flowExpanded',b.dataset.t==='flow');});
 document.querySelectorAll('[data-flow-add]').forEach(b=>b.onclick=()=>addFlowNode(b.dataset.flowAdd));
 $('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
+$('flowRestore').onclick=()=>document.body.classList.remove('flowExpanded');
 $('flowConnect').onclick=()=>{flowConnectMode=!flowConnectMode;flowConnectFrom=null;flowConnectTo=null;flowConnectLabel='';$('flowConnect').classList.toggle('on',flowConnectMode);$('flowConnect').textContent=flowConnectMode?'↔ 點兩個節點連線':'↔ 連線';renderFlow();};
 $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.flow-node');if(!el)return;const id=el.dataset.flowId;
   if(e.button===2)return;
