@@ -216,7 +216,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 #t-sim>#ipoSec h5{margin:0 0 6px}
 #code{min-height:260px;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:transparent;color:#e8f0ec;tab-size:2;white-space:pre;overflow:auto;position:relative;z-index:1;display:block}
 .codewrap{position:relative;background:#1d2626;border-radius:10px;overflow:hidden}
-#codeHL{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#codeHL{position:absolute;inset:0;pointer-events:none;z-index:2;overflow:hidden}
 .hlb{position:absolute;left:0;right:0;border-left:4px solid}
 .hlt{position:absolute;right:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;border-radius:4px;padding:0 5px;z-index:2}
 .runTag{position:absolute;left:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;background:#f59e0b;border-radius:4px;padding:0 5px;z-index:2}
@@ -1258,18 +1258,19 @@ function computeFX(){ if(!SIM.running) return EMPTY_FX; const now=performance.no
   return fx; }
 let hlSig='';
 function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
-  const L=FX.lines, sig=SIM.running?JSON.stringify(L)+'|'+SIM.execLine+'|'+ta.scrollTop:'';
+  const activeLine=SIM.focusLine>=0?SIM.focusLine:SIM.execLine;
+  const sig=SIM.running?JSON.stringify(FX.lines)+'|'+activeLine+'|'+ta.scrollTop:'';
   if(sig===hlSig) return; hlSig=sig; if(!SIM.running){ box.innerHTML=''; return; }
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25, pt=parseFloat(cs.paddingTop)+parseFloat(cs.borderTopWidth);
   let h=''; const first={};
   [['I','rgba(37,99,235,.42)','#60a5fa'],['P','rgba(124,58,237,.45)','#c4b5fd'],['O','rgba(217,72,15,.45)','#fdba74']].forEach(([k,bg,bd])=>{
     [...new Set(L[k])].forEach(i=>{ if(first[k]===undefined) first[k]=i; h+=`<div class="hlb" style="top:${f1(pt+i*lh-ta.scrollTop)}px;height:${f1(lh)}px;background:${bg};border-left-color:${bd}"></div>`; });
     if(first[k]!==undefined) h+=`<div class="hlt" style="top:${f1(pt+first[k]*lh-ta.scrollTop)}px;background:${bd}">${k}</div>`; });
-  if(SIM.execLine>=0) h+=`<div class="runline" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px"></div><div class="runTag" style="top:${f1(pt+SIM.execLine*lh-ta.scrollTop)}px">RUN</div>`;
+  if(activeLine>=0) h+=`<div class="runline" style="top:${f1(pt+activeLine*lh-ta.scrollTop)}px"></div><div class="runTag" style="top:${f1(pt+activeLine*lh-ta.scrollTop)}px">${SIM.focusLine>=0?'跳轉':'RUN'}</div>`;
   box.innerHTML=h;
-  if(SIM.execLine>=0&&SIM.execLine!==runScrollLine&&performance.now()-lastTyped>500){
-    runScrollLine=SIM.execLine;
-    const lineTop=pt+SIM.execLine*lh, viewTop=ta.scrollTop, viewBottom=viewTop+ta.clientHeight-lh;
+  if(activeLine>=0&&activeLine!==runScrollLine&&(SIM.focusLine>=0||performance.now()-lastTyped>500)){
+    runScrollLine=activeLine;
+    const lineTop=pt+activeLine*lh, viewTop=ta.scrollTop, viewBottom=viewTop+ta.clientHeight-lh;
     if(lineTop<viewTop||lineTop>viewBottom) ta.scrollTo({top:Math.max(0,lineTop-ta.clientHeight*.35),behavior:'smooth'});
   }
   // 新出現的區塊不在畫面內時，捲到看得到的位置
@@ -1641,7 +1642,7 @@ function jumpToCodeStage(stage){
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
-  SIM.execLine=line; hlSig=''; updateCodeHL();
+  SIM.focusLine=line; SIM.execLine=line; runScrollLine=line; hlSig=''; updateCodeHL();
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
@@ -1791,7 +1792,7 @@ function lcdScreen(c,x,y,w){
   return `<image href="${L.url}" x="${x}" y="${y}" width="${w}" height="${w}" style="image-rendering:pixelated"/>`;
 }
 function inp(c){ if(!INPUTS[c.id]) INPUTS[c.id]=c.type==='pot'?{v:.5}:c.type==='ldr'?{v:.6}:c.type==='sonar'?{d:30}:c.type==='dht'?{t:26,h:60}:{}; return INPUTS[c.id]; }
-const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0};
+const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0,focusLine:-1};
 const STOP={stop:true};
 function pinOf(n){ return BD().pinOf(n); }
 function ps(id){ return SIM.P[id]||(SIM.P[id]={mode:'INPUT',v:0,pwm:null,tone:0}); }
@@ -2049,7 +2050,7 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
+  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
