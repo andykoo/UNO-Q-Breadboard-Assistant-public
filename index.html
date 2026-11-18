@@ -56,7 +56,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .ipot small{font-weight:400;color:var(--muted);font-size:11.5px}
 .ipobox textarea{min-height:0;height:54px;font-size:12.5px;padding:7px 8px;margin-top:6px}
 .auto{font-size:12px;line-height:1.6;color:#334155}
-.auto div{display:flex;gap:6px}
+.auto div{display:flex;gap:6px}.ioGuide{display:flex!important;align-items:flex-start;margin:5px 0;padding:5px 6px;border-radius:7px;background:#fff;border:1px dashed var(--line);font-size:11.5px}.ioGuide input{flex:1;min-width:0;border:1px solid var(--line);border-radius:6px;padding:4px 6px;font-size:11.5px}.ioGuide .ioText{flex:1;line-height:1.35}
 .auto .none{color:var(--muted)}
 .rule{background:#fff;border:1px solid #ddd6fe;border-radius:10px;padding:7px 8px;margin-bottom:7px;font-size:12.5px}
 .rule .rh{display:flex;align-items:center;justify-content:space-between;color:#6d28d9;font-weight:700;margin-bottom:4px}
@@ -1127,8 +1127,8 @@ const COND_UNIT=(t,cond)=>cond==='every'?'毫秒':t==='sonar'&&(cond==='gt'||con
 const ACT_OPTS={led:[['on','亮'],['off','熄滅'],['blink','閃爍'],['follow','亮度跟著輸入']],buzzer:[['on','響'],['off','安靜'],['beep','嗶嗶叫']],
   servo:[['angle','轉到（度）'],['follow','角度跟著輸入']],oled:[['show','顯示文字'],['clear','清除文字']],lcd:[['open','張開眼睛'],['close','閉上眼睛'],['blink','眨眼']]};
 const LEVELS={full:'完整程式',fill:'架構填空',ask:'只問我問題'};
-const defaultIpo=()=>({level:'full',i:'',p:'',o:'',rules:[]});
-function normIpo(q){ q=Object.assign(defaultIpo(),q||{}); if(!Array.isArray(q.rules)) q.rules=[]; if(!LEVELS[q.level]) q.level='full'; return q; }
+const defaultIpo=()=>({level:'full',i:'',p:'',o:'',rules:[],details:{I:{},O:{}}});
+function normIpo(q){ q=Object.assign(defaultIpo(),q||{}); if(!Array.isArray(q.rules)) q.rules=[]; if(!LEVELS[q.level]) q.level='full'; if(!q.details||typeof q.details!=='object') q.details={I:{},O:{}}; q.details.I=q.details.I||{}; q.details.O=q.details.O||{}; return q; }
 const byId=id=>state.comps.find(c=>c.id===id);
 const ipoComps=k=>state.comps.filter(c=>IPO_OF[c.type]===k);
 function inpType(r){ if(r.inp==='timer') return 'timer'; if(String(r.inp).startsWith('ob_')) return 'ob'; const c=byId(r.inp); return c?c.type:null; }
@@ -1577,12 +1577,12 @@ const LEVEL_TEXT={
 function promptText(){
   const q=normIpo(state.ipo), ins=ipoComps('I'), outs=ipoComps('O'), rs=validRules();
   const L=[BD().promptHead,'請用 IPO（I 輸入 → P 處理 → O 輸出）的方式協助我完成這個專案。',''];
-  L.push('【I 輸入：要感測什麼】'); (ins.length?ins:[null]).forEach(c=>L.push(c?'- '+compLine(c):'- （還沒有輸入元件）'));
+  L.push('【I 輸入：要感測什麼】'); (ins.length?ins:[null]).forEach(c=>{if(!c){L.push('- （還沒有輸入元件）');return;}L.push('- '+compLine(c));if(q.details.I[c.id])L.push('  使用者補充：'+q.details.I[c.id]);});
   Object.keys(BD().onboard).forEach(id=>{ if(rs.some(r=>r.inp==='ob_'+id)) L.push(`- ${BD().onboard[id].label}：開發板內建，${pinWord(id)}，按下時讀到 LOW`); });
   if(q.i.trim()) L.push('我想感測：'+q.i.trim()); L.push('');
   L.push('【P 處理：我的規則】'); (rs.length?rs:[null]).forEach((r,k)=>L.push(r?`- 規則 ${k+1}：${ruleText(r,true)}`:'- （還沒有規則）'));
   if(q.p.trim()) L.push('其他想法：'+q.p.trim()); L.push('');
-  L.push('【O 輸出：要產生什麼結果】'); (outs.length?outs:[null]).forEach(c=>L.push(c?'- '+compLine(c):'- （還沒有輸出元件）'));
+  L.push('【O 輸出：要產生什麼結果】'); (outs.length?outs:[null]).forEach(c=>{if(!c){L.push('- （還沒有輸出元件）');return;}L.push('- '+compLine(c));if(q.details.O[c.id])L.push('  使用者補充：'+q.details.O[c.id]);});
   if(q.o.trim()) L.push('我希望的結果：'+q.o.trim()); L.push('');
   L.push('【硬體注意事項】',BD().promptNotes,'','【請你這樣回答】',LEVEL_TEXT[q.level],'');
   L.push('最後請用四個問題引導我反思：我知道什麼？我怎麼做？我產出什麼？我有什麼感受與需求？並提醒我想一想下一步可以怎麼改進。');
@@ -1608,9 +1608,9 @@ function renderIPO(force){
   document.querySelectorAll('#lvl button').forEach(b=>b.classList.toggle('on',b.dataset.l===q.level));
   ['i','p','o'].forEach(k=>{ const el=$('ipo'+k.toUpperCase()); if(document.activeElement!==el&&el.value!==q[k]) el.value=q[k]; });
   if(force||sig!==ipoSig){ ipoSig=sig;
-    const line=c=>`<div><span class="ipo ${IPO_OF[c.type]}">${IPO_OF[c.type]}</span><span>${compName(c)}・${Object.values(c.pins).map(pinLabel).join('、')||'Qwiic'}</span></div>`;
-    $('ipoIAuto').innerHTML=ipoComps('I').map(line).join('')||'<div class="none">還沒有輸入元件（從左側 I 區加入）</div>';
-    $('ipoOAuto').innerHTML=ipoComps('O').map(line).join('')||'<div class="none">還沒有輸出元件（從左側 O 區加入）</div>';
+    const line=(c,k)=>`<div class="ioGuide"><span class="ipo ${IPO_OF[c.type]}">${IPO_OF[c.type]}</span><span class="ioText"><b>${compName(c)}・${Object.values(c.pins).map(pinLabel).join('、')||'Qwiic'}</b><br><span style="color:var(--muted)">${k==='I'?'請說明要感測什麼、何時算觸發':'請說明希望這個輸出做什麼、顯示什麼結果'}</span><input data-io-detail="${k}" data-id="${c.id}" value="${flowEsc(q.details[k][c.id]||'')}" placeholder="${k==='I'?'例如：按下按鈕時觸發':'例如：閉上眼睛並顯示提示文字'}"></span></div>`;
+    $('ipoIAuto').innerHTML=ipoComps('I').map(c=>line(c,'I')).join('')||'<div class="none">還沒有輸入元件（從左側 I 區加入）</div>';
+    $('ipoOAuto').innerHTML=ipoComps('O').map(c=>line(c,'O')).join('')||'<div class="none">還沒有輸出元件（從左側 O 區加入）</div>';
     const vr=validRules(), cnt={}; vr.forEach((r,k)=>{ (cnt[r.out]=cnt[r.out]||[]).push(k+1); });
     const dup=Object.entries(cnt).filter(([,ks])=>ks.length>1).map(([id,ks])=>`規則 ${ks.join('、')} 都在控制「${compName(byId(id))}」：程式由上往下執行，後面的規則會蓋過前面。想一想：哪一條比較重要？要不要合併成一條？`);
     $('ruleList').innerHTML=(q.rules.map(ruleRow).join('')||'<div class="auto none" style="margin-bottom:6px">還沒有規則。按「新增規則」，用「當…就…否則…」寫下開發板要怎麼判斷。</div>')+dup.map(t=>`<div class="ck warn" style="margin-bottom:7px"><b>⚠</b><span>${t}</span></div>`).join(''); }
@@ -1740,6 +1740,7 @@ function jumpToCodeStage(stage){
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
 ['i','p','o'].forEach(k=>$('ipo'+k.toUpperCase()).addEventListener('input',e=>{ state.ipo[k]=e.target.value; persist(); $('promptTxt').value=promptText(); if(k==='p') $('ruleErr').textContent=''; }));
+['ipoIAuto','ipoOAuto'].forEach(id=>$(id).addEventListener('input',e=>{const el=e.target.closest('[data-io-detail]');if(!el)return;const k=el.dataset.ioDetail;state.ipo.details[k][el.dataset.id]=el.value;persist();$('promptTxt').value=promptText();}));
 $('ruleList').addEventListener('focusout',e=>{ if(e.target.matches('input[data-rk]')) ipoChanged(true); });
 $('bAddRule').onclick=()=>{ if(!ipoComps('O').length){ toast('先在左側 O 區加入輸出元件，才能寫規則'); return; } state.ipo.rules.push(newRule()); $('ruleErr').textContent=''; ipoChanged(true); };
 $('ruleList').addEventListener('click',e=>{ const d=e.target.closest('[data-rdel]'); if(!d) return; const id=d.closest('.rule').dataset.rid; state.ipo.rules=state.ipo.rules.filter(r=>r.id!==id); ipoChanged(true); });
