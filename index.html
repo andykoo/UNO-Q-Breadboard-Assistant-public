@@ -47,6 +47,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .item .ipo{margin-right:2px}
 .ipoH{font-size:12.5px;line-height:1.6;color:var(--ink);background:#faf6e8;border-radius:10px;padding:8px 10px}
 .functionCard{border:2px solid var(--teal);border-radius:12px;background:#fff;padding:10px 12px;margin:10px 0}.functionCard h4{margin:0 0 7px;color:var(--teal-d);font-size:14px}.functionGrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}.functionGrid label{font-size:11.5px;color:var(--muted)}.functionGrid input,.functionGrid textarea{width:100%;box-sizing:border-box;margin-top:3px;border:1px solid var(--line);border-radius:7px;padding:6px;font-size:12px;background:#fff}.functionGrid textarea{min-height:48px;resize:vertical}.functionGrid .wide{grid-column:1/-1}
+.functionTabs{display:flex;gap:5px;align-items:center;overflow-x:auto;margin:8px 0}.functionTabs button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 9px;color:var(--muted);cursor:pointer;white-space:nowrap;font-size:12px}.functionTabs button.on{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700}.functionTabs button.add{border-style:dashed;color:var(--teal-d)}.functionTabs button.del{padding:4px 7px;color:#b91c1c}
 .seg{display:flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}
 .seg button{flex:1;border:0;background:#fff;padding:7px 4px;cursor:pointer;font-size:12.5px;color:var(--muted)}
 .seg button+button{border-left:1px solid var(--line)}
@@ -355,6 +356,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
     <div class="tabpane" id="t-prompt">
       <div class="ipoH"><b>先設計規則，再產生流程圖與程式。</b>硬體元件由接線帶入；你只要說清楚輸入、判斷和輸出。</div>
+      <div class="functionTabs" id="functionTabs"></div>
       <div class="functionCard"><h4>功能設定：這個專案要完成什麼功能？</h4><div class="functionGrid"><label class="wide">功能名稱<input id="fnName" placeholder="例如：按鈕控制機器人表情"></label><label>為什麼要做？<textarea id="fnWhy" placeholder="例如：讓學生了解按鈕如何控制 LCD"></textarea></label><label>功能用途<textarea id="fnUse" placeholder="例如：按下按鈕閉眼，放開按鈕張眼"></textarea></label></div></div>
       <details class="hardwareSummary" open><summary>硬體元件（依接線自動帶入）</summary><div class="hardwareCols"><div><b class="hI">I 輸入</b><div id="hardwareIAuto"></div></div><div><b class="hO">O 輸出</b><div id="hardwareOAuto"></div></div></div></details>
       <div class="field"><label>希望 AI 怎麼幫我</label><div class="seg" id="lvl"><button data-l="full">完整程式</button><button data-l="fill">架構填空</button><button data-l="ask">只問我問題</button></div></div>
@@ -654,7 +656,7 @@ const defaultFlow=()=>({nodes:[
   {id:'f_o',type:'O',title:'LCD 顯示閉眼',text:'輸出機器人閉眼表情',x:28,y:340}
 ],links:[['f_start','f_i'],['f_i','f_p'],['f_p','f_o']]});
 function normFlow(f){ if(!f||!Array.isArray(f.nodes)) return defaultFlow(); return {nodes:f.nodes.map((n,i)=>({id:n.id||'f_'+uid(),type:['start','I','P','O','decision','loop','end'].includes(n.type)?n.type:'P',compId:n.compId||'',autoRule:n.autoRule||'',title:n.title||'流程節點',text:n.text||'',x:Number.isFinite(n.x)?n.x:24+(i%3)*170,y:Number.isFinite(n.y)?n.y:24+Math.floor(i/3)*100})),links:Array.isArray(f.links)?f.links.filter(x=>Array.isArray(x)&&x.length>=2):[]}; }
-let state = {name:'未命名專案', comps:[], code:'', codeAuto:true, board:'unoq', ipo:{level:'full',i:'',p:'',o:'',rules:[]}, flow:defaultFlow()};
+let state = {name:'未命名專案', comps:[], code:'', codeAuto:true, board:'unoq', ipo:{level:'full',i:'',p:'',o:'',rules:[]}, functions:[],activeFunctionId:'', flow:defaultFlow()};
 let selType='led', selectedId=null, locked=false, showWires=true, showParts=true, wiresTop=false;
 const view={x:0,y:0,k:1};
 const uid=()=>Math.random().toString(36).slice(2,9);
@@ -1610,8 +1612,14 @@ function ruleRow(r,k){ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g
    <div class="rl">就 ${outOpts.length?`<select data-rk="out">${optList(outOpts,r.out)}</select><select data-rk="act">${optList(ao,r.act)}</select>${av(r.act)}`:'<span class="unit">（先在左側加入輸出元件）</span>'}</div>
    ${r.cond==='always'?'':`<div class="rl">否則 <select data-rk="els">${optList([['none','不改變'],...ao],r.els)}</select>${r.els&&r.els!=='none'?av(r.els):''}</div>`}
    <div class="say">${ruleValid(r)?esc(ruleText(r)):'這條規則還不完整：請選好輸入和輸出元件。'}</div></div>`; }
+function ensureFunctionStore(){if(!Array.isArray(state.functions)||!state.functions.length){const id='fn_'+uid();state.functions=[{id,ipo:JSON.parse(JSON.stringify(normIpo(state.ipo)))}];state.activeFunctionId=id;}let f=state.functions.find(x=>x.id===state.activeFunctionId);if(!f){f=state.functions[0];state.activeFunctionId=f.id;}f.ipo=normIpo(f.ipo);}
+function saveActiveFunction(){ensureFunctionStore();const f=state.functions.find(x=>x.id===state.activeFunctionId);if(f)f.ipo=JSON.parse(JSON.stringify(normIpo(state.ipo)));}
+function renderFunctionTabs(){const el=$('functionTabs');if(!el)return;ensureFunctionStore();el.innerHTML=state.functions.map((f,i)=>`<button class="${f.id===state.activeFunctionId?'on':''}" data-fid="${f.id}">${flowEsc(f.ipo.function.name||`功能 ${i+1}`)}</button>`).join('')+`<button class="add" id="addFunction">＋ 新增功能</button>${state.functions.length>1?'<button class="del" id="deleteFunction">刪除目前功能</button>':''}`;}
+function activateFunction(id){saveActiveFunction();const f=state.functions.find(x=>x.id===id);if(!f)return;state.activeFunctionId=id;state.ipo=JSON.parse(JSON.stringify(normIpo(f.ipo)));ipoSig='';renderAll();persist();}
+function addFunction(){saveActiveFunction();const id='fn_'+uid(),q=defaultIpo();q.function.name=`功能 ${state.functions.length+1}`;state.functions.push({id,ipo:q});state.activeFunctionId=id;state.ipo=JSON.parse(JSON.stringify(q));ipoSig='';persist();renderAll();}
+function deleteActiveFunction(){if(state.functions.length<=1)return;saveActiveFunction();const i=state.functions.findIndex(x=>x.id===state.activeFunctionId);state.functions.splice(i,1);const f=state.functions[Math.max(0,i-1)];state.activeFunctionId=f.id;state.ipo=JSON.parse(JSON.stringify(f.ipo));ipoSig='';persist();renderAll();}
 function renderIPO(force){
-  pruneRules(); const q=state.ipo;
+  ensureFunctionStore(); renderFunctionTabs(); pruneRules(); saveActiveFunction(); const q=state.ipo;
   const sig=B_ID+'|'+state.comps.map(c=>c.id+c.type+compName(c)+Object.values(c.pins).join()).join('|')+'|'+JSON.stringify(q.rules)+'|'+JSON.stringify(q.function);
   document.querySelectorAll('#lvl button').forEach(b=>b.classList.toggle('on',b.dataset.l===q.level));
   ['i','p','o'].forEach(k=>{ const el=$('ipo'+k.toUpperCase()); if(document.activeElement!==el&&el.value!==q[k]) el.value=q[k]; });
@@ -1730,6 +1738,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.que
 document.querySelectorAll('[data-flow-add]').forEach(b=>b.onclick=()=>addFlowNode(b.dataset.flowAdd));
 $('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
 $('flowRestore').onclick=()=>document.body.classList.remove('flowExpanded');
+$('functionTabs').addEventListener('click',e=>{const b=e.target.closest('[data-fid]');if(b){activateFunction(b.dataset.fid);return;}if(e.target.id==='addFunction')addFunction();if(e.target.id==='deleteFunction')deleteActiveFunction();});
 $('flowConnect').onclick=()=>{flowConnectMode=!flowConnectMode;flowConnectFrom=null;flowConnectTo=null;flowConnectLabel='';$('flowConnect').classList.toggle('on',flowConnectMode);$('flowConnect').textContent=flowConnectMode?'↔ 點兩個節點連線':'↔ 連線';renderFlow();};
 $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.flow-node');if(!el)return;const id=el.dataset.flowId;
   if(e.button===2)return;
@@ -1782,7 +1791,7 @@ $('projName').addEventListener('input',e=>{state.name=e.target.value;persist();}
 const LS='unoq-bb-projects', LSC='unoq-bb-current';
 function lsGet(k){try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}}
 function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}}
-function persist(){lsSet(LSC,state);}
+function persist(){ensureFunctionStore();saveActiveFunction();lsSet(LSC,state);}
 $('bSave').onclick=()=>{const all=lsGet(LS)||{};all[state.name]={...state,saved:Date.now()};toast(lsSet(LS,all)?`已存到此瀏覽器：${state.name}`:'此環境無法存到瀏覽器，請用「匯出檔案」');};
 $('bOpen').onclick=()=>{const all=lsGet(LS)||{};const ks=Object.keys(all);
   modal(`<h2>開啟已存專案</h2>${ks.length?`<div class="list">${ks.map(k=>`<div class="item" data-open="${encodeURIComponent(k)}"><div class="nm">${k}<small>${all[k].comps.length} 個元件・${new Date(all[k].saved).toLocaleString()}</small></div><button class="iconbtn" data-rm="${encodeURIComponent(k)}">✕</button></div>`).join('')}</div>`:'<p>這個瀏覽器還沒有存過專案。也可以用「匯入檔案」開啟 .json 專案檔。</p>'}
@@ -1806,10 +1815,10 @@ $('bPng').onclick=()=>{
   const img=new Image();img.onload=()=>{const cv=document.createElement('canvas');cv.width=W*r;cv.height=Hh*r;cv.getContext('2d').drawImage(img,0,0);cv.toBlob(b=>download((state.name||'unoq')+'.png',b),'image/png');};
   img.onerror=()=>toast('PNG 產生失敗');img.src=url;
 };
-function loadState(d){stopSim();setBoard(d.board||'unoq');applyBoardUI();state={name:d.name||'未命名專案',comps:(d.comps||[]).filter(c=>TYPE_ORDER.includes(c.type)),code:d.code||'',codeAuto:d.codeAuto!==false||!d.code,board:B_ID,ipo:normIpo(d.ipo),flow:normFlow(d.flow)}; pruneRules(); ipoSig='';if(state.codeAuto)state.code=genCode();$('code').value=state.code;ctrlSig='';updateCodeTag();$('projName').value=state.name;selectedId=null;persist();renderAll();}
+function loadState(d){stopSim();setBoard(d.board||'unoq');applyBoardUI();state={name:d.name||'未命名專案',comps:(d.comps||[]).filter(c=>TYPE_ORDER.includes(c.type)),code:d.code||'',codeAuto:d.codeAuto!==false||!d.code,board:B_ID,ipo:normIpo(d.ipo),functions:Array.isArray(d.functions)?d.functions:[],activeFunctionId:d.activeFunctionId||'',flow:normFlow(d.flow)}; pruneRules(); ipoSig='';if(state.codeAuto)state.code=genCode();$('code').value=state.code;ctrlSig='';updateCodeTag();$('projName').value=state.name;selectedId=null;persist();renderAll();}
 $('bNew').onclick=()=>{modal(`<h2>開新專案？</h2><p>目前畫面上的接線會清除（已存檔的專案不受影響）。</p><div class="mrow"><button class="btn ghost" data-m="close">取消</button><button class="btn" id="nOk">開新專案</button></div>`);$('nOk').onclick=()=>{closeModal();loadState({name:'未命名專案',comps:[],board:B_ID});};};
 $('bExample').onclick=()=>{
-  state={name:'',comps:[],code:'',codeAuto:true,board:B_ID,ipo:defaultIpo(),flow:defaultFlow()}; ipoSig='';
+  state={name:'',comps:[],code:'',codeAuto:true,board:B_ID,ipo:defaultIpo(),functions:[],activeFunctionId:'',flow:defaultFlow()}; ipoSig='';
   const add=(type,pins,extra)=>{const t=TYPES[type];const c={id:uid(),type,pins,label:nextLabel(type),...extra};if(t.bb)c.col=freeCol(t.w+1);else Object.assign(c,modulePos(type));state.comps.push(c);};
   state.name=BD().example(add);
   { const f=t=>state.comps.filter(c=>c.type===t); const led=f('led'), btn=f('button'), pot=f('pot'), sv=f('servo');
@@ -2444,7 +2453,7 @@ function genCode(){
 
 /* ================= 啟動 ================= */
 (function init(){
-  const cur=lsGet(LSC); if(cur&&Array.isArray(cur.comps)){setBoard(cur.board||'unoq');state={name:cur.name||'未命名專案',comps:cur.comps.filter(c=>TYPE_ORDER.includes(c.type)),code:cur.code||'',codeAuto:cur.codeAuto!==false||!cur.code,board:B_ID,ipo:normIpo(cur.ipo),flow:normFlow(cur.flow)}; pruneRules();$('projName').value=state.name;}
+  const cur=lsGet(LSC); if(cur&&Array.isArray(cur.comps)){setBoard(cur.board||'unoq');state={name:cur.name||'未命名專案',comps:cur.comps.filter(c=>TYPE_ORDER.includes(c.type)),code:cur.code||'',codeAuto:cur.codeAuto!==false||!cur.code,board:B_ID,ipo:normIpo(cur.ipo),functions:Array.isArray(cur.functions)?cur.functions:[],activeFunctionId:cur.activeFunctionId||'',flow:normFlow(cur.flow)}; pruneRules();$('projName').value=state.name;}
   applyBoardUI();
   if(state.codeAuto||!state.code) state.code=genCode(); $('code').value=state.code;
   renderAll(); updateCodeTag(); updateSimUI(); requestAnimationFrame(()=>{fit(); if(!state.comps.length) $('bExample').click();});
