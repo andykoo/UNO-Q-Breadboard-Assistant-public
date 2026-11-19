@@ -1822,7 +1822,7 @@ $('flowNodes').addEventListener('pointerup',e=>{if(flowWire){const hit=document.
 $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.flow-node');if(!el)return;e.preventDefault();showFlowCtx(el.dataset.flowId,e.clientX,e.clientY);});
 function jumpToCodeStage(stage,node){
   const ta=$('code'), lines=ta.value.split(/\r?\n/), re=new RegExp('=====\\s*'+stage+'\\b','i');
-  const baseLine=lines.findIndex(x=>re.test(x)); const mapped=codeMap(); let line=baseLine, range=baseLine>=0?[baseLine,baseLine]:[-1,-1];
+  const baseLine=lines.findIndex(x=>re.test(x)); const mapped=codeMap(); let line=baseLine, range=mapped[stage]|| (baseLine>=0?[baseLine,baseLine]:[-1,-1]);
   if(stage==='P'&&node&&node.autoRule){ const ri=validRules().findIndex(r=>r.id===node.autoRule); const hit=ri>=0?ruleLines(ri):[]; if(hit.length){line=Math.min(...hit);range=[Math.min(...hit),Math.max(...hit)];} }
   if(node&&node.compId){ const c=byId(node.compId), map=mapped[stage], hit=c?linesWith(map,compWords(c)):[]; if(hit.length){line=Math.min(...hit);range=[Math.min(...hit),Math.max(...hit)];} }
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
