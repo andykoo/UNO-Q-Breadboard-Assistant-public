@@ -180,10 +180,9 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 .collapsed .sideHeader .sideToggle{font-size:18px;padding:2px 5px}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
-#monitorPanel{position:absolute;right:14px;bottom:14px;top:auto;left:auto;width:min(360px,calc(100% - 28px));height:190px;box-sizing:border-box;margin:0;display:none;background:#1d2626f2;border:1px solid #526363;border-radius:12px;padding:10px;box-shadow:0 8px 24px #0005;overflow:hidden;pointer-events:none;z-index:12}
+#monitorPanel{position:absolute;right:0;top:0;bottom:0;left:auto;width:min(360px,42%);height:auto;box-sizing:border-box;margin:0;display:none;background:#1d2626f2;border:1px solid #526363;border-right:0;border-radius:12px 0 0 12px;padding:14px;box-shadow:-6px 0 18px #0004;overflow:hidden;pointer-events:auto;z-index:12}
 #monitorPanel.on{display:block}
 #monitorPanel h5{margin:0 0 5px;color:#d7ebe4;font-size:12px;display:flex;align-items:center;justify-content:space-between}
-#monitorPanel h5,#monitorPanel .iconbtn,#monitorPanel #con{pointer-events:auto}
 #monitorPanel .iconbtn{color:#d7ebe4}
 #monitorPanel #con{height:calc(100% - 28px);min-height:110px;margin:0}
 .floatbar{position:absolute;display:flex;gap:4px;background:#fffdf6ee;border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:0 2px 8px #0001}
