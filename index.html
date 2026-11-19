@@ -364,7 +364,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="flow">流程圖</button><button data-t="prompt">規則設計</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
     <div class="tabpane on" id="t-wiring"></div>
     <div class="tabpane" id="t-flow">
-      <div class="flowbar"><button class="btn ghost" data-flow-add="I">＋ I 輸入</button><button class="btn ghost" data-flow-add="P">＋ P 處理</button><button class="btn ghost" data-flow-add="O">＋ O 輸出</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">－ 縮小視窗</button><button class="btn ghost" data-pane-back>↩ 回到上一步</button></div>
+      <div class="flowbar"><button class="btn ghost" id="flowRedraw">⟳ 依 IPO 重新繪製</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">－ 縮小視窗</button><button class="btn ghost" data-pane-back>↩ 回到上一步</button></div>
       <p class="flowhint">先新增節點，再拖曳排列；菱形請按右鍵選「連接是／否分支」，要接入菱形則選「指定上游輸入」。一般連線按「連線」後依序點兩個節點。</p>
       <div class="flowlayout"><div class="flowcanvas" id="flowCanvas"><svg id="flowSvg" viewBox="0 0 600 460" preserveAspectRatio="none"><defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="flowLinks"></g></svg><div id="flowNodes"></div></div><div class="flowinspect" id="flowInspect"><h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div></div></div>
     </div>
@@ -1446,6 +1446,17 @@ function syncFlowRules(){const rs=validRules(),byRule=new Map(rs.map(r=>[r.id,r]
   const nodes=state.flow.nodes, start=nodes.find(n=>n.type==='start'), autoLinks=[]; if(start) nodes.filter(n=>n.compId&&n.type==='I').forEach(n=>autoLinks.push([start.id,n.id,'','auto']));
   rs.forEach(r=>{const p=nodes.find(n=>n.autoRule===r.id),inp=nodes.find(n=>n.compId===r.inp),out=nodes.find(n=>n.compId===r.out);if(!p)return;autoLinks.push([inp?inp.id:(start&&start.id),p.id,'','auto']);if(out)autoLinks.push([p.id,out.id,'成立','auto']);});
   state.flow.links=state.flow.links.filter(x=>x[3]!=='auto');autoLinks.forEach(l=>{if(l[0]&&l[1]&&!state.flow.links.some(x=>x[0]===l[0]&&x[1]===l[1]&&x[3]==='auto'))state.flow.links.push(l);});}
+function redrawFlowFromIpo(){
+  syncFlowComponents(); syncFlowRules();
+  const ins=state.flow.nodes.filter(n=>n.type==='I'&&n.compId), ps=state.flow.nodes.filter(n=>n.type==='P'&&n.autoRule), outs=state.flow.nodes.filter(n=>n.type==='O'&&n.compId);
+  const start=state.flow.nodes.find(n=>n.type==='start'), end=state.flow.nodes.find(n=>n.type==='end');
+  if(start){start.x=40;start.y=28;start.layoutReady=true;} if(end){end.x=760;end.y=28;end.layoutReady=true;}
+  ins.forEach((n,i)=>{n.x=40;n.y=125+i*100;n.layoutReady=true;});
+  ps.forEach((n,i)=>{n.x=280;n.y=105+i*110;n.layoutReady=true;});
+  outs.forEach((n,i)=>{n.x=550;n.y=105+i*100;n.layoutReady=true;});
+  // 重新繪製只清除手動連線；判斷／迴圈節點保留，方便之後重新接線。
+  state.flow.links=state.flow.links.filter(x=>x[3]==='auto'); syncFlowRules(); persist(); renderFlow(); toast('已依目前 IPO 規則重新繪製流程圖');
+}
 function renderFlowLinks(){const linksEl=$('flowLinks');if(!linksEl)return;const by={};state.flow.nodes.forEach(n=>by[n.id]=n);let out=state.flow.links.map(([a,b,label])=>{const x=by[a],y=by[b];if(!x||!y)return '';const [p1,p2]=flowEdge(x,y,label),mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2-4;return `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#94a3b8" stroke-width="2.5" marker-end="url(#flowArrow)"/>${label?`<text x="${mx}" y="${my}" text-anchor="middle" font-size="11" font-weight="700" fill="#475569">${flowEsc(label)}</text>`:''}`;}).join('');if(flowWire){const n=flowNode(flowWire.from),p=flowPoint(n,flowWire.side);out+=`<line x1="${p.x}" y1="${p.y}" x2="${flowWire.x}" y2="${flowWire.y}" stroke="#f59e0b" stroke-width="3" stroke-dasharray="6 4"/>`; }linksEl.innerHTML=out;}
 function renderFlow(){
   const canvas=$('flowCanvas'), nodesEl=$('flowNodes'); if(!canvas||!nodesEl)return;
@@ -1796,7 +1807,7 @@ function shrinkWorkspace(){document.body.classList.remove('workspaceExpanded');s
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.t!==activeTab){previousTab=activeTab;activeTab=b.dataset.t;}document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));if(b.dataset.t==='flow')document.body.classList.add('workspaceExpanded');});
 document.getElementById('right').addEventListener('click',e=>{const expand=e.target.closest('[data-pane-expand]'),back=e.target.closest('[data-pane-back]');if(back){goBackTab();return;}if(!expand)return;const on=document.body.classList.toggle('workspaceExpanded');syncWorkspaceButtons();if(on)setTimeout(()=>{if(viewMode==='phys')fit();},0);});
 document.querySelectorAll('[data-flow-add]').forEach(b=>b.onclick=()=>addFlowNode(b.dataset.flowAdd));
-$('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
+$('flowRedraw').onclick=redrawFlowFromIpo; $('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
 $('flowRestore').onclick=shrinkWorkspace;
 $('functionTabs').addEventListener('click',e=>{const b=e.target.closest('[data-fid]');if(b){activateFunction(b.dataset.fid);return;}if(e.target.id==='addFunction')addFunction();if(e.target.id==='deleteFunction')deleteActiveFunction();});
 $('flowConnect').onclick=()=>{flowConnectMode=!flowConnectMode;flowConnectFrom=null;flowConnectTo=null;flowConnectLabel='';$('flowConnect').classList.toggle('on',flowConnectMode);$('flowConnect').textContent=flowConnectMode?'↔ 點兩個節點連線':'↔ 連線';renderFlow();};
@@ -1809,9 +1820,11 @@ $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.fl
 $('flowNodes').addEventListener('pointermove',e=>{if(flowWire){const r=$('flowCanvas').getBoundingClientRect();flowWire.x=e.clientX-r.left+$('flowCanvas').scrollLeft;flowWire.y=e.clientY-r.top+$('flowCanvas').scrollTop;renderFlowLinks();return;}if(!flowDrag)return;const n=flowNode(flowDrag.id),el=e.target.closest('.flow-node');if(!n||!el)return;const dx=e.clientX-flowDrag.sx,dy=e.clientY-flowDrag.sy;if(Math.abs(dx)+Math.abs(dy)>4)flowDrag.moved=true;n.x=Math.max(8,flowDrag.ox+dx);n.y=Math.max(8,flowDrag.oy+dy);el.style.left=n.x+'px';el.style.top=n.y+'px';renderFlowLinks();});
 $('flowNodes').addEventListener('pointerup',e=>{if(flowWire){const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.flow-node'),from=flowNode(flowWire.from);if(target&&target.dataset.flowId!==flowWire.from){const label=flowWire.label||'';const exists=state.flow.links.some(x=>x[0]===flowWire.from&&x[1]===target.dataset.flowId&&x[2]===label);if(!exists)state.flow.links.push([flowWire.from,target.dataset.flowId,label]);persist();}flowWire=null;renderFlow();return;}if(!flowDrag)return;const d=flowDrag;flowDrag=null;if(d.moved){persist();renderFlow();}else selectFlowNode(d.id);});
 $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.flow-node');if(!el)return;e.preventDefault();showFlowCtx(el.dataset.flowId,e.clientX,e.clientY);});
-function jumpToCodeStage(stage){
+function jumpToCodeStage(stage,node){
   const ta=$('code'), lines=ta.value.split(/\r?\n/), re=new RegExp('=====\\s*'+stage+'\\b','i');
-  const line=lines.findIndex(x=>re.test(x));
+  const baseLine=lines.findIndex(x=>re.test(x)); const mapped=codeMap(); let line=baseLine;
+  if(stage==='P'&&node&&node.autoRule){ const ri=validRules().findIndex(r=>r.id===node.autoRule); const hit=ri>=0?ruleLines(ri):[]; if(hit.length)line=Math.min(...hit); }
+  if(node&&node.compId){ const c=byId(node.compId), map=mapped[stage], hit=c?linesWith(map,compWords(c)):[]; if(hit.length)line=Math.min(...hit); }
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
