@@ -1822,13 +1822,13 @@ $('flowNodes').addEventListener('pointerup',e=>{if(flowWire){const hit=document.
 $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.flow-node');if(!el)return;e.preventDefault();showFlowCtx(el.dataset.flowId,e.clientX,e.clientY);});
 function jumpToCodeStage(stage,node){
   const ta=$('code'), lines=ta.value.split(/\r?\n/), re=new RegExp('=====\\s*'+stage+'\\b','i');
-  const baseLine=lines.findIndex(x=>re.test(x)); const mapped=codeMap(); let line=baseLine;
-  if(stage==='P'&&node&&node.autoRule){ const ri=validRules().findIndex(r=>r.id===node.autoRule); const hit=ri>=0?ruleLines(ri):[]; if(hit.length)line=Math.min(...hit); }
-  if(node&&node.compId){ const c=byId(node.compId), map=mapped[stage], hit=c?linesWith(map,compWords(c)):[]; if(hit.length)line=Math.min(...hit); }
+  const baseLine=lines.findIndex(x=>re.test(x)); const mapped=codeMap(); let line=baseLine, range=baseLine>=0?[baseLine,baseLine]:[-1,-1];
+  if(stage==='P'&&node&&node.autoRule){ const ri=validRules().findIndex(r=>r.id===node.autoRule); const hit=ri>=0?ruleLines(ri):[]; if(hit.length){line=Math.min(...hit);range=[Math.min(...hit),Math.max(...hit)];} }
+  if(node&&node.compId){ const c=byId(node.compId), map=mapped[stage], hit=c?linesWith(map,compWords(c)):[]; if(hit.length){line=Math.min(...hit);range=[Math.min(...hit),Math.max(...hit)];} }
   if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
-  SIM.focusLine=-1; SIM.focusRange=null; SIM.execLine=line; runScrollLine=line; hlSig=''; updateIpoBar(); updateCodeHL();
+  SIM.focusLine=range[0]; SIM.focusRange=range; SIM.execLine=line; runScrollLine=line; hlSig=''; selectCodeLine(range[0],range[1]); updateIpoBar(); updateCodeHL();
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
