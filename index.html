@@ -2404,6 +2404,8 @@ let generatedCodeMap={src:null,rules:new Map()};
 function genCode(){
   const cs=state.comps, by=t=>cs.filter(c=>c.type===t);
   const leds=by('led'),btns=by('button'),pots=by('pot'),ldrs=by('ldr'),buzz=by('buzzer'),servos=by('servo'),oleds=by('oled'),sonars=by('sonar'),dhts=by('dht'),lcds=by('lcd');
+  const hubLcd=B_ID==='hub8735'&&lcds.length>0;
+  const debounceButtons=hubLcd&&btns.length>0;
   const pc=p=>BD().codePin(p), pa=p=>BD().codePinA(p), SER=BD().ser;
   const L=[]; const ruleRanges=new Map(); let lineCount=0;
   const a=x=>{L.push(x);lineCount+=x.split('\n').length;};
@@ -2441,6 +2443,15 @@ function genCode(){
   servos.forEach((c,i)=>a(`int servo${i+1}Angle = 90;  // ${compName(c)} 角度 0–180`));
   if(oledMsg) a('String oledMsg = "";      // OLED 要顯示的文字');
   if(lcds.length){ a('bool eyesOpen = true;     // LCD 機器人眼睛：張開或閉上'); a('bool shownEyes = true;    // LCD 目前畫的狀態'); a('bool lcdFirstFrame = true; // 第一次 loop 才繪製畫面'); }
+  if(debounceButtons){
+    a('const unsigned long BUTTON_DEBOUNCE_MS = 25;');
+    btns.forEach((c,i)=>{
+      const n=i+1;
+      a(`bool lastRawPressed${n} = false;`);
+      a(`bool pressed${n} = false;`);
+      a(`unsigned long rawChangedAt${n} = 0;`);
+    });
+  }
   a('');
   sonars.forEach((c,i)=>{ a(`// 讀取超音波距離（公分）\nlong readDistance${i+1}() {\n  digitalWrite(TRIG${i+1}, LOW);\n  delayMicroseconds(2);\n  digitalWrite(TRIG${i+1}, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(TRIG${i+1}, LOW);\n  long duration = pulseIn(ECHO${i+1}, HIGH, 30000);\n  return duration / 58;\n}\n`); });
   if(lcds.length) [
@@ -2452,6 +2463,32 @@ function genCode(){
     '    digitalWrite(LCD_SCLK, HIGH);',
     '  }',
     '}',
+    ...(hubLcd?[
+    'void lcdCommandOpenCS(uint8_t value) {',
+    '  digitalWrite(LCD_DC, LOW);',
+    '  lcdSpiWrite(value);',
+    '}',
+    'void lcdDataOpenCS(uint8_t value) {',
+    '  digitalWrite(LCD_DC, HIGH);',
+    '  lcdSpiWrite(value);',
+    '}',
+    'void lcdCommand(uint8_t value) {',
+    '  digitalWrite(LCD_CS, LOW);',
+    '  lcdCommandOpenCS(value);',
+    '  digitalWrite(LCD_CS, HIGH);',
+    '}',
+    'void lcdCommandData(uint8_t command, uint8_t value) {',
+    '  digitalWrite(LCD_CS, LOW);',
+    '  lcdCommandOpenCS(command);',
+    '  lcdDataOpenCS(value);',
+    '  digitalWrite(LCD_CS, HIGH);',
+    '}',
+    'void lcdSetWindow(uint16_t x0, uint16_t y0, uint16_t x1, uint16_t y1) {',
+    '  lcdCommandOpenCS(0x2A); lcdDataOpenCS(x0 >> 8); lcdDataOpenCS(x0); lcdDataOpenCS(x1 >> 8); lcdDataOpenCS(x1);',
+    '  lcdCommandOpenCS(0x2B); lcdDataOpenCS(y0 >> 8); lcdDataOpenCS(y0); lcdDataOpenCS(y1 >> 8); lcdDataOpenCS(y1);',
+    '  lcdCommandOpenCS(0x2C);',
+    '}',
+    ]:[
     'void lcdCommand(uint8_t value) {',
     '  digitalWrite(LCD_DC, LOW);   // DC 低 = 命令',
     '  digitalWrite(LCD_CS, LOW);',
@@ -2469,13 +2506,15 @@ function genCode(){
     '  lcdCommand(0x2B); lcdData(y0 >> 8); lcdData(y0); lcdData(y1 >> 8); lcdData(y1);',
     '  lcdCommand(0x2C);',
     '}',
+    ]),
     'void lcdFillRect(int x, int y, int w, int h, uint16_t color) {',
     '  if (x >= 240 || y >= 240 || w <= 0 || h <= 0) return;',
     '  if (x + w > 240) w = 240 - x;',
     '  if (y + h > 240) h = 240 - y;',
+    ...(hubLcd?['  digitalWrite(LCD_CS, LOW);']:[]),
     '  lcdSetWindow(x, y, x + w - 1, y + h - 1);',
     '  digitalWrite(LCD_DC, HIGH);',
-    '  digitalWrite(LCD_CS, LOW);',
+    ...(!hubLcd?['  digitalWrite(LCD_CS, LOW);']:[]),
     '  for (long i = 0; i < (long)w * h; i++) {',
     '    lcdSpiWrite(color >> 8);',
     '    lcdSpiWrite(color & 0xFF);',
@@ -2486,15 +2525,15 @@ function genCode(){
     '  pinMode(LCD_MOSI, OUTPUT); pinMode(LCD_SCLK, OUTPUT); pinMode(LCD_RST, OUTPUT); pinMode(LCD_DC, OUTPUT); pinMode(LCD_CS, OUTPUT);',
     '  digitalWrite(LCD_CS, HIGH);',
     '  digitalWrite(LCD_SCLK, HIGH);',
-    '  digitalWrite(LCD_RST, HIGH); delay(20);',
+    ...(hubLcd?['  digitalWrite(LCD_MOSI, LOW);','  digitalWrite(LCD_DC, HIGH);','  digitalWrite(LCD_RST, HIGH);']:['  digitalWrite(LCD_RST, HIGH); delay(20);']),
     '  digitalWrite(LCD_RST, LOW);  delay(50);',
     '  digitalWrite(LCD_RST, HIGH); delay(120);',
     '  lcdCommand(0x01); delay(150);          // 軟體重置',
     '  lcdCommand(0x11); delay(120);          // 離開睡眠',
-    '  lcdCommand(0x3A); lcdData(0x55);       // RGB565',
-    '  lcdCommand(0x36); lcdData(0x00);       // 方向：直向，不加 Y 偏移',
-    '  lcdCommand(0x21); delay(10);           // IPS 面板要開反相，顏色才正確',
-    '  lcdCommand(0x13); delay(10);           // 一般顯示模式',
+    hubLcd?'  lcdCommandData(0x3A, 0x55);           // RGB565':'  lcdCommand(0x3A); lcdData(0x55);',
+    hubLcd?'  lcdCommandData(0x36, 0x00);           // 直向，不加 Y 偏移':'  lcdCommand(0x36); lcdData(0x00);',
+    hubLcd?'  lcdCommand(0x21);                     // IPS 反相':'  lcdCommand(0x21); delay(10);',
+    hubLcd?'  lcdCommand(0x13);                     // 一般顯示模式':'  lcdCommand(0x13); delay(10);',
     '  lcdCommand(0x29); delay(120);          // 開啟顯示',
     '}',
     'void drawEyes(bool open) {',
@@ -2517,13 +2556,17 @@ function genCode(){
     '  lcdFillRect(56, 140, 24, 12, LCD_PINK);    // 腮紅',
     '  lcdFillRect(160, 140, 24, 12, LCD_PINK);',
     '  lcdFillRect(92, 158, 56, 8, LCD_BLACK);    // 嘴巴',
-    '  drawEyes(true);',
+    ...(!hubLcd?['  drawEyes(true);']:[]),
     '}',
     ''].forEach(a);
   a('void setup() {'); a('  '+BD().serBegin);
+  if(hubLcd) a('  delay(200);  // HUB 8735 上電後等待穩定');
   leds.forEach((c,i)=>a(`  pinMode(LED${i+1}, OUTPUT);`));
   btns.forEach((c,i)=>a(`  pinMode(BTN${i+1}, INPUT_PULLUP);   // 沒按 = HIGH，按下 = LOW`));
-  buzz.forEach((c,i)=>a(`  pinMode(BUZ${i+1}, OUTPUT);`));
+  buzz.forEach((c,i)=>{
+    a(`  pinMode(BUZ${i+1}, OUTPUT);`);
+    if(hubLcd) a(`  digitalWrite(BUZ${i+1}, LOW);   // 上電時保持安靜`);
+  });
   sonars.forEach((c,i)=>{ a(`  pinMode(TRIG${i+1}, OUTPUT);`); a(`  pinMode(ECHO${i+1}, INPUT);`); });
   servos.forEach((c,i)=>a(`  servo${i+1}.attach(SERVO${i+1}_PIN);`));
   dhts.forEach((c,i)=>a(`  dht${i+1}.begin();`));
@@ -2533,10 +2576,13 @@ function genCode(){
   if(lcds.length){ a('  lcdInit();          // LCD 初始化（約 0.5 秒），不在 setup 繪圖'); }
   a(`  ${SER}.println("${BD().short} start");`); a('}'); a('');
   a('void loop() {');
-  if(lcds.length){ a('  if (lcdFirstFrame) {'); a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);'); a('    drawRobotFace();'); a('    lcdFirstFrame = false;'); a('  }'); }
+  if(lcds.length&&!hubLcd){ a('  if (lcdFirstFrame) {'); a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);'); a('    drawRobotFace();'); a('    lcdFirstFrame = false;'); a('  }'); }
   // ===== I 輸入 =====
   a('  // ===== I 輸入：讀取感測器，存進變數 =====');
-  btns.forEach((c,i)=>a(`  bool pressed${i+1} = digitalRead(BTN${i+1}) == LOW;   // ${compName(c)}：按下 = true`));
+  btns.forEach((c,i)=>{
+    const n=i+1;
+    a(`  bool ${debounceButtons?'rawPressed':'pressed'}${n} = digitalRead(BTN${n}) == LOW;   // ${compName(c)}：按下 = true`);
+  });
   pots.forEach((c,i)=>a(`  int pot${i+1} = analogRead(POT${i+1});   // ${compName(c)}：0–1023`));
   ldrs.forEach((c,i)=>a(`  int light${i+1} = analogRead(LDR${i+1});   // ${compName(c)}：越亮數值越大`));
   sonars.forEach((c,i)=>a(`  long dist${i+1} = readDistance${i+1}();   // ${compName(c)}：距離（公分）`));
@@ -2545,6 +2591,19 @@ function genCode(){
   if(!btns.length&&!pots.length&&!ldrs.length&&!sonars.length&&!dhts.length&&!obIds.length) a('  // （沒有輸入元件）');
   // ===== P 處理 =====
   a(''); a('  // ===== P 處理：依規則判斷，把結果存進輸出狀態變數 =====');
+  if(debounceButtons){
+    a('  unsigned long buttonNow = millis();');
+    btns.forEach((c,i)=>{
+      const n=i+1;
+      a(`  if (lcdFirstFrame || rawPressed${n} != lastRawPressed${n}) {`);
+      a(`    lastRawPressed${n} = rawPressed${n};`);
+      a(`    rawChangedAt${n} = buttonNow;`);
+      a('  }');
+      a(`  if (lcdFirstFrame || buttonNow - rawChangedAt${n} >= BUTTON_DEBOUNCE_MS) {`);
+      a(`    pressed${n} = lastRawPressed${n};`);
+      a('  }');
+    });
+  }
   const vIn=r=>{ const t=inpType(r), n=idx[r.inp]; return t==='button'?`pressed${n}`:t==='pot'?`pot${n}`:t==='ldr'?`light${n}`:t==='sonar'?`dist${n}`:t==='dht'?((r.cond==='hgt'||r.cond==='hlt')?`hum${n}`:`temp${n}`):t==='ob'?'fnKey':'0'; };
   const nv=(v,d)=>String(numOr(v,d));
   const cond=r=>{ const v=vIn(r); switch(r.cond){ case 'press': return v; case 'release': return '!'+v;
@@ -2605,7 +2664,17 @@ function genCode(){
   leds.forEach((c,i)=>{ const n=i+1; if(lvl[c.id]) a(PINS[c.pins.sig].pwm?`  analogWrite(LED${n}, led${n}Level);`:`  digitalWrite(LED${n}, led${n}Level > 127 ? HIGH : LOW);   // 這腳不是 PWM，只能全亮或全暗`); else a(`  digitalWrite(LED${n}, led${n}On ? HIGH : LOW);`); });
   buzz.forEach((c,i)=>a(`  digitalWrite(BUZ${i+1}, buz${i+1}On ? HIGH : LOW);`));
   servos.forEach((c,i)=>a(`  servo${i+1}.write(servo${i+1}Angle);`));
-  if(lcds.length){ a('  if (eyesOpen != shownEyes) {   // 狀態改變時才重畫，LCD 比較慢'); a('    drawEyes(eyesOpen);'); a('    shownEyes = eyesOpen;'); a('  }'); }
+  if(hubLcd){
+    a('  if (lcdFirstFrame) {');
+    a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);');
+    a('    drawRobotFace();');
+    a('  }');
+    a('  if (lcdFirstFrame || eyesOpen != shownEyes) {');
+    a('    drawEyes(eyesOpen);');
+    a('    shownEyes = eyesOpen;');
+    a('    lcdFirstFrame = false;');
+    a('  }');
+  }else if(lcds.length){ a('  if (eyesOpen != shownEyes) {   // 狀態改變時才重畫，LCD 比較慢'); a('    drawEyes(eyesOpen);'); a('    shownEyes = eyesOpen;'); a('  }'); }
   if(oleds.length){
     a('  display.clearDisplay();'); a('  display.setTextSize(1);'); a('  display.setCursor(0, 0);'); a(`  display.println("${BD().short} IPO");`);
     if(oledMsg) a('  display.println(oledMsg);');
