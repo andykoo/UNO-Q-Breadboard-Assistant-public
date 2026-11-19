@@ -180,11 +180,11 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 .collapsed .sideHeader .sideToggle{font-size:18px;padding:2px 5px}
 #cv{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 #cv.pan{cursor:grabbing}
-#monitorPanel{position:absolute;inset:0;width:auto;height:100%;box-sizing:border-box;margin:0;display:none;background:#1d2626f2;border:0;border-radius:0;padding:14px;box-shadow:none;overflow:hidden;pointer-events:auto;z-index:12}
+#monitorPanel{position:relative;width:auto;margin:12px 14px;display:none;background:#1d2626f2;border:2px solid #5b706b;border-radius:12px;padding:7px 9px;box-shadow:0 8px 24px #0005;pointer-events:auto}
 #monitorPanel.on{display:block}
 #monitorPanel h5{margin:0 0 5px;color:#d7ebe4;font-size:12px;display:flex;align-items:center;justify-content:space-between}
 #monitorPanel .iconbtn{color:#d7ebe4}
-#monitorPanel #con{height:calc(100% - 28px);min-height:110px;margin:0}
+#monitorPanel #con{height:110px;margin:0}
 .floatbar{position:absolute;display:flex;gap:4px;background:#fffdf6ee;border:1px solid var(--line);border-radius:10px;padding:4px;box-shadow:0 2px 8px #0001}
 .floatbar button{border:0;background:transparent;border-radius:7px;padding:5px 9px;cursor:pointer;font-size:12.5px;white-space:nowrap}
 .floatbar button:hover{background:#efe9d4}
@@ -1809,19 +1809,13 @@ $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.fl
 $('flowNodes').addEventListener('pointermove',e=>{if(flowWire){const r=$('flowCanvas').getBoundingClientRect();flowWire.x=e.clientX-r.left+$('flowCanvas').scrollLeft;flowWire.y=e.clientY-r.top+$('flowCanvas').scrollTop;renderFlowLinks();return;}if(!flowDrag)return;const n=flowNode(flowDrag.id),el=e.target.closest('.flow-node');if(!n||!el)return;const dx=e.clientX-flowDrag.sx,dy=e.clientY-flowDrag.sy;if(Math.abs(dx)+Math.abs(dy)>4)flowDrag.moved=true;n.x=Math.max(8,flowDrag.ox+dx);n.y=Math.max(8,flowDrag.oy+dy);el.style.left=n.x+'px';el.style.top=n.y+'px';renderFlowLinks();});
 $('flowNodes').addEventListener('pointerup',e=>{if(flowWire){const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.flow-node'),from=flowNode(flowWire.from);if(target&&target.dataset.flowId!==flowWire.from){const label=flowWire.label||'';const exists=state.flow.links.some(x=>x[0]===flowWire.from&&x[1]===target.dataset.flowId&&x[2]===label);if(!exists)state.flow.links.push([flowWire.from,target.dataset.flowId,label]);persist();}flowWire=null;renderFlow();return;}if(!flowDrag)return;const d=flowDrag;flowDrag=null;if(d.moved){persist();renderFlow();}else selectFlowNode(d.id);});
 $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.flow-node');if(!el)return;e.preventDefault();showFlowCtx(el.dataset.flowId,e.clientX,e.clientY);});
-function jumpToCodeStage(stage,node){
-  const ta=$('code');
-  if(!ta.value.trim()&&state.codeAuto){ state.code=genCode(); ta.value=state.code; CM.src=null; updateCodeTag(); }
-  const lines=ta.value.split(/\r?\n/), map=codeMap()[stage], baseLine=stageLine(stage,lines), inlineRange=inlineStageRange(stage,lines);
-  const nodeHits=flowNodeCodeHits(node,stage,map);
-  let targetRange=nodeHits.length?[Math.min(...nodeHits),Math.max(...nodeHits)]:inlineRange||map||[baseLine,baseLine];
-  const line=targetRange[0]>=0?targetRange[0]:baseLine;
-  if(line<0){toast(`程式碼中找不到 ${stage} 區段；請先按「依接線產生程式」`);return;}
-  const range=targetRange[0]>=0?targetRange:[line,line];
+function jumpToCodeStage(stage){
+  const ta=$('code'), lines=ta.value.split(/\r?\n/), re=new RegExp('=====\\s*'+stage+'\\b','i');
+  const line=lines.findIndex(x=>re.test(x));
+  if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
-  ta.scrollTo({top:Math.max(0,range[0]*lh-ta.clientHeight*.25),behavior:'smooth'});
-  SIM.focusLine=range[0]; SIM.focusRange=range; SIM.execLine=range[0]; runScrollLine=range[0]; hlSig=''; selectCodeLine(range[0],range[1]); updateIpoBar(); updateCodeHL();
-  toast(`已跳到 ${node&&node.title?node.title:stage+' 區段'}（第 ${line+1} 行）`);
+  ta.scrollTo({top:Math.max(0,line*lh-ta.clientHeight*.25),behavior:'smooth'});
+  SIM.focusLine=-1; SIM.focusRange=null; SIM.execLine=line; runScrollLine=line; hlSig=''; updateIpoBar(); updateCodeHL();
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
