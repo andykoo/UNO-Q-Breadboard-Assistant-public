@@ -250,10 +250,13 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 #t-sim h5{margin:14px 0 6px;font-size:12.5px;color:var(--teal-d);display:flex;align-items:center;justify-content:space-between}
 #t-sim>#ipoSec{position:sticky;top:-12px;z-index:5;margin:-12px 0 10px;padding:10px 0 8px;background:var(--paper);border-bottom:2px solid var(--line);box-shadow:0 3px 8px #0001;max-height:230px;overflow:visible;box-sizing:border-box}
 #t-sim>#ipoSec h5{margin:0 0 6px}
-#code{min-height:260px;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:transparent;color:#e8f0ec;tab-size:2;white-space:pre;overflow:auto;position:relative;z-index:1;display:block}
+#code{min-height:260px;font-family:var(--mono);font-size:11.5px;line-height:1.5;background:transparent;color:#e8f0ec;tab-size:2;white-space:pre;overflow:auto;position:relative;z-index:1;display:block;padding-left:50px;box-sizing:border-box}
 #code::selection{background:#f59e0b;color:#111}
 .codewrap{position:relative;background:#1d2626;border-radius:10px;overflow:hidden}
 #codeHL{position:absolute;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+#codeGutter{position:absolute;left:0;top:0;bottom:0;width:43px;overflow:hidden;background:#172020;color:#73837d;border-right:1px solid #3b4a47;pointer-events:none;z-index:2;font:11.5px/1.5 var(--mono);text-align:right}
+#codeGutter .codeNums{padding-top:10px;will-change:transform}
+#codeGutter .ln{display:block;height:17.25px;line-height:17.25px;padding-right:7px;box-sizing:border-box}
 .hlb{position:absolute;left:0;right:0;border-left:4px solid}
 .hlt{position:absolute;right:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;border-radius:4px;padding:0 5px;z-index:2}
 .runTag{position:absolute;left:6px;transform:translateY(-1px);font:700 10px/16px var(--mono);color:#111;background:#f59e0b;border-radius:4px;padding:0 5px;z-index:2}
@@ -386,7 +389,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
       <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
-      <div class="codewrap"><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
+      <div class="codewrap"><div id="codeGutter" aria-hidden="true"></div><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
       <h5>互動控制</h5><div id="simCtrls"></div>
       <p class="note">模擬器支援常用的 Arduino 語法與函式（pinMode、digitalWrite/Read、analogRead/Write、delay、millis、tone、pulseIn、Servo／AmebaServo、Adafruit_SSD1306、DHT、Monitor／Serial）。類別、指標、static 區域變數等進階語法不支援；整數除法會以小數計算。</p>
     </div>
@@ -1246,7 +1249,8 @@ function flowTick(){ flowRaf=0; if(!SIM.running) return; renderCanvas(); if(SIM.
 function srcFrames(){ const st=String(new Error().stack||''); const out=[];
   st.split('\n').forEach(l=>{ const m=l.match(/<anonymous>:(\d+):\d+\)?\s*$/)||l.match(/> Function:(\d+):\d+\s*$/); if(m){ const i=parseInt(m[1],10)-SRC_OFF; if(i>=0) out.push(i); } });
   return out; }   // 由內而外：最前面是實際讀寫的那一行，最後面是 loop() 裡的那一行
-function selectCodeLine(line,lastLine){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); const last=Math.max(line,Math.min(lastLine===undefined?line:lastLine,lines.length-1)); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; let end=start; for(let i=line;i<=last;i++) end+=lines[i].length+(i<last?1:0); ta.focus({preventScroll:true}); ta.setSelectionRange(start,Math.max(end,start+1)); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); }
+function updateCodeGutter(){ const ta=$('code'),g=$('codeGutter'); if(!ta||!g)return; const lines=ta.value.split(/\r?\n/), lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25, pt=parseFloat(getComputedStyle(ta).paddingTop)||10; g.innerHTML=`<div class="codeNums" style="transform:translateY(${-ta.scrollTop}px)">${lines.map((_,i)=>`<span class="ln">${i+1}</span>`).join('')}</div>`; }
+function selectCodeLine(line,lastLine){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); const last=Math.max(line,Math.min(lastLine===undefined?line:lastLine,lines.length-1)); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; let end=start; for(let i=line;i<=last;i++) end+=lines[i].length+(i<last?1:0); ta.focus({preventScroll:true}); ta.setSelectionRange(start,Math.max(end,start+1)); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); updateCodeGutter(); }
 function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; const line=frames[frames.length-1]; const changed=line!==SIM.execLine; SIM.execLine=line; SIM.execAt=performance.now(); if(changed){
   // 使用者點選 IPO 後，指定的區塊優先於模擬器目前執行行；不要在這裡清除 focusLine。
   if(SIM.focusLine<0){ selectCodeLine(line); hlSig=''; }
@@ -1333,7 +1337,7 @@ function computeFX(){ if(!SIM.running) return EMPTY_FX; const now=performance.no
     if(e>=ST.O[0]){ p.outs.forEach(id=>fx.glowO.add(id)); p.lO=p.lO||pulseLines(p,'O'); fx.lines.O.push(...p.lO); } });
   return fx; }
 let hlSig='';
-function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
+function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return; updateCodeGutter();
   // 點 IPO 跳轉後，保留 textarea 的原生文字反選；不要再用色塊蓋住它。
   if(SIM.focusLine>=0){ if(box.innerHTML) box.innerHTML=''; hlSig='native-selection-'+SIM.focusLine; return; }
   const L=FX.lines;
@@ -1451,7 +1455,7 @@ function showFlowCtx(id,x,y){flowSelected=id;renderFlow();const n=flowNode(id),m
 function addFlowNode(type){const i=state.flow.nodes.length,n={id:'f_'+uid(),type,title:type==='I'?'讀取輸入':type==='P'?'處理規則':type==='O'?'控制輸出':type==='decision'?'條件判斷':type==='loop'?'重複執行':'流程節點',text:type==='decision'?'是／否':type==='loop'?'回到前面重複':'請編輯這個節點',x:190+(i%2)*170,y:35+Math.floor(i/2)*105};state.flow.nodes.push(n);flowSelected=n.id;persist();renderFlow();}
 function checkFlow(){const ns=state.flow.nodes,ls=state.flow.links,ids=new Set(ns.map(n=>n.id)),bad=[];if(!ns.some(n=>n.type==='start'))bad.push('缺少「開始」節點。');ns.forEach(n=>{const incoming=ls.some(x=>x[1]===n.id),outs=ls.filter(x=>x[0]===n.id),outgoing=outs.length;if(n.type!=='start'&&!incoming)bad.push(`「${n.title}」沒有輸入連線。`);if(n.type!=='end'&&!outgoing)bad.push(`「${n.title}」沒有下一步連線。`);if(n.type==='decision'){const labels=new Set(outs.map(x=>x[2]));if(outgoing<2)bad.push(`「${n.title}」是判斷節點，需要「是」與「否」兩條路徑。`);else{if(!labels.has('是'))bad.push(`「${n.title}」缺少「是」分支。`);if(!labels.has('否'))bad.push(`「${n.title}」缺少「否」分支。`);}}if(n.type==='loop'&&!outgoing)bad.push(`「${n.title}」是迴圈節點，需要連回前面的節點。`);});ls.forEach(x=>{if(!ids.has(x[0])||!ids.has(x[1]))bad.push('有連線指向不存在的節點。');});const box=$('flowInspect');if(box)box.innerHTML=`<h5>流程檢查</h5><div class="flowmsg ${bad.length?'bad':'good'}">${bad.length?bad.map(x=>`• ${flowEsc(x)}`).join('<br>'):'✓ 流程圖結構完整，可以進一步連接 IPO 與模擬器。'}</div>`;}
 function flowExample(){state.flow=defaultFlow();flowSelected=null;flowConnectMode=false;flowConnectFrom=null;flowConnectTo=null;flowConnectLabel='';persist();renderFlow();}
-function renderAll(){renderCanvas();renderPalette();renderFields();renderList();renderChecks();renderRight();renderSimCtrls();renderFlow();}
+function renderAll(){renderCanvas();renderPalette();renderFields();renderList();renderChecks();renderRight();renderSimCtrls();renderFlow();updateCodeGutter();}
 function geomAll(){
   const ctx={rLane:0,lLane:0,bbLane:0,railIdx:{},colorIdx:{}};
   let ci=0; state.comps.forEach(c=>TYPES[c.type].sigs.forEach(s=>{ctx.colorIdx[c.id+s.k]=ci++;}));
@@ -2264,9 +2268,9 @@ $('simCtrls').addEventListener('pointerdown',e=>{ const b=e.target.closest('[dat
 /* ---------- 接線變更 → 自動更新程式 ---------- */
 function compsChanged(){ stopSim(); pruneRules(); if(state.codeAuto){ state.code=genCode(); $('code').value=state.code; } ctrlSig=''; updateCodeTag(); }
 function updateCodeTag(){ $('codeTag').textContent=state.codeAuto?'自動產生・會跟著接線更新':'已手動修改'; }
-$('code').addEventListener('scroll',()=>{ if(SIM.running) updateCodeHL(); });
+$('code').addEventListener('scroll',()=>{ updateCodeGutter(); if(SIM.running) updateCodeHL(); });
 $('code').addEventListener('keydown',()=>{ lastTyped=performance.now(); });
-$('code').addEventListener('input',()=>{ state.code=$('code').value; if(state.codeAuto){ state.codeAuto=false; updateCodeTag(); } persist(); });
+$('code').addEventListener('input',()=>{ state.code=$('code').value; updateCodeGutter(); if(state.codeAuto){ state.codeAuto=false; updateCodeTag(); } persist(); });
 $('code').addEventListener('keydown',e=>{ if(e.key==='Tab'){ e.preventDefault(); const t=e.target,a=t.selectionStart; t.setRangeText('  ',a,t.selectionEnd,'end'); t.dispatchEvent(new Event('input')); } });
 $('bRun').onclick=()=>{ const tab=document.querySelector('.tabs button[data-t="sim"]'); if(tab)tab.click(); runSim().catch(e=>{log('✖ 模擬啟動失敗：'+(e&&e.message||e),'err');toast('模擬啟動失敗，請查看序列監控');}); };
 $('bStop').onclick=()=>stopSim(); $('bStop2').onclick=()=>stopSim();
