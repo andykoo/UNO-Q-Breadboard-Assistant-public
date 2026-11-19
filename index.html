@@ -1254,8 +1254,8 @@ function srcFrames(){ const st=String(new Error().stack||''); const out=[];
 function updateCodeGutter(){ const ta=$('code'),g=$('codeGutter'); if(!ta||!g)return; const lines=ta.value.split(/\r?\n/), lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25, pt=parseFloat(getComputedStyle(ta).paddingTop)||10; g.innerHTML=`<div class="codeNums" style="transform:translateY(${-ta.scrollTop}px)">${lines.map((_,i)=>`<span class="ln">${i+1}</span>`).join('')}</div>`; }
 function selectCodeLine(line,lastLine){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); const last=Math.max(line,Math.min(lastLine===undefined?line:lastLine,lines.length-1)); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; let end=start; for(let i=line;i<=last;i++) end+=lines[i].length+(i<last?1:0); ta.focus({preventScroll:true}); ta.setSelectionRange(start,Math.max(end,start+1)); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); updateCodeGutter(); }
 function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; const line=frames[frames.length-1]; const changed=line!==SIM.execLine; SIM.execLine=line; SIM.execAt=performance.now(); if(changed){
-  // 使用者點選 IPO 後，指定的區塊優先於模擬器目前執行行；不要在這裡清除 focusLine。
-  if(SIM.focusLine<0){ selectCodeLine(line); hlSig=''; }
+  // 模擬執行只用 RUN 色帶標示，不要把瀏覽器原生反選混進來。
+  if(SIM.focusLine<0){ hlSig=''; }
   schedule(); }
 }
 const ipoFlowOn=()=>!$('ipoFlow')||$('ipoFlow').checked;
@@ -2234,7 +2234,7 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null}); lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
+  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null}); const ta=$('code'); if(ta){ ta.focus({preventScroll:true}); ta.setSelectionRange(0,0); ta.blur(); } lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
