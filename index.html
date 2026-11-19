@@ -1795,7 +1795,7 @@ function editComp(id){
   modal(`<h2>更換腳位：${compName(c)}</h2>
    ${t.sigs.map(s=>`<div class="field"><label>${s.label}（${REQ[s.req].label}）</label><select data-esig="${s.k}">${pinOptions(s.req,c.pins[s.k],c.id,false)}</select></div>`).join('')}
    ${c.type==='led'?`<div class="field"><label>LED 顏色</label><select id="eColor">${Object.keys(LED_COLORS).map(k=>`<option ${k===(c.color||'紅')?'selected':''}>${k}</option>`).join('')}</select></div>`:''}
-   <div class="field"><label>名稱</label><input id="eName" value="${compName(c)}"></div>
+   <div class="field"><label>名稱</label><input id="eName" value="${flowEsc(compName(c))}"></div>
    <p class="note">選了已被使用的腳位時，會詢問是否把原本的元件移到其他腳位。換腳位後記得同步修改 Arduino 程式。</p>
    <div class="mrow"><button class="btn ghost" data-m="close">取消</button><button class="btn" id="eOk">套用</button></div>`);
   $('eOk').onclick=()=>{const d={};document.querySelectorAll('[data-esig]').forEach(s=>d[s.dataset.esig]=s.value);
@@ -1921,7 +1921,7 @@ function validateSharedProject(project){
     !Object.hasOwn(BOARD_DEFS,project.board)||typeof project.name!=='string'||!validIpo(project.ipo)||
     !Array.isArray(project.comps)||!project.comps.every(c=>c&&id(c.id)&&BOARD_DEFS[project.board].types.includes(c.type)&&
       c.pins&&typeof c.pins==='object'&&Object.values(c.pins).every(id)&&
-      (c.label==null||typeof c.label==='string'&&!/["\r\n]/.test(c.label))&&
+      (c.label==null||typeof c.label==='string'&&!/[\r\n]/.test(c.label))&&
       (c.color==null||Object.hasOwn(LED_COLORS,c.color)))||
     !Array.isArray(project.functions)||!project.functions.every(f=>f&&id(f.id)&&validIpo(f.ipo))||
     !Array.isArray(project.flow?.nodes)||!project.flow.nodes.every(n=>n&&id(n.id))||
