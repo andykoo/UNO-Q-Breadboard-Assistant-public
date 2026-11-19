@@ -1333,6 +1333,8 @@ function computeFX(){ if(!SIM.running) return EMPTY_FX; const now=performance.no
   return fx; }
 let hlSig='';
 function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return;
+  // 點 IPO 跳轉後，保留 textarea 的原生文字反選；不要再用色塊蓋住它。
+  if(SIM.focusLine>=0){ if(box.innerHTML) box.innerHTML=''; hlSig='native-selection-'+SIM.focusLine; return; }
   const L=FX.lines;
   const activeLine=SIM.focusLine>=0?SIM.focusLine:SIM.execLine;
   const sig=JSON.stringify(FX.lines)+'|'+activeLine+'|'+ta.scrollTop+'|'+SIM.focusStage+'|'+SIM.running;
@@ -1766,11 +1768,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
   if(b.dataset.act==='edit'){if(locked){toast('目前為鎖定狀態');return;}editComp(id);} if(b.dataset.act==='del')delComp(id);});
 $('list').addEventListener('click',e=>{if(e.target.closest('[data-act]'))return;const it=e.target.closest('.item');if(!it)return;selectedId=selectedId===it.dataset.id?null:it.dataset.id;renderAll();});
 $('bShowAll').onclick=()=>{selectedId=null;renderAll();};
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));if(b.dataset.t==='flow')document.body.classList.add('workspaceExpanded');});
-document.getElementById('right').addEventListener('click',e=>{const b=e.target.closest('[data-pane-expand]');if(!b)return;document.body.classList.toggle('workspaceExpanded');const on=document.body.classList.contains('workspaceExpanded');document.querySelectorAll('[data-pane-expand]').forEach(x=>x.textContent=on?'↩ 回到上一步':'⛶ 放大閱讀');setTimeout(()=>{if(viewMode==='phys')fit();},0);});
+let activeTab='wiring', previousTab='wiring';
+function selectTab(name){const b=document.querySelector(`.tabs button[data-t="${name}"]`);if(b)b.click();}
+function goBackWorkspace(){if(previousTab!==activeTab){selectTab(previousTab);return;}document.body.classList.remove('workspaceExpanded');document.querySelectorAll('[data-pane-expand]').forEach(x=>x.textContent='⛶ 放大閱讀');}
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.t!==activeTab){previousTab=activeTab;activeTab=b.dataset.t;}document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));if(b.dataset.t==='flow')document.body.classList.add('workspaceExpanded');});
+document.getElementById('right').addEventListener('click',e=>{const b=e.target.closest('[data-pane-expand]');if(!b)return;if(document.body.classList.contains('workspaceExpanded')){goBackWorkspace();return;}document.body.classList.add('workspaceExpanded');document.querySelectorAll('[data-pane-expand]').forEach(x=>x.textContent='↩ 回到上一步');setTimeout(()=>{if(viewMode==='phys')fit();},0);});
 document.querySelectorAll('[data-flow-add]').forEach(b=>b.onclick=()=>addFlowNode(b.dataset.flowAdd));
 $('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
-$('flowRestore').onclick=()=>{document.body.classList.remove('workspaceExpanded');document.querySelectorAll('[data-pane-expand]').forEach(x=>x.textContent='⛶ 放大閱讀');};
+$('flowRestore').onclick=goBackWorkspace;
 $('functionTabs').addEventListener('click',e=>{const b=e.target.closest('[data-fid]');if(b){activateFunction(b.dataset.fid);return;}if(e.target.id==='addFunction')addFunction();if(e.target.id==='deleteFunction')deleteActiveFunction();});
 $('flowConnect').onclick=()=>{flowConnectMode=!flowConnectMode;flowConnectFrom=null;flowConnectTo=null;flowConnectLabel='';$('flowConnect').classList.toggle('on',flowConnectMode);$('flowConnect').textContent=flowConnectMode?'↔ 點兩個節點連線':'↔ 連線';renderFlow();};
 $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.flow-node');if(!el)return;const id=el.dataset.flowId;
