@@ -1295,11 +1295,21 @@ function stageLine(stage,lines){
     /(digitalWrite|analogWrite|Serial\.|lcd|oled|display|servo|tone|draw[A-Z])/i;
   return lines.findIndex(l=>fallback.test(l));
 }
+function inlineStageRange(stage,lines){
+  const s=String(stage||'').toUpperCase();
+  const marks=[];
+  lines.forEach((l,i)=>{ if(/^\s*\/\/(?!\s*=)/.test(l)&&new RegExp('(?:^|[+|｜、,，])\\s*'+s+'(?=\\s|[:：]|$)','i').test(l)) marks.push(i); });
+  if(!marks.length) return null;
+  let a=marks[0],b=a;
+  marks.forEach((m,i)=>{ const next=marks[i+1]; let end=next===undefined?m:next-1; if(next===undefined){ let k=m+1; while(k<lines.length&&k<m+7&&!/^\s*\/\//.test(lines[k])&&lines[k].trim())k++; end=k-1; } b=Math.max(b,end); });
+  return [a,b];
+}
 function codeMap(){ const src=$('code').value; if(CM.src===src) return CM; const lines=src.split('\n');
   const iI=stageLine('I',lines), iP=stageLine('P',lines), iO=stageLine('O',lines);
   let loopEnd=lines.length-1; for(let k=lines.length-1;k>=0;k--){ if(/^\}/.test(lines[k])){ loopEnd=k-1; break; } }
   const nextOf=a=>{ const c=[iI,iP,iO,loopEnd+1].filter(x=>x>a).sort((x,y)=>x-y); return c[0]-1; };
-  CM={src,lines,I:iI>=0?[iI,nextOf(iI)]:null,P:iP>=0?[iP,nextOf(iP)]:null,O:iO>=0?[iO,nextOf(iO)]:null}; return CM; }
+  const xI=inlineStageRange('I',lines),xP=inlineStageRange('P',lines),xO=inlineStageRange('O',lines);
+  CM={src,lines,I:xI||(iI>=0?[iI,nextOf(iI)]:null),P:xP||(iP>=0?[iP,nextOf(iP)]:null),O:xO||(iO>=0?[iO,nextOf(iO)]:null)}; return CM; }
 function compWords(c){ if(c.id&&String(c.id).startsWith('ob_')) return ['fnKey'];
   const n=state.comps.filter(x=>x.type===c.type).indexOf(c)+1;
   return ({button:['pressed'+n,'BTN'+n],pot:['pot'+n,'POT'+n],ldr:['light'+n,'LDR'+n],sonar:['dist'+n,'readDistance'+n],dht:['temp'+n,'hum'+n,'dht'+n,'lastDht'],
@@ -1801,7 +1811,7 @@ function jumpToCodeStage(stage,node){
   const ta=$('code');
   if(!ta.value.trim()&&state.codeAuto){ state.code=genCode(); ta.value=state.code; CM.src=null; updateCodeTag(); }
   const lines=ta.value.split(/\r?\n/), map=codeMap()[stage], baseLine=stageLine(stage,lines);
-  let targetRange=map||[baseLine,baseLine];
+  let targetRange=inlineStageRange(stage,lines)||map||[baseLine,baseLine];
   if(node&&map){
     let hits=[];
     if(node.compId){ const c=byId(node.compId); if(c) hits=linesWith(map,compWords(c)); }
