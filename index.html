@@ -1246,7 +1246,7 @@ function flowTick(){ flowRaf=0; if(!SIM.running) return; renderCanvas(); if(SIM.
 function srcFrames(){ const st=String(new Error().stack||''); const out=[];
   st.split('\n').forEach(l=>{ const m=l.match(/<anonymous>:(\d+):\d+\)?\s*$/)||l.match(/> Function:(\d+):\d+\s*$/); if(m){ const i=parseInt(m[1],10)-SRC_OFF; if(i>=0) out.push(i); } });
   return out; }   // 由內而外：最前面是實際讀寫的那一行，最後面是 loop() 裡的那一行
-function selectCodeLine(line){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; const text=lines[line]||''; const end=start+text.length; ta.focus({preventScroll:true}); ta.setSelectionRange(start,Math.max(end,start+1)); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); }
+function selectCodeLine(line,lastLine){ const ta=$('code'); if(!ta||line<0) return; const lines=ta.value.split(/\r?\n/); const last=Math.max(line,Math.min(lastLine===undefined?line:lastLine,lines.length-1)); let start=0; for(let i=0;i<line&&i<lines.length;i++) start+=lines[i].length+1; let end=start; for(let i=line;i<=last;i++) end+=lines[i].length+(i<last?1:0); ta.focus({preventScroll:true}); ta.setSelectionRange(start,Math.max(end,start+1)); const lh=parseFloat(getComputedStyle(ta).lineHeight)||17.25; ta.scrollTop=Math.max(0,line*lh-ta.clientHeight*.25); }
 function markExec(){ if(!SIM.running||performance.now()-SIM.execAt<80) return; const frames=srcFrames(); if(!frames.length) return; const line=frames[frames.length-1]; const changed=line!==SIM.execLine; SIM.execLine=line; SIM.execAt=performance.now(); if(changed){
   // 使用者點選 IPO 後，指定的區塊優先於模擬器目前執行行；不要在這裡清除 focusLine。
   if(SIM.focusLine<0){ selectCodeLine(line); hlSig=''; }
@@ -1581,6 +1581,7 @@ function renderRight(){
   renderIPO();
   // 腳位速查
   $('t-pins').innerHTML=`<div class="paneHead"><h4>腳位速查</h4><span><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button><button class="paneExpand" data-pane-back>↩ 回到上一步</button></span></div>`+BD().pinsTab();
+  if(typeof syncWorkspaceButtons==='function') syncWorkspaceButtons();
 }
 function wiringText(G){
   let s=`${BD().short} 接線表：${state.name}\n電源軌：3V3→上排+、GND→上排−；5V→下排+、GND→下排−\n`;
@@ -1798,7 +1799,7 @@ function jumpToCodeStage(stage){
   const range=codeMap()[stage]||[line,line];
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,range[0]*lh-ta.clientHeight*.25),behavior:'smooth'});
-  SIM.focusLine=range[0]; SIM.focusRange=range; SIM.focusStage=stage; SIM.execLine=range[0]; runScrollLine=range[0]; hlSig=''; selectCodeLine(range[0]); updateIpoBar(); updateCodeHL();
+  SIM.focusLine=range[0]; SIM.focusRange=range; SIM.execLine=range[0]; runScrollLine=range[0]; hlSig=''; selectCodeLine(range[0],range[1]); updateIpoBar(); updateCodeHL();
   toast(`已跳到 ${stage} 區段（第 ${line+1} 行）`);
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
