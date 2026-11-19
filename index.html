@@ -1318,6 +1318,8 @@ function linesWith(range,words){ if(!range||!words.length) return []; const out=
   for(let k=range[0]+1;k<=range[1];k++){ if(res.some(re=>re.test(CM.lines[k]))) out.push(k); }
   if(out.length){ const last=out[out.length-1]; if(/\{\s*(\/\/.*)?$/.test(CM.lines[last])){ for(let k=last+1;k<=range[1];k++){ out.push(k); if(/^\s*\}/.test(CM.lines[k])) break; } } }
   return out; }
+function codeIdentifierHits(range,words){ if(!range||!words.length)return[]; const out=[],res=words.map(w=>new RegExp('(^|[^\\w])'+w+'([^\\w]|$)')); for(let k=Math.max(0,range[0]);k<=range[1]&&k<CM.lines.length;k++)if(res.some(re=>re.test(CM.lines[k])))out.push(k); return out; }
+function flowNodeCodeHits(node,stage,map){ if(!node||!map)return[]; let words=[]; if(node.compId){const c=byId(node.compId);if(c)words=compWords(c);} if(node.autoRule&&stage==='P'){const ri=validRules().findIndex(r=>r.id===node.autoRule);if(ri>=0){const hit=ruleLines(ri);if(hit.length)return hit;}} if(!words.length){const ids=String(node.title||'')+' '+String(node.text||'');words=(ids.match(/[A-Za-z_][A-Za-z0-9_]*/g)||[]).filter(w=>w.length>2&&!['INPUT','OUTPUT','Arduino'].includes(w));} return codeIdentifierHits(map,words); }
 function ruleLines(k){ const m=CM; if(!m.P) return []; const out=[]; let on=false;
   for(let i=m.P[0]+1;i<=m.P[1];i++){ const l=m.lines[i]; if(new RegExp('//\\s*規則 '+(k+1)+'：').test(l)){ on=true; out.push(i); continue; }
     if(on){ if(/\/\/\s*規則 \d+：/.test(l)||/^\s*$/.test(l)||/^\s*\/\/\s*（/.test(l)) break; out.push(i); } } return out; }
@@ -1811,13 +1813,8 @@ function jumpToCodeStage(stage,node){
   const ta=$('code');
   if(!ta.value.trim()&&state.codeAuto){ state.code=genCode(); ta.value=state.code; CM.src=null; updateCodeTag(); }
   const lines=ta.value.split(/\r?\n/), map=codeMap()[stage], baseLine=stageLine(stage,lines), inlineRange=inlineStageRange(stage,lines);
-  let targetRange=inlineRange||map||[baseLine,baseLine];
-  if(node&&map&&!inlineRange){
-    let hits=[];
-    if(node.compId){ const c=byId(node.compId); if(c) hits=linesWith(map,compWords(c)); }
-    if(!hits.length&&node.autoRule&&stage==='P'){ const ri=validRules().findIndex(r=>r.id===node.autoRule); if(ri>=0) hits=ruleLines(ri); }
-    if(hits.length) targetRange=[Math.min(...hits),Math.max(...hits)];
-  }
+  const nodeHits=flowNodeCodeHits(node,stage,map);
+  let targetRange=nodeHits.length?[Math.min(...nodeHits),Math.max(...nodeHits)]:inlineRange||map||[baseLine,baseLine];
   const line=targetRange[0]>=0?targetRange[0]:baseLine;
   if(line<0){toast(`程式碼中找不到 ${stage} 區段；請先按「依接線產生程式」`);return;}
   const range=targetRange[0]>=0?targetRange:[line,line];
