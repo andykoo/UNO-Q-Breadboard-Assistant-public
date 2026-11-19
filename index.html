@@ -143,11 +143,17 @@ aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 .ck.info b{color:var(--teal)}
 #stage{position:relative;overflow:hidden;background:radial-gradient(#e6dfc6 1px,transparent 1px) 0 0/18px 18px,#f6f1df;touch-action:none}
 #left,#right{position:relative;transition:width .2s,opacity .2s}
-body.flowExpanded main{grid-template-columns:300px 1fr}
-body.flowExpanded #stage{display:none}
-body.flowExpanded #right{grid-column:2;border-left:0}
-body.flowExpanded #right .tabs{position:sticky;top:0;z-index:8}
-body.flowExpanded #t-flow{min-height:calc(100% - 46px)}
+body.workspaceExpanded main{grid-template-columns:300px 1fr}
+body.workspaceExpanded #stage{display:none}
+body.workspaceExpanded #right{grid-column:2;border-left:0}
+body.workspaceExpanded #right .tabs{position:sticky;top:0;z-index:8}
+body.workspaceExpanded .tabpane.on{min-height:calc(100% - 46px);box-sizing:border-box}
+body.workspaceExpanded #t-flow{min-height:calc(100% - 46px)}
+body.workspaceExpanded #t-sim #code{min-height:calc(100vh - 245px);height:calc(100vh - 245px)}
+.paneHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 9px;color:var(--teal-d)}
+.paneHead h4{margin:0;font-size:15px}
+.paneExpand{border:1px solid var(--line);border-radius:7px;background:#fffdf6;color:var(--teal-d);padding:5px 9px;cursor:pointer;font-size:12px;white-space:nowrap}
+.paneExpand:hover{background:#efe9d4}
 body.leftCollapsed main{grid-template-columns:44px 1fr 370px}
 body.rightCollapsed main{grid-template-columns:300px 1fr 44px}
 body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
@@ -350,12 +356,12 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabs"><button data-t="wiring" class="on">接線簡圖</button><button data-t="flow">流程圖</button><button data-t="prompt">規則設計</button><button data-t="sim">▶ 模擬</button><button data-t="pins">腳位</button></div>
     <div class="tabpane on" id="t-wiring"></div>
     <div class="tabpane" id="t-flow">
-      <div class="flowbar"><button class="btn ghost" data-flow-add="I">＋ I 輸入</button><button class="btn ghost" data-flow-add="P">＋ P 處理</button><button class="btn ghost" data-flow-add="O">＋ O 輸出</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">恢復原本版面</button></div>
+      <div class="flowbar"><button class="btn ghost" data-flow-add="I">＋ I 輸入</button><button class="btn ghost" data-flow-add="P">＋ P 處理</button><button class="btn ghost" data-flow-add="O">＋ O 輸出</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">↩ 回到上一步</button></div>
       <p class="flowhint">先新增節點，再拖曳排列；菱形請按右鍵選「連接是／否分支」，要接入菱形則選「指定上游輸入」。一般連線按「連線」後依序點兩個節點。</p>
       <div class="flowlayout"><div class="flowcanvas" id="flowCanvas"><svg id="flowSvg" viewBox="0 0 600 460" preserveAspectRatio="none"><defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="flowLinks"></g></svg><div id="flowNodes"></div></div><div class="flowinspect" id="flowInspect"><h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div></div></div>
     </div>
     <div class="tabpane" id="t-prompt">
-      <div class="ipoH"><b>先設計規則，再產生流程圖與程式。</b>硬體元件由接線帶入；你只要說清楚輸入、判斷和輸出。</div>
+      <div class="paneHead"><h4>規則設計</h4><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button></div><div class="ipoH"><b>先設計規則，再產生流程圖與程式。</b>硬體元件由接線帶入；你只要說清楚輸入、判斷和輸出。</div>
       <div class="functionTabs" id="functionTabs"></div>
       <div class="functionCard"><h4>功能設定：這個專案要完成什麼功能？</h4><div class="functionGrid"><label class="wide">功能名稱<input id="fnName" placeholder="例如：按鈕控制機器人表情"></label><label class="wide">功能目的<textarea id="fnPurpose" placeholder="請說明這個功能要解決什麼問題，以及實際要完成什麼。例如：讓學生了解按鈕如何控制 LCD；按下按鈕閉眼，放開按鈕張眼。"></textarea></label></div></div>
       <details class="hardwareSummary" open><summary>硬體元件（依接線自動帶入）</summary><div class="hardwareCols"><div><b class="hI">I 輸入</b><div id="hardwareIAuto"></div></div><div><b class="hO">O 輸出</b><div id="hardwareOAuto"></div></div></div></details>
@@ -373,7 +379,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="note" id="promptNote">把提示詞貼給 AI，它就有完整的 UNO Q 接線資訊可以幫你寫程式。</div>
     </div>
     <div class="tabpane" id="t-sim">
-      <div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
+      <div class="paneHead"><h4>程式碼與模擬</h4><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button></div><div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
       <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
@@ -1554,15 +1560,15 @@ function renderRight(){
   // 接線簡圖
   let rows='';
   state.comps.forEach(c=>G[c.id].legs.forEach((l,i)=>{rows+=`<tr>${i===0?`<td rowspan="${G[c.id].legs.length}"><b>${compName(c)}</b></td>`:''}<td>${l.part}</td><td>${legPill(l)}</td><td style="color:var(--muted);font-size:11.5px">${l.via||''}</td></tr>`;}));
-  $('t-wiring').innerHTML=state.comps.length?`<table><tr><th>元件</th><th>元件腳</th><th>接到 ${BD().short}</th><th>備註</th></tr>
+  $('t-wiring').innerHTML=`<div class="paneHead"><h4>接線簡圖</h4><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button></div>`+(state.comps.length?`<table><tr><th>元件</th><th>元件腳</th><th>接到 ${BD().short}</th><th>備註</th></tr>
     <tr><td><b>電源軌</b></td><td colspan="3" style="font-size:12px">3V3 → 上排 + 軌、GND → 上排 − 軌；5V → 下排 + 軌、GND → 下排 − 軌</td></tr>${rows}</table>
     <button class="btn wide ghost" id="bCopyTable">複製接線表（純文字）</button>`
-    :`<div class="hint">加入元件後，這裡會列出每條線該接到哪裡。</div>`;
+    :`<div class="hint">加入元件後，這裡會列出每條線該接到哪裡。</div>`);
   const ct=$('bCopyTable'); if(ct) ct.onclick=()=>copyText(wiringText(G),'已複製接線表');
   // 提示詞
   renderIPO();
   // 腳位速查
-  $('t-pins').innerHTML=BD().pinsTab();
+  $('t-pins').innerHTML=`<div class="paneHead"><h4>腳位速查</h4><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button></div>`+BD().pinsTab();
 }
 function wiringText(G){
   let s=`${BD().short} 接線表：${state.name}\n電源軌：3V3→上排+、GND→上排−；5V→下排+、GND→下排−\n`;
@@ -1751,10 +1757,11 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
   if(b.dataset.act==='edit'){if(locked){toast('目前為鎖定狀態');return;}editComp(id);} if(b.dataset.act==='del')delComp(id);});
 $('list').addEventListener('click',e=>{if(e.target.closest('[data-act]'))return;const it=e.target.closest('.item');if(!it)return;selectedId=selectedId===it.dataset.id?null:it.dataset.id;renderAll();});
 $('bShowAll').onclick=()=>{selectedId=null;renderAll();};
-document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));document.body.classList.toggle('flowExpanded',b.dataset.t==='flow');});
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));if(b.dataset.t==='flow')document.body.classList.add('workspaceExpanded');});
+document.getElementById('right').addEventListener('click',e=>{const b=e.target.closest('[data-pane-expand]');if(!b)return;document.body.classList.toggle('workspaceExpanded');const on=document.body.classList.contains('workspaceExpanded');document.querySelectorAll('[data-pane-expand]').forEach(x=>x.textContent=on?'↩ 回到上一步':'⛶ 放大閱讀');setTimeout(()=>{if(viewMode==='phys')fit();},0);});
 document.querySelectorAll('[data-flow-add]').forEach(b=>b.onclick=()=>addFlowNode(b.dataset.flowAdd));
 $('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
-$('flowRestore').onclick=()=>document.body.classList.remove('flowExpanded');
+$('flowRestore').onclick=()=>{document.body.classList.remove('workspaceExpanded');document.querySelectorAll('[data-pane-expand]').forEach(x=>x.textContent='⛶ 放大閱讀');};
 $('functionTabs').addEventListener('click',e=>{const b=e.target.closest('[data-fid]');if(b){activateFunction(b.dataset.fid);return;}if(e.target.id==='addFunction')addFunction();if(e.target.id==='deleteFunction')deleteActiveFunction();});
 $('flowConnect').onclick=()=>{flowConnectMode=!flowConnectMode;flowConnectFrom=null;flowConnectTo=null;flowConnectLabel='';$('flowConnect').classList.toggle('on',flowConnectMode);$('flowConnect').textContent=flowConnectMode?'↔ 點兩個節點連線':'↔ 連線';renderFlow();};
 $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.flow-node');if(!el)return;const id=el.dataset.flowId;
