@@ -1261,8 +1261,20 @@ function ipoBadge(x,y,k,on){ if(!on) return `<g pointer-events="none"><circle cx
 
 /* 程式碼對應的區塊（依變數名稱找行） */
 let CM={src:null};
+function stageLine(stage,lines){
+  const s=String(stage||'').toUpperCase();
+  const label=s==='I'?'輸入':s==='P'?'處理':'輸出';
+  const marker=new RegExp('={3,}\\s*'+s+'(?:\\s|[:：]|$)|\\b'+s+'\\s*'+label,'i');
+  let line=lines.findIndex(l=>marker.test(l));
+  if(line>=0) return line;
+  // 手動程式可能沒有 IPO 標題：用常見 Arduino 動作作為保底位置。
+  const fallback=s==='I'?/(digitalRead|analogRead|pinMode|read[A-Z_])/i:
+    s==='P'?/(^\s*if\s*\(|^\s*switch\s*\(|規則\s*\d+)/i:
+    /(digitalWrite|analogWrite|Serial\.|lcd|oled|display|servo|tone|draw[A-Z])/i;
+  return lines.findIndex(l=>fallback.test(l));
+}
 function codeMap(){ const src=$('code').value; if(CM.src===src) return CM; const lines=src.split('\n');
-  const find=re=>lines.findIndex(l=>re.test(l)); const iI=find(/=====\s*I\s/), iP=find(/=====\s*P\s/), iO=find(/=====\s*O\s/);
+  const iI=stageLine('I',lines), iP=stageLine('P',lines), iO=stageLine('O',lines);
   let loopEnd=lines.length-1; for(let k=lines.length-1;k>=0;k--){ if(/^\}/.test(lines[k])){ loopEnd=k-1; break; } }
   const nextOf=a=>{ const c=[iI,iP,iO,loopEnd+1].filter(x=>x>a).sort((x,y)=>x-y); return c[0]-1; };
   CM={src,lines,I:iI>=0?[iI,nextOf(iI)]:null,P:iP>=0?[iP,nextOf(iP)]:null,O:iO>=0?[iO,nextOf(iO)]:null}; return CM; }
@@ -1755,13 +1767,15 @@ $('flowNodes').addEventListener('pointermove',e=>{if(flowWire){const r=$('flowCa
 $('flowNodes').addEventListener('pointerup',e=>{if(flowWire){const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.flow-node'),from=flowNode(flowWire.from);if(target&&target.dataset.flowId!==flowWire.from){const label=flowWire.label||'';const exists=state.flow.links.some(x=>x[0]===flowWire.from&&x[1]===target.dataset.flowId&&x[2]===label);if(!exists)state.flow.links.push([flowWire.from,target.dataset.flowId,label]);persist();}flowWire=null;renderFlow();return;}if(!flowDrag)return;const d=flowDrag;flowDrag=null;if(d.moved){persist();renderFlow();}else selectFlowNode(d.id);});
 $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.flow-node');if(!el)return;e.preventDefault();showFlowCtx(el.dataset.flowId,e.clientX,e.clientY);});
 function jumpToCodeStage(stage){
-  const ta=$('code'), lines=ta.value.split(/\r?\n/), re=new RegExp('=====\\s*'+stage+'\\b','i');
-  const line=lines.findIndex(x=>re.test(x));
-  if(line<0){toast(`找不到程式碼中的 ${stage} 區段`);return;}
+  const ta=$('code');
+  if(!ta.value.trim()&&state.codeAuto){ state.code=genCode(); ta.value=state.code; CM.src=null; updateCodeTag(); }
+  const lines=ta.value.split(/\r?\n/), line=stageLine(stage,lines);
+  if(line<0){toast(`程式碼中找不到 ${stage} 區段；請先按「依接線產生程式」`);return;}
   const range=codeMap()[stage]||[line,line];
   const cs=getComputedStyle(ta), lh=parseFloat(cs.lineHeight)||17.25;
   ta.scrollTo({top:Math.max(0,range[0]*lh-ta.clientHeight*.25),behavior:'smooth'});
   SIM.focusLine=range[0]; SIM.focusRange=range; SIM.focusStage=stage; SIM.execLine=range[0]; runScrollLine=range[0]; hlSig=''; selectCodeLine(range[0]); updateIpoBar(); updateCodeHL();
+  toast(`已跳到 ${stage} 區段（第 ${line+1} 行）`);
 }
 $('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
