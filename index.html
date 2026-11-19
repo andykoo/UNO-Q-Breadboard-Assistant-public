@@ -1298,7 +1298,7 @@ function stageLine(stage,lines){
 function inlineStageRange(stage,lines){
   const s=String(stage||'').toUpperCase();
   const marks=[];
-  lines.forEach((l,i)=>{ if(/^\s*\/\/(?!\s*=)/.test(l)&&new RegExp('(?:^|[+|｜、,，])\\s*'+s+'(?=\\s|[:：]|$)','i').test(l)) marks.push(i); });
+  lines.forEach((l,i)=>{ const at=l.indexOf('//'); if(at<0||/^\s*\/\/\s*=/.test(l))return; const body=l.slice(at+2); if(new RegExp('(?:^|[+＋|｜、,，])\\s*'+s+'(?=\\s|[:：]|$)','i').test(body)) marks.push(i); });
   if(!marks.length) return null;
   let a=marks[0],b=a;
   marks.forEach((m,i)=>{ const next=marks[i+1]; let end=next===undefined?m:next-1; if(next===undefined){ let k=m+1; while(k<lines.length&&k<m+7&&!/^\s*\/\//.test(lines[k])&&lines[k].trim())k++; end=k-1; } b=Math.max(b,end); });
@@ -1810,9 +1810,9 @@ $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.fl
 function jumpToCodeStage(stage,node){
   const ta=$('code');
   if(!ta.value.trim()&&state.codeAuto){ state.code=genCode(); ta.value=state.code; CM.src=null; updateCodeTag(); }
-  const lines=ta.value.split(/\r?\n/), map=codeMap()[stage], baseLine=stageLine(stage,lines);
-  let targetRange=inlineStageRange(stage,lines)||map||[baseLine,baseLine];
-  if(node&&map){
+  const lines=ta.value.split(/\r?\n/), map=codeMap()[stage], baseLine=stageLine(stage,lines), inlineRange=inlineStageRange(stage,lines);
+  let targetRange=inlineRange||map||[baseLine,baseLine];
+  if(node&&map&&!inlineRange){
     let hits=[];
     if(node.compId){ const c=byId(node.compId); if(c) hits=linesWith(map,compWords(c)); }
     if(!hits.length&&node.autoRule&&stage==='P'){ const ri=validRules().findIndex(r=>r.id===node.autoRule); if(ri>=0) hits=ruleLines(ri); }
