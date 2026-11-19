@@ -106,6 +106,13 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .tb button{background:#2a3a3a;border:1px solid #3b4d4d;color:#f3eedb;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
 .tb button:hover{background:#344848}
 .tb button.on{background:var(--accent);border-color:var(--accent)}
+.topMenu{position:relative}
+.topMenu summary{list-style:none;background:#2a3a3a;border:1px solid #3b4d4d;color:#f3eedb;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.topMenu summary::-webkit-details-marker{display:none}
+.topMenu[open] summary,.topMenu summary:hover{background:#344848}
+.topMenuPanel{position:absolute;right:0;top:calc(100% + 5px);z-index:30;display:grid;gap:4px;min-width:145px;padding:6px;background:#2a3a3a;border:1px solid #526363;border-radius:9px;box-shadow:0 8px 20px #0004}
+.topMenuPanel button{width:100%;text-align:left;background:transparent;border:0;padding:7px 9px}
+.topMenuPanel button:hover{background:#405454}
 main{display:grid;grid-template-columns:300px 1fr 370px;height:calc(100% - 56px)}
 aside{background:var(--paper);overflow:auto;border-right:1px solid var(--line)}
 #right{border-right:0;border-left:1px solid var(--line);display:flex;flex-direction:column}
@@ -302,13 +309,8 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
   <div class="tb">
     <button id="bSim" class="run">▶ 模擬</button>
     <button id="bHelp">操作教學</button>
-    <button id="bExample">載入範例</button>
-    <button id="bNew">新專案</button>
     <button id="bSave">存檔</button>
-    <button id="bOpen">開啟</button>
-    <button id="bExport">匯出檔案</button>
-    <button id="bImport">匯入檔案</button>
-    <button id="bPng">匯出 PNG</button>
+    <details class="topMenu"><summary>☰ 專案選單</summary><div class="topMenuPanel"><button id="bExample">載入範例</button><button id="bNew">新專案</button><button id="bOpen">開啟</button><button id="bExport">匯出檔案</button><button id="bImport">匯入檔案</button><button id="bPng">匯出 PNG</button></div></details>
     <button id="bLock">鎖定編輯</button>
     <button id="bFull">全螢幕</button>
     <a class="creditAction" href="https://tool.davidhuanglab.com/arduino-breadboard/" target="_blank" rel="noopener">原創：黃信惠的瘋狂教室｜二創作者：柯建盛｜2026-11-18｜參考來源</a>
@@ -2280,10 +2282,10 @@ $('code').addEventListener('scroll',()=>{ updateCodeGutter(); if(SIM.running) up
 $('code').addEventListener('keydown',()=>{ lastTyped=performance.now(); });
 $('code').addEventListener('input',()=>{ state.code=$('code').value; updateCodeGutter(); if(state.codeAuto){ state.codeAuto=false; updateCodeTag(); } persist(); });
 $('code').addEventListener('keydown',e=>{ if(e.key==='Tab'){ e.preventDefault(); const t=e.target,a=t.selectionStart; t.setRangeText('  ',a,t.selectionEnd,'end'); t.dispatchEvent(new Event('input')); } });
-$('bRun').onclick=()=>{ const tab=document.querySelector('.tabs button[data-t="sim"]'); if(tab)tab.click(); runSim().catch(e=>{log('✖ 模擬啟動失敗：'+(e&&e.message||e),'err');toast('模擬啟動失敗，請查看序列監控');}); };
+$('bRun').onclick=()=>{ shrinkWorkspace(); const tab=document.querySelector('.tabs button[data-t="sim"]'); if(tab)tab.click(); runSim().catch(e=>{log('✖ 模擬啟動失敗：'+(e&&e.message||e),'err');toast('模擬啟動失敗，請查看序列監控');}); };
 $('bStop').onclick=()=>stopSim(); $('bStop2').onclick=()=>stopSim();
 $('bClr').onclick=()=>{ $('con').innerHTML=''; conLine=null; };
-$('bSim').onclick=()=>{ if(SIM.running){ stopSim(); return; } document.querySelector('.tabs button[data-t=sim]').click(); runSim(); };
+$('bSim').onclick=()=>{ if(SIM.running){ stopSim(); return; } shrinkWorkspace(); document.querySelector('.tabs button[data-t=sim]').click(); runSim(); };
 $('mute').onchange=updateAudio;
 $('ipoFlow').onchange=()=>{ if(!$('ipoFlow').checked){ SIM.pulses=[]; SIM.hold={}; } schedule(); };
 $('bGen').onclick=()=>{ const go=()=>{ stopSim(); state.codeAuto=true; state.code=genCode(); $('code').value=state.code; updateCodeTag(); persist(); toast('已依目前接線產生程式'); };
