@@ -105,6 +105,8 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 .tb{display:flex;gap:6px;margin-left:auto;flex-wrap:nowrap;overflow:visible;position:relative;z-index:40}
 .tb button{background:#2a3a3a;border:1px solid #3b4d4d;color:#f3eedb;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
 .tb button:hover{background:#344848}
+.tb #bExport{background:#b91c1c;border-color:#b91c1c;color:#fff}
+.tb #bExport:hover{background:#991b1b;border-color:#991b1b}
 .tb button.on{background:var(--accent);border-color:var(--accent)}
 .topMenu{position:relative}
 .topMenu summary{list-style:none;background:#2a3a3a;border:1px solid #3b4d4d;color:#f3eedb;border-radius:8px;padding:6px 10px;cursor:pointer;white-space:nowrap}
@@ -311,7 +313,8 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <button id="bHelp">操作教學</button>
     <button id="bSave">存檔</button>
     <button id="bShare" type="button">分享網址</button>
-    <details class="topMenu"><summary>☰ 專案選單</summary><div class="topMenuPanel"><button id="bExample">載入範例</button><button id="bNew">新專案</button><button id="bOpen">開啟</button><button id="bExport">匯出檔案</button><button id="bImport">匯入檔案</button><button id="bPng">匯出 PNG</button></div></details>
+    <button id="bExport" type="button">匯出檔案</button>
+    <details class="topMenu"><summary>☰ 專案選單</summary><div class="topMenuPanel"><button id="bExample">載入範例</button><button id="bNew">新專案</button><button id="bOpen">開啟</button><button id="bImport">匯入檔案</button><button id="bPng">匯出 PNG</button></div></details>
     <button id="bLock">鎖定編輯</button>
     <button id="bFull">全螢幕</button>
     <a class="creditAction" href="https://tool.davidhuanglab.com/arduino-breadboard/" target="_blank" rel="noopener">原創：黃信惠的瘋狂教室｜二創作者：柯建盛｜2026-11-18｜參考來源</a>
