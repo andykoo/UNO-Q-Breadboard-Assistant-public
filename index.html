@@ -2214,9 +2214,11 @@ function checkOverVolt(){ if(!SIM.running) return; SIM.burn=SIM.burn||{};
   state.comps.filter(c=>c.type==='solar'&&c.pins.sig).forEach(c=>{ const id=c.pins.sig, V=inp(c).V, pinV=V/2;
     if(pinV>VOLT_BURN&&!SIM.burn[id]){ SIM.burn[id]={c:c.id,at:performance.now(),V};
       log(`✖ ${compName(c)} 電壓 ${V.toFixed(1)}V，分壓後 ${pinV.toFixed(2)}V 超過 ${BD().short} 腳位上限 3.3V：${pinLabel(id)} 腳位燒毀了！實際上可能整塊開發板一起損壞。`,'err');
-      log(`  ↳ 把電壓調回 6.6V 以下，再按「重新執行」（等於換一塊新板子）。真實接線一定要經 10kΩ／10kΩ 分壓，而且太陽能板電壓不能超過 6.6V。`,'err');
+      log(`  ↳ 把電壓調回 7.2V 以下火就會熄滅；安全範圍是 6.6V 以下。真實接線一定要經 10kΩ／10kΩ 分壓，而且太陽能板電壓不能超過 6.6V。`,'err');
       toast(`🔥 ${pinLabel(id)} 腳位燒毀！太陽能板電壓太高（${V.toFixed(1)}V）`); }
-    else if(pinV>VOLT_WARN&&!SIM.burn[id]) warnOnce('solWarn'+id,`${compName(c)} 分壓後 ${pinV.toFixed(2)}V，已超過 3.3V 上限，再調高就會燒毀腳位！`); }); }
+    else if(pinV<=VOLT_BURN&&SIM.burn[id]){ delete SIM.burn[id]; SIM.warned&&SIM.warned.delete('solWarn'+id);
+      log(`✔ ${compName(c)} 電壓調回 ${V.toFixed(1)}V，火熄了，${pinLabel(id)} 腳位恢復讀值。（提醒：真實電路燒壞的元件不會自己復原，要換新的）`,'sys'); toast('✔ 電壓調回，火熄了'); }
+    if(pinV>VOLT_WARN&&pinV<=VOLT_BURN&&!SIM.burn[id]) warnOnce('solWarn'+id,`${compName(c)} 分壓後 ${pinV.toFixed(2)}V，已超過 3.3V 上限，再調高就會燒毀腳位！`); }); }
 function burnFxSvg(){ if(!SIM.running) return ''; checkOverVolt(); let h=''; const t=performance.now()/1000, d=x=>`animation-delay:-${(t%x).toFixed(2)}s`;
   state.comps.filter(c=>c.type==='solar'&&c.pins.sig).forEach(c=>{ const id=c.pins.sig, p=pinPos(id), pinV=inp(c).V/2, b=SIM.burn&&SIM.burn[id];
     if(b){ const B=BOARD;
