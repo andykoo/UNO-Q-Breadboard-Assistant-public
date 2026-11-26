@@ -1371,8 +1371,12 @@ let CM={src:null};
 function stageLine(stage,lines){
   const s=String(stage||'').toUpperCase();
   const label=s==='I'?'輸入':s==='P'?'處理':'輸出';
-  const marker=new RegExp('={3,}\\s*'+s+'(?:\\s|[:：]|$)|\\b'+s+'\\s*'+label,'i');
-  let line=lines.findIndex(l=>marker.test(l));
+  // 先找「===== I／P／O」區塊標題；找不到才找「P 處理」這類文字（避免被「輸出狀態：P 處理決定」等註解誤判）
+  const head=new RegExp('={3,}\\s*'+s+'(?:\\s|[:：]|$)','i');
+  let line=lines.findIndex(l=>head.test(l));
+  if(line>=0) return line;
+  const marker=new RegExp('\\b'+s+'\\s*'+label,'i');
+  line=lines.findIndex(l=>marker.test(l)&&!/輸出狀態/.test(l));
   if(line>=0) return line;
   // 手動程式可能沒有 IPO 標題：用常見 Arduino 動作作為保底位置。
   const fallback=s==='I'?/(digitalRead|analogRead|pinMode|read[A-Z_])/i:
@@ -1383,7 +1387,7 @@ function stageLine(stage,lines){
 function inlineStageRange(stage,lines){
   const s=String(stage||'').toUpperCase();
   const marks=[];
-  lines.forEach((l,i)=>{ const at=l.indexOf('//'); if(at<0||/^\s*\/\/\s*=/.test(l))return; const body=l.slice(at+2); if(new RegExp('(?:^|[+＋|｜、,，])\\s*'+s+'(?=\\s|[:：]|$)','i').test(body)) marks.push(i); });
+  lines.forEach((l,i)=>{ const at=l.indexOf('//'); if(at<0||/^\s*\/\/\s*[=-]{3,}/.test(l)||/^\s*\/\/\s*=/.test(l))return; const body=l.slice(at+2); if(new RegExp('(?:^|[+＋|｜、,，])\\s*'+s+'(?=\\s|[:：]|$)','i').test(body)) marks.push(i); });
   if(!marks.length) return null;
   let a=marks[0],b=a;
   marks.forEach((m,i)=>{ const next=marks[i+1]; let end=next===undefined?m:next-1; if(next===undefined){ let k=m+1; while(k<lines.length&&k<m+7&&!/^\s*\/\//.test(lines[k])&&lines[k].trim())k++; end=k-1; } b=Math.max(b,end); });
