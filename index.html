@@ -245,6 +245,7 @@ textarea{width:100%;min-height:300px;border:1px solid var(--line);border-radius:
 #ctx{position:fixed;display:none;z-index:50;background:#fff;border:1px solid var(--line);border-radius:10px;box-shadow:0 8px 24px #0002;padding:5px;min-width:170px}
 #ctx button{display:block;width:100%;text-align:left;border:0;background:transparent;padding:7px 10px;border-radius:7px;cursor:pointer}
 #ctx button:hover{background:#f2ecd9}
+.ctxShop{margin-top:4px;padding:6px 10px 4px;border-top:1px solid #eee6cf;font-size:12px;min-width:240px}.ctxShop b{display:block;margin-bottom:2px}
 #ctx .t{font-size:11.5px;color:var(--muted);padding:4px 10px 6px;border-bottom:1px solid #eee6cf;margin-bottom:4px}
 #modal{position:fixed;inset:0;background:#1d262699;display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
 #modal .box{background:var(--paper);border-radius:14px;max-width:520px;width:100%;max-height:88vh;overflow:auto;padding:18px 20px;box-shadow:0 20px 50px #0004}
@@ -1878,15 +1879,20 @@ function endPtr(e){ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;
     else if(!drag.moved && selectedId){selectedId=null;renderAll();}
   } drag=null; svg.classList.remove('pan');}
 svg.addEventListener('pointerup',endPtr);svg.addEventListener('pointercancel',endPtr);
-svg.addEventListener('contextmenu',e=>{e.preventDefault();const g=e.target.closest('.part');if(g) showCtx(g.dataset.id,e.clientX,e.clientY);});
+svg.addEventListener('contextmenu',e=>{e.preventDefault();const g=e.target.closest('.part');if(g){ showCtx(g.dataset.id,e.clientX,e.clientY); return; }
+  if(viewMode!=='ipo'){ const w=toWorld(e.clientX,e.clientY); if(w.x>=BOARD.x&&w.x<=BOARD.x+BOARD.w&&w.y>=BOARD.y&&w.y<=BOARD.y+BOARD.h) showBoardCtx(e.clientX,e.clientY); else if(w.x>=BB.x&&w.x<=BB.x+BB.w&&w.y>=BB.y&&w.y<=BB.y+BB.h) showBoardCtx(e.clientX,e.clientY,true); } });
 window.addEventListener('resize',applyView);
 
 /* ================= 右鍵選單、對話框 ================= */
 function showCtx(id,x,y){const c=state.comps.find(k=>k.id===id);const m=$('ctx');
-  m.innerHTML=`<div class="t">${compName(c)}</div><button data-c="view">只看這個元件的接線</button>${locked?'':`<button data-c="edit">更換腳位…</button><button data-c="del">刪除元件</button>`}`;
-  m.style.display='block';m.style.left=Math.min(x,innerWidth-190)+'px';m.style.top=Math.min(y,innerHeight-140)+'px';
+  m.innerHTML=`<div class="t">${compName(c)}</div><button data-c="view">只看這個元件的接線</button>${locked?'':`<button data-c="edit">更換腳位…</button><button data-c="del">刪除元件</button>`}${PARTS[c.type]?`<div class="ctxShop"><b>🔗 找實品</b>${partLinksHtml(c.type)}</div>`:''}`;
+  placeCtx(m,x,y);
   m.onclick=ev=>{const a=ev.target.dataset.c;hideCtx();if(a==='view'){selectedId=id;renderAll();}if(a==='edit')editComp(id);if(a==='del')delComp(id);};
 }
+function placeCtx(m,x,y){ m.style.display='block'; m.style.left='0px'; m.style.top='0px'; const r=m.getBoundingClientRect(); m.style.left=Math.max(4,Math.min(x,innerWidth-r.width-8))+'px'; m.style.top=Math.max(4,Math.min(y,innerHeight-r.height-8))+'px'; }
+function showBoardCtx(x,y,bb){ const m=$('ctx'); const [label,q]=bb?['麵包板（830 孔）','830孔 麵包板']:BOARD_PART[B_ID];
+  m.innerHTML=`<div class="t">${label}</div><div class="ctxShop"><b>🔗 找實品</b><div class="shop"><span>${label}</span><span class="sl">${shopLinks(q)}</span></div>${bb?`<div class="shop"><span>杜邦線</span><span class="sl">${shopLinks('杜邦線 公對公 公對母 20cm')}</span></div>`:''}</div>`;
+  m.onclick=ev=>{ if(ev.target.closest('a')) hideCtx(); }; placeCtx(m,x,y); }
 function hideCtx(){$('ctx').style.display='none';}
 document.addEventListener('click',e=>{if(!e.target.closest('#ctx'))hideCtx();});
 function modal(html){$('mbox').innerHTML=html;$('modal').style.display='flex';$('mbox').querySelectorAll('[data-m=close]').forEach(b=>b.onclick=closeModal);}
