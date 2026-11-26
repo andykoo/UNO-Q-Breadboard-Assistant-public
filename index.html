@@ -222,6 +222,10 @@ table{border-collapse:collapse;width:100%;font-size:12.5px}
 th,td{text-align:left;padding:5px 6px;border-bottom:1px solid #eee6cf;vertical-align:top}
 th{font-size:11.5px;color:var(--muted);font-weight:500}
 #t-wiring td:first-child{width:30%}
+.shopBox{margin-top:8px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px;background:#fffdf6;font-size:12px}
+.shop{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12px;border-bottom:1px dotted var(--line)}.shop:last-child{border-bottom:0}
+.shop .sl{white-space:nowrap}.shop a{color:var(--teal);text-decoration:none;font-weight:700}.shop a:hover{text-decoration:underline}
+.bom{margin-top:14px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fffdf6}.bom h5{margin:0 0 4px;font-size:14px}.bom .qty{margin-left:6px;color:#b45309}
 td.mono{font-family:var(--mono);font-size:11.5px}
 textarea{width:100%;min-height:300px;border:1px solid var(--line);border-radius:10px;padding:10px;background:#fff;font-size:12.5px;line-height:1.6;resize:vertical}
 .card{border:1.5px solid var(--teal);border-radius:12px;background:#fff;padding:10px 12px;margin:12px 14px 0;flex:none}
@@ -232,6 +236,9 @@ textarea{width:100%;min-height:300px;border:1px solid var(--line);border-radius:
 .leg .from{flex:1}
 .leg .via{color:var(--muted);font-size:11.5px}
 @keyframes wheelSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.fxFlick{animation:fxFlick .4s ease-in-out infinite alternate}@keyframes fxFlick{from{opacity:.35}to{opacity:1}}
+.fxFlame{transform-box:fill-box;transform-origin:50% 100%;animation:fxFlame .5s ease-in-out infinite alternate}@keyframes fxFlame{from{transform:scale(.85,.8)}to{transform:scale(1.1,1.15)}}
+.fxSmoke{transform-box:fill-box;transform-origin:center;animation:fxSmoke 2.2s ease-out infinite}@keyframes fxSmoke{from{transform:translate(0,0) scale(.5);opacity:.8}to{transform:translate(10px,-70px) scale(2);opacity:0}}
 .pill{font-family:var(--mono);font-weight:700;font-size:11.5px;border-radius:99px;padding:2px 10px;color:#fff;white-space:nowrap}
 .pill.sig{background:#16a34a}.pill.gnd{background:#111}.pill.v33{background:#c2410c}.pill.v5{background:#c81e1e}.pill.q{background:#0b5fa5}
 .note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
@@ -578,7 +585,7 @@ BOARD_DEFS.hub8735 = {
     oled:{pref:{sda:['P3'],scl:['P4']},hint:'8735 的 Wire 是 3（SDA）/4（SCL），Wire1 是 0/1。VCC 接 3.3V。要顯示中文建議用台灣社群版 U8G2 程式庫（twgo.io/vygya）。'},
     sonar:{pref:{trig:['P7','P15','P8'],echo:['P8','P11','P7']},hint:'VCC 需 5V。8735 的 GPIO 不耐 5V，Echo 一定要經 1kΩ/2kΩ 分壓後再接到腳位。'},
     dht:{pref:{sig:['P7','P15','P11']},hint:'模組版 DHT11：S 接腳位、+ 接 3.3V、− 接 GND。'},
-    solar:{pref:{sig:['P9','P10','P2','P0','P1']},hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳（0、1、2、9、10），− 接 GND。8735 腳位最高 3.3V，不可直接接太陽能板。模擬時可設定太陽能板電壓。'},
+    solar:{pref:{sig:['P9','P10','P2','P0','P1']},hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳（0、1、2、9、10），− 接 GND。8735 腳位最高 3.3V，不可直接接太陽能板。模擬時可設定太陽能板電壓（0–12V）：超過 6.6V 時腳位會燒毀。'},
     car:{pref:{aia:['P18','P19','P24'],aib:['P11','P15','P7'],bia:['P21','P22','P23','P13'],bib:['P8','P5','P6','P2']},hint:'雙輪車：一片 L9110S 雙路驅動模組控制左右兩顆 TT 馬達。A-IA、B-IA 接 PWM 腳（11–13、18–24）調速度，A-IB、B-IB 接任一腳控制方向。A 路接左輪、B 路接右輪。VCC 建議接外接電源（4 顆 AA），GND 與 8735 共地。'},
     motor:{pref:{ia:['P18','P19','P24','P21','P13'],ib:['P11','P15','P7','P8']},hint:'TT 馬達＋輪子一組，經 L9110S 馬達驅動模組控制：IA 接 PWM 腳（11–13、18–24）調速度，IB 接任一腳控制方向。VCC 建議接外接電源（4 顆 AA），GND 要和 8735 共地。不可把馬達直接接腳位。'},
     lcd:{pref:{sclk:['P19'],mosi:['P20'],cs:['P21'],rst:['P22'],dc:['P23']},hint:'YY-IPS130-V4.0（ST7789、240×240）已實機驗證的接線：SCLK→19、MOSI→20、CS→21、RST→22、DC→23（程式寫 AMB_D19～AMB_D23），VCC 與 BLK 接 3.3V、GND 接 GND。程式用 digitalWrite 軟體 SPI，不要改成 SPI1.transfer()；座標用完整 240×240，不要加 Y=80 偏移。'},
@@ -677,7 +684,7 @@ const TYPES_BASE = {
   lcd:{name:'LCD 1.3" IPS',bb:false,sigs:[{k:'sclk',label:'SCL',req:'dout',pref:['D13']},{k:'mosi',label:'SDA',req:'dout',pref:['D11']},{k:'cs',label:'CS',req:'dout',pref:['D10']},{k:'rst',label:'RES',req:'dout',pref:['D8']},{k:'dc',label:'DC',req:'dout',pref:['D7']}],
     hint:'YY-IPS130-V4.0：1.3 吋 IPS LCD 螢幕，ST7789 驅動、240×240、SPI、RGB565。VCC 與 BLK（背光）接 3.3V、GND 接 GND；SCL 是時脈（SCLK）、SDA 是資料（MOSI），不使用 MISO。程式用 digitalWrite 軟體 SPI，所以任何數位腳都能接。'},
   solar:{name:'太陽能板',bb:false,sigs:[{k:'sig',label:'+（分壓後）',req:'analog',pref:['A2','A3','A0','A1','A4','A5']}],
-    hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳，− 接 GND。UNO Q 類比腳最高 3.3V，不可直接接太陽能板。程式把讀值換算回電壓；模擬時可設定太陽能板電壓（0–6V）。'},
+    hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳，− 接 GND。UNO Q 類比腳最高 3.3V，不可直接接太陽能板。程式把讀值換算回電壓；模擬時可設定太陽能板電壓（0–12V）：超過 6.6V 時分壓後會超過 3.3V，開發板腳位會燒毀。'},
   car:{name:'雙輪車',bb:false,sigs:[{k:'aia',label:'A-IA（左輪速度）',req:'pwm',pref:['D5','D3','D6']},{k:'aib',label:'A-IB（左輪方向）',req:'dout',pref:['D4','D2','D12']},{k:'bia',label:'B-IA（右輪速度）',req:'pwm',pref:['D6','D9','D10','D11','D3']},{k:'bib',label:'B-IB（右輪方向）',req:'dout',pref:['D7','D8','D13','D12','D2']}],
     hint:'雙輪車：一片 L9110S 雙路驅動模組控制左右兩顆 TT 馬達。A-IA、B-IA 接 PWM 腳（D3、D5、D6、D9、D10、D11）調速度，A-IB、B-IB 接數位腳控制方向；A 路接左輪、B 路接右輪。VCC 建議接外接電源（4 顆 AA），GND 要和 UNO Q 共地。'},
   motor:{name:'輪子＋TT 馬達',bb:false,sigs:[{k:'ia',label:'IA',req:'pwm',pref:['D5','D6','D3','D10','D11','D9']},{k:'ib',label:'IB',req:'dout',pref:['D4','D2','D12','D13','D7','D8']}],
@@ -1589,6 +1596,7 @@ function renderCanvas(){
       parts+=`<g pointer-events="none"><rect x="${B.x-8}" y="${B.y-8}" width="${B.w+16}" height="${B.h+16}" rx="18" fill="#7c3aed" fill-opacity=".14" stroke="#7c3aed" stroke-width="4"/><rect x="${B.x-8}" y="${B.y-8}" width="${B.w+16}" height="${B.h+16}" rx="18" fill="none" stroke="#a78bfa" stroke-width="14" opacity=".45" filter="url(#glow)"/>
         <circle cx="${B.x+B.w/2}" cy="${B.y+B.h/2}" r="${f1(34*pz)}" fill="#7c3aed" opacity=".25" filter="url(#glow)"/><circle cx="${B.x+B.w/2}" cy="${B.y+B.h/2}" r="22" fill="#7c3aed" stroke="#fff" stroke-width="3"/><text x="${B.x+B.w/2}" y="${B.y+B.h/2+8}" font-size="24" font-weight="700" fill="#fff" text-anchor="middle">P</text></g>`; }
   }
+  if(SIM.running) parts+=burnFxSvg();
   const W=showWires?wires:'', Pp=showParts?parts:'';
   $('gLayerA').innerHTML = wiresTop?Pp:W; $('gLayerB').innerHTML = wiresTop?W:Pp;
   $('gLabels').innerHTML=labelsSvg(used);
@@ -1621,7 +1629,7 @@ function renderPalette(){
   $('palette').innerHTML=grp('I','感測、讀取外界')+'<div class="pgflow">↓</div>'+
     `<div class="pgrp P"><div class="pgh"><span class="ipo P">P</span>處理<small>開發板依規則判斷</small></div><div class="pboard">${BD().name} 負責處理。規則寫在右側「AI 提示詞」的 P 欄，程式會依規則自動產生。<div class="pLinks">AI 提示詞：<a href="#" data-ai-level="full">完整程式</a> ／ <a href="#" data-ai-level="fill">架構填空</a> ／ <a href="#" data-ai-level="ask">只問我問題</a></div></div></div><div class="pgflow">↓</div>`+
     grp('O','動作、顯示');
-  $('typeHint').textContent=TYPES[selType].hint;
+  $('typeHint').innerHTML=flowEsc(TYPES[selType].hint)+(PARTS[selType]?`<div class="shopBox"><b>🔗 找實品</b>${partLinksHtml(selType)}</div>`:'');
 }
 function pinOptions(req,cur,excludeId,withAuto,sug){
   const occ=occupancy(excludeId); let auto='';
@@ -1667,6 +1675,29 @@ function legPill(l){
   if(l.kind==='q') return `<span class="pill q">Qwiic</span>`;
   return `<span class="pill sig">${pinLabel(l.to)}</span>`;
 }
+const PARTS={
+  led:[['LED 5mm','5mm LED 發光二極體'],['220Ω 電阻','220歐姆 電阻 1/4W']],
+  button:[['按鈕','6x6 輕觸開關 按鈕']],
+  pot:[['可變電阻','可變電阻 10K 旋鈕 麵包板']],
+  ldr:[['光敏電阻','光敏電阻 5528'],['10kΩ 電阻','10K歐姆 電阻 1/4W']],
+  solar:[['太陽能板','6V 小型太陽能板'],['10kΩ 電阻（分壓用）','10K歐姆 電阻 1/4W',2]],
+  buzzer:[['有源蜂鳴器','有源蜂鳴器 5V 模組']],
+  servo:[['伺服馬達','SG90 伺服馬達']],
+  motor:[['TT 馬達＋輪子','TT馬達 輪子 黃色減速馬達'],['L9110S 驅動模組','L9110S 馬達驅動模組'],['4 顆 AA 電池盒','4節 AA 電池盒 附開關']],
+  car:[['L9110S 驅動模組','L9110S 雙路 馬達驅動模組'],['TT 馬達＋輪子','TT馬達 輪子 黃色減速馬達',2],['雙輪車底盤','智能小車 底盤 TT馬達 雙輪'],['4 顆 AA 電池盒','4節 AA 電池盒 附開關']],
+  oled:[['OLED 0.96 吋','0.96吋 OLED SSD1306 I2C 128x64']],
+  lcd:[['LCD 1.3 吋 IPS','1.3吋 IPS LCD ST7789 240x240 SPI']],
+  sonar:[['超音波感測器','HC-SR04 超音波感測器'],['1kΩ＋2kΩ 電阻（Echo 分壓）','1K 2K 歐姆 電阻 1/4W']],
+  dht:[['溫溼度模組','DHT11 溫溼度感測器 模組']],
+  qwiic:[['Modulino 模組','Arduino Modulino']]};
+const BOARD_PART={unoq:['Arduino UNO Q','Arduino UNO Q'],hub8735:['HUB 8735 ultra','HUB 8735 ultra']};
+const SHOP=[['Google','https://www.google.com/search?q='],['蝦皮','https://shopee.tw/search?keyword='],['露天','https://www.ruten.com.tw/find/?q=']];
+function shopLinks(q){ return SHOP.map(([n,u])=>`<a href="${u}${encodeURIComponent(q)}" target="_blank" rel="noopener">${n}</a>`).join('｜'); }
+function partLinksHtml(type){ return (PARTS[type]||[]).map(([label,q,k])=>`<div class="shop"><span>${label}${k>1?` ×${k}`:''}</span><span class="sl">${shopLinks(q)}</span></div>`).join(''); }
+function bomHtml(){ const cnt={}; state.comps.forEach(c=>cnt[c.type]=(cnt[c.type]||0)+1);
+  const rows=[[BOARD_PART[B_ID][0],1,BOARD_PART[B_ID][1]],['麵包板（830 孔）',1,'830孔 麵包板'],['杜邦線（公對公、公對母）','一包','杜邦線 公對公 公對母 20cm']];
+  const m={}; Object.keys(cnt).forEach(t=>(PARTS[t]||[]).forEach(([label,q,k])=>{ const key=q; if(m[key]) m[key][1]+=cnt[t]*(k||1); else { m[key]=[label,cnt[t]*(k||1),q]; rows.push(m[key]); } }));
+  return `<div class="bom"><h5>🛒 材料清單・找實品</h5><div class="note">點連結會用關鍵字搜尋，請自行比較規格與價格。</div>${rows.map(([l,n,q])=>`<div class="shop"><span>${l}${n!==''?`<b class="qty">× ${n}</b>`:''}</span><span class="sl">${shopLinks(q)}</span></div>`).join('')}</div>`; }
 function renderRight(){
   const G=geomAll();
   // 單一元件卡片
@@ -1675,6 +1706,7 @@ function renderRight(){
     $('selCard').innerHTML=`<div class="card"><h4>${ICONS[c.type].replace('<svg','<svg width="22" height="22"')} ${compName(c)}</h4>
       ${g.legs.map(l=>`<div class="leg"><span class="dot" style="background:${l.kind==='gnd'?C_GND:l.kind==='v33'?C_V33:l.kind==='v5'?C_V5:l.kind==='q'?'#0b5fa5':'#16a34a'}"></span><span class="from">${l.part}${l.via?`<div class="via">${l.via}</div>`:''}</span>${legPill(l)}</div>`).join('')}
       <div class="note">${TYPES[c.type].hint}</div>
+      ${PARTS[c.type]?`<div class="shopBox"><b>🔗 找實品</b>${partLinksHtml(c.type)}</div>`:''}
       <div class="mrow" style="margin-top:8px"><button class="btn ghost" data-act="edit" data-id="${c.id}">更換腳位</button><button class="btn danger" data-act="del" data-id="${c.id}">刪除</button></div></div>`;
     $('selBanner').style.display='flex'; $('selText').textContent='只看：'+compName(c);
   } else { $('selCard').innerHTML=''; $('selBanner').style.display='none'; }
@@ -1683,7 +1715,7 @@ function renderRight(){
   state.comps.forEach(c=>G[c.id].legs.forEach((l,i)=>{rows+=`<tr>${i===0?`<td rowspan="${G[c.id].legs.length}"><b>${compName(c)}</b></td>`:''}<td>${l.part}</td><td>${legPill(l)}</td><td style="color:var(--muted);font-size:11.5px">${l.via||''}</td></tr>`;}));
   $('t-wiring').innerHTML=`<div class="paneHead"><h4>接線簡圖</h4><span><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button><button class="paneExpand" data-pane-back>↩ 回到上一步</button></span></div>`+(state.comps.length?`<table><tr><th>元件</th><th>元件腳</th><th>接到 ${BD().short}</th><th>備註</th></tr>
     <tr><td><b>電源軌</b></td><td colspan="3" style="font-size:12px">3V3 → 上排 + 軌、GND → 上排 − 軌；5V → 下排 + 軌、GND → 下排 − 軌</td></tr>${rows}</table>
-    <button class="btn wide ghost" id="bCopyTable">複製接線表（純文字）</button>`
+    <button class="btn wide ghost" id="bCopyTable">複製接線表（純文字）</button>${bomHtml()}`
     :`<div class="hint">加入元件後，這裡會列出每條線該接到哪裡。</div>`);
   const ct=$('bCopyTable'); if(ct) ct.onclick=()=>copyText(wiringText(G),'已複製接線表');
   // 提示詞
@@ -1820,7 +1852,7 @@ svg.addEventListener('pointerdown',e=>{
     if(c&&c.type==='button'){SIM.pressed[c.id]=true;syncHold();schedule();simPtr={hold:c.id};svg.setPointerCapture(e.pointerId);return;}
     if(c&&(c.type==='pot'||c.type==='ldr')){simPtr={knob:c,k:'v',min:0,max:1,per:1/160,step:1000,sy:e.clientY,v0:inp(c).v};svg.setPointerCapture(e.pointerId);return;}
     if(c&&c.type==='sonar'){simPtr={knob:c,k:'d',min:2,max:300,per:1,step:1,sy:e.clientY,v0:inp(c).d};svg.setPointerCapture(e.pointerId);return;}
-    if(c&&c.type==='solar'){simPtr={knob:c,k:'V',min:0,max:6,per:6/160,step:10,sy:e.clientY,v0:inp(c).V};svg.setPointerCapture(e.pointerId);return;}
+    if(c&&c.type==='solar'){simPtr={knob:c,k:'V',min:0,max:12,per:12/240,step:10,sy:e.clientY,v0:inp(c).V};svg.setPointerCapture(e.pointerId);return;}
     drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:false};svg.classList.add('pan');svg.setPointerCapture(e.pointerId);return;
   }
   if(g&&viewMode!=='ipo'){const c=state.comps.find(x=>x.id===g.dataset.id);drag={mode:'part',c,start:w,orig:{col:c.col,x:c.x,y:c.y},moved:false};}
@@ -2171,6 +2203,32 @@ function simCar(c){ if(!SIM.running) return [0,0]; const h=holdOf(c); if(h&&Arra
 function carState(L,R){ const z=v=>Math.abs(v)<0.02, pct=v=>Math.round(Math.abs(v)*100)+'%'; if(z(L)&&z(R)) return '停止';
   if(L>0&&R>0) return Math.abs(L-R)<0.05?'前進 '+pct(L):(L>R?'前進偏右':'前進偏左'); if(L<0&&R<0) return '後退 '+pct(L);
   if(z(L)&&R>0||L<0&&R>0) return '左轉'; if(z(R)&&L>0||R<0&&L>0) return '右轉'; return '左 '+Math.round(L*100)+'%／右 '+Math.round(R*100)+'%'; }
+const VOLT_WARN=3.3, VOLT_BURN=3.6;   // 分壓後到腳位的電壓：超過 3.3V 危險，超過 3.6V 視為燒毀
+function checkOverVolt(){ if(!SIM.running) return; SIM.burn=SIM.burn||{};
+  state.comps.filter(c=>c.type==='solar'&&c.pins.sig).forEach(c=>{ const id=c.pins.sig, V=inp(c).V, pinV=V/2;
+    if(pinV>VOLT_BURN&&!SIM.burn[id]){ SIM.burn[id]={c:c.id,at:performance.now(),V};
+      log(`✖ ${compName(c)} 電壓 ${V.toFixed(1)}V，分壓後 ${pinV.toFixed(2)}V 超過 ${BD().short} 腳位上限 3.3V：${pinLabel(id)} 腳位燒毀了！實際上可能整塊開發板一起損壞。`,'err');
+      log(`  ↳ 把電壓調回 6.6V 以下，再按「重新執行」（等於換一塊新板子）。真實接線一定要經 10kΩ／10kΩ 分壓，而且太陽能板電壓不能超過 6.6V。`,'err');
+      toast(`🔥 ${pinLabel(id)} 腳位燒毀！太陽能板電壓太高（${V.toFixed(1)}V）`); }
+    else if(pinV>VOLT_WARN&&!SIM.burn[id]) warnOnce('solWarn'+id,`${compName(c)} 分壓後 ${pinV.toFixed(2)}V，已超過 3.3V 上限，再調高就會燒毀腳位！`); }); }
+function burnFxSvg(){ if(!SIM.running) return ''; checkOverVolt(); let h=''; const t=performance.now()/1000, d=x=>`animation-delay:-${(t%x).toFixed(2)}s`;
+  state.comps.filter(c=>c.type==='solar'&&c.pins.sig).forEach(c=>{ const id=c.pins.sig, p=pinPos(id), pinV=inp(c).V/2, b=SIM.burn&&SIM.burn[id];
+    if(b){ const B=BOARD;
+      h+=`<g pointer-events="none"><rect x="${B.x}" y="${B.y}" width="${B.w}" height="${B.h}" rx="14" fill="#111" opacity=".35"/>
+        <circle cx="${p.x}" cy="${p.y}" r="46" fill="#1c1917" opacity=".55" filter="url(#glow)"/><circle cx="${p.x}" cy="${p.y}" r="20" fill="#000" opacity=".7"/>
+        <circle cx="${p.x}" cy="${p.y}" r="30" fill="#f97316" opacity=".55" class="fxFlick" style="${d(.4)}" filter="url(#glow)"/>
+        <path d="M${p.x-22},${p.y+8} q6,-40 22,-58 q3,24 15,33 q9,-15 6,-30 q18,21 12,55 z" fill="#ef4444" class="fxFlame" style="${d(.6)}"/><path d="M${p.x-14},${p.y+6} q4,-26 14,-38 q2,16 10,22 q6,-10 4,-20 q12,14 8,36 z" fill="#f97316" class="fxFlame" style="${d(.5)}"/>
+        <path d="M${p.x-7},${p.y+6} q3,-16 8,-24 q2,10 6,14 q4,-6 3,-12 q6,9 4,22 z" fill="#fde047" class="fxFlame" style="${d(.37)}"/>
+        ${[0,1,2,3].map(i=>`<circle cx="${p.x+(i%2?8:-6)}" cy="${p.y-30}" r="${9+i*2}" fill="#57534e" class="fxSmoke" style="animation-delay:-${((t+i*.55)%2.2).toFixed(2)}s"/>`).join('')}
+        <rect x="${p.x+18}" y="${p.y-62}" width="118" height="24" rx="12" fill="#b91c1c" class="fxFlick" style="${d(.4)}"/><text x="${p.x+77}" y="${p.y-45}" font-size="13" font-weight="800" fill="#fff" text-anchor="middle">🔥 ${pinLabel(id)} 腳位燒毀</text></g>`;
+      h+=`<g pointer-events="none"><rect x="${c.x-6}" y="${c.y-14}" width="124" height="104" rx="8" fill="none" stroke="#dc2626" stroke-width="4" class="fxFlick" style="${d(.4)}"/>
+        <rect x="${c.x+6}" y="${c.y+88}" width="100" height="16" rx="8" fill="#b91c1c"/><text x="${c.x+56}" y="${c.y+100}" font-size="10" font-weight="800" fill="#fff" text-anchor="middle">電壓太高 ${inp(c).V.toFixed(1)}V</text></g>`;
+    } else if(pinV>VOLT_WARN){
+      h+=`<g pointer-events="none"><circle cx="${p.x}" cy="${p.y}" r="18" fill="none" stroke="#f59e0b" stroke-width="4" class="fxFlick" style="${d(.4)}"/>
+        <rect x="${p.x+14}" y="${p.y-40}" width="96" height="20" rx="10" fill="#f59e0b"/><text x="${p.x+62}" y="${p.y-26}" font-size="11" font-weight="800" fill="#111" text-anchor="middle">⚠ ${pinV.toFixed(2)}V 過高</text></g>`;
+      h+=`<g pointer-events="none"><rect x="${c.x+6}" y="${c.y+88}" width="100" height="16" rx="8" fill="#f59e0b"/><text x="${c.x+56}" y="${c.y+100}" font-size="10" font-weight="800" fill="#111" text-anchor="middle">⚠ 電壓過高</text></g>`;
+    } });
+  return h; }
 function simMotor(c){ if(!SIM.running) return 0; const h=holdOf(c); if(h) return h.v; return simMotorRaw(c); }
 function simServo(c){ const h=holdOf(c); if(h) return h.v; const a=SIM.servo[c.pins.sig]; return a==null?90:a; }
 let rafPending=false;
@@ -2349,7 +2407,8 @@ function makeApi(run){
     const c=compsOnPin(id).find(c=>c.type==='pot'||c.type==='ldr');
     if(c){ const val=Math.round(inp(c).v*max); readMark(c,val); return val; }
     const sp=compsOnPin(id).find(c=>c.type==='solar');
-    if(sp){ const pinV=inp(sp).V/2; if(pinV>3.3) warnOnce('solHi'+id,`${compName(sp)} 分壓後是 ${pinV.toFixed(2)}V，超過 3.3V，讀值會停在最大值`); const val=Math.round(Math.min(pinV,3.3)/3.3*max); readMark(sp,val,sp.id+'V'); return val; }
+    if(sp){ checkOverVolt(); if(SIM.burn&&SIM.burn[id]){ const val=Math.round(Math.random()*max); readMark(sp,val,sp.id+'V'); return val; }
+      const val=Math.round(Math.min(inp(sp).V/2,3.3)/3.3*max); readMark(sp,val,sp.id+'V'); return val; }
     warnOnce('ncA'+id,`程式讀取 ${id}，但接線圖中這個腳位沒有接元件（讀值會亂跳）`); return Math.round(Math.random()*max*.3); };
   A.tone=(p,f,d)=>{ const id=pid(p,'tone'); if(!id) return; const s=ps(id); if(!s.tone) compsOnPin(id).forEach(c=>{ if(c.type==='buzzer') outputChange(c,false); }); s.tone=Number(f)||0; s.mode='OUTPUT'; if(d){ setTimeout(()=>{ if(s.tone===f){s.tone=0;schedule();} },d);} schedule(); };
   A.noTone=p=>{ const id=pinOf(p); if(!id) return; ps(id).tone=0; schedule(); };
@@ -2429,7 +2488,7 @@ async function runSim(){
   catch(e){ const msg='程式無法轉換：'+e.message+'（請檢查語法，或是否用了模擬器不支援的寫法）'; log('✖ '+msg,'err'); toast(msg); return; }
   try{ if(!SIM.ac) SIM.ac=new (window.AudioContext||window.webkitAudioContext)(); if(SIM.ac.state==='suspended') SIM.ac.resume(); }catch(e){}
   const run={stop:false}; SIM.run=run;
-  Object.assign(SIM,{running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null}); const ta=$('code'); if(ta){ ta.focus({preventScroll:true}); ta.setSelectionRange(0,0); ta.blur(); } lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
+  Object.assign(SIM,{burn:{},running:true,P:{},pressed:{},servo:{},oled:{},bl:{},warned:new Set(),trig:{},res:10,t0:performance.now(),pulses:[],hold:{},lastIn:{},obRead:{},phase:'setup',execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null}); const ta=$('code'); if(ta){ ta.focus({preventScroll:true}); ta.setSelectionRange(0,0); ta.blur(); } lcdSetup(); hlSig=''; scrollKey=''; runScrollLine=-1;
   log('▶ 開始模擬','sys'); updateSimUI(); schedule();
   try{
     const api=makeApi(run); const f=prog(api);
@@ -2464,7 +2523,7 @@ function renderSimCtrls(){
     if(c.type==='button') h+=`<div class="ctl"><label>${compName(c)}</label><button class="hold" data-hold="${c.id}">按住</button></div>`;
     if(c.type==='pot') h+=`<div class="ctl"><label>${compName(c)}</label><input type="range" min="0" max="1000" value="${v.v*1000}" data-in="${c.id}" data-k="v" data-s="1000"><span class="val" data-val="${c.id}v"></span></div>`;
     if(c.type==='ldr') h+=`<div class="ctl"><label>${compName(c)} 光線</label><input type="range" min="0" max="1000" value="${v.v*1000}" data-in="${c.id}" data-k="v" data-s="1000"><span class="val" data-val="${c.id}v"></span></div>`;
-    if(c.type==='solar') h+=`<div class="ctl"><label>${compName(c)} 電壓</label><input type="range" min="0" max="60" value="${v.V*10}" data-in="${c.id}" data-k="V" data-s="10"><span class="val" data-val="${c.id}V"></span></div>`;
+    if(c.type==='solar') h+=`<div class="ctl"><label>${compName(c)} 電壓</label><input type="range" min="0" max="120" value="${v.V*10}" data-in="${c.id}" data-k="V" data-s="10"><span class="val" data-val="${c.id}V"></span></div>`;
     if(c.type==='sonar') h+=`<div class="ctl"><label>${compName(c)} 距離</label><input type="range" min="2" max="300" value="${v.d}" data-in="${c.id}" data-k="d" data-s="1"><span class="val" data-val="${c.id}d"></span></div>`;
     if(c.type==='dht') h+=`<div class="ctl"><label>${compName(c)} 溫度</label><input type="range" min="-10" max="50" value="${v.t}" data-in="${c.id}" data-k="t" data-s="1"><span class="val" data-val="${c.id}t"></span></div>
       <div class="ctl"><label>${compName(c)} 濕度</label><input type="range" min="0" max="100" value="${v.h}" data-in="${c.id}" data-k="h" data-s="1"><span class="val" data-val="${c.id}h"></span></div>`;
