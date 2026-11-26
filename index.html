@@ -231,6 +231,7 @@ textarea{width:100%;min-height:300px;border:1px solid var(--line);border-radius:
 .leg .dot{width:12px;height:12px;border-radius:50%;flex:none;border:1.5px solid #0003}
 .leg .from{flex:1}
 .leg .via{color:var(--muted);font-size:11.5px}
+@keyframes wheelSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .pill{font-family:var(--mono);font-weight:700;font-size:11.5px;border-radius:99px;padding:2px 10px;color:#fff;white-space:nowrap}
 .pill.sig{background:#16a34a}.pill.gnd{background:#111}.pill.v33{background:#c2410c}.pill.v5{background:#c81e1e}.pill.q{background:#0b5fa5}
 .note{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5}
@@ -353,7 +354,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       </defs>
       <g id="world"><g id="gStatic"></g><g id="gLayerA"></g><g id="gLayerB"></g><g id="gLabels" class="lbl"></g></g>
     </svg>
-    <div class="floatbar" id="simBanner"><span class="rec">●</span><span id="simBannerTxt">模擬中・點住按鈕、上下拖曳旋鈕</span><button id="bStop2">■ 停止</button></div>
+    <div class="floatbar" id="simBanner"><span class="rec">●</span><span id="simBannerTxt">模擬中・點住按鈕；上下拖曳旋鈕、超音波、太陽能板</span><button id="bStop2">■ 停止</button></div>
     <div class="floatbar" id="selBanner"><span id="selText"></span><button id="bShowAll">顯示全部</button></div>
     <div class="floatbar" id="zoomBar">
       <button id="zOut" title="縮小">－</button><span class="z" id="zVal">100%</span><button id="zIn" title="放大">＋</button><button id="zFit">重設視角</button>
@@ -392,7 +393,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </div>
     <div class="tabpane" id="t-sim">
       <div class="paneHead"><h4>程式碼與模擬</h4><span><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button><button class="paneExpand" data-pane-back>↩ 回到上一步</button></span></div><div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
-      <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。</div>
+      <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕；上下拖曳旋鈕、超音波（距離）、太陽能板（電壓），或用下方「互動控制」的拉桿。</div>
       <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeGutter" aria-hidden="true"></div><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
@@ -466,7 +467,7 @@ BOARD_DEFS.unoq = {
     ['A5',63.2,{alt:'D19',fn:'SCL',fc:'i2c3',mcu:'PC0',analog:1,tol:0,desc:'ADC・I2C3 SCL（不是 Wire）'}],
   ],
   qwiic:{x:14,y:68.2}, i2c:{sda:'SDA',scl:'SCL'}, fiveVTol:true,
-  types:['led','button','pot','ldr','buzzer','servo','oled','lcd','sonar','dht','qwiic'],
+  types:['led','button','pot','ldr','solar','buzzer','servo','motor','oled','lcd','sonar','dht','qwiic'],
   digOrder:['D2','D4','D7','D8','D12','D13','D11','D10','D6','D5','D9','D3','A2','A3','A4','A5','A0','A1','D0','D1'],
   ser:'Monitor', serialPins:['D0','D1'],
   builtins:{LED_BUILTIN:{x:45.2,y:63.8,color:'#ef4444',activeLow:true,msg:'LED_BUILTIN 是板上的 RGB LED 3，低電位（LOW）時點亮'}},
@@ -543,7 +544,7 @@ BOARD_DEFS.hub8735 = {
     ['SPK',g2[7],{disp:'SPK',kind:'aux',desc:'AOUT 喇叭輸出'}],
   ],
   qwiic:null, i2c:{sda:'P3',scl:'P4'}, fiveVTol:false,
-  types:['led','button','pot','ldr','buzzer','servo','oled','lcd','sonar','dht'],
+  types:['led','button','pot','ldr','solar','buzzer','servo','motor','oled','lcd','sonar','dht'],
   digOrder:['P22','P23','P24','P21','P20','P19','P18','P11','P7','P15','P8','P5','P6','P2','P9','P10','P0','P1','P3','P4','P12','P13'],
   ser:'Serial', serialPins:[],
   builtins:{
@@ -569,6 +570,8 @@ BOARD_DEFS.hub8735 = {
     oled:{pref:{sda:['P3'],scl:['P4']},hint:'8735 的 Wire 是 3（SDA）/4（SCL），Wire1 是 0/1。VCC 接 3.3V。要顯示中文建議用台灣社群版 U8G2 程式庫（twgo.io/vygya）。'},
     sonar:{pref:{trig:['P7','P15','P8'],echo:['P8','P11','P7']},hint:'VCC 需 5V。8735 的 GPIO 不耐 5V，Echo 一定要經 1kΩ/2kΩ 分壓後再接到腳位。'},
     dht:{pref:{sig:['P7','P15','P11']},hint:'模組版 DHT11：S 接腳位、+ 接 3.3V、− 接 GND。'},
+    solar:{pref:{sig:['P9','P10','P2','P0','P1']},hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳（0、1、2、9、10），− 接 GND。8735 腳位最高 3.3V，不可直接接太陽能板。模擬時可設定太陽能板電壓。'},
+    motor:{pref:{ia:['P18','P19','P24','P21','P13'],ib:['P11','P15','P7','P8']},hint:'TT 馬達＋輪子一組，經 L9110S 馬達驅動模組控制：IA 接 PWM 腳（11–13、18–24）調速度，IB 接任一腳控制方向。VCC 建議接外接電源（4 顆 AA），GND 要和 8735 共地。不可把馬達直接接腳位。'},
     lcd:{pref:{sclk:['P19'],mosi:['P20'],cs:['P21'],rst:['P22'],dc:['P23']},hint:'YY-IPS130-V4.0（ST7789、240×240）已實機驗證的接線：SCLK→19、MOSI→20、CS→21、RST→22、DC→23（程式寫 AMB_D19～AMB_D23），VCC 與 BLK 接 3.3V、GND 接 GND。程式用 digitalWrite 軟體 SPI，不要改成 SPI1.transfer()；座標用完整 240×240，不要加 Y=80 偏移。'},
   },
   drawBoard:hubBoardSvg, labels:hubLabels, power:hubPower, checks:hubChecks, pinsTab:hubPinsTab,
@@ -664,11 +667,15 @@ const TYPES_BASE = {
     hint:'模組版 DHT11：S 接數位腳、+ 接 3V3、− 接 GND。'},
   lcd:{name:'LCD 1.3" IPS',bb:false,sigs:[{k:'sclk',label:'SCL',req:'dout',pref:['D13']},{k:'mosi',label:'SDA',req:'dout',pref:['D11']},{k:'cs',label:'CS',req:'dout',pref:['D10']},{k:'rst',label:'RES',req:'dout',pref:['D8']},{k:'dc',label:'DC',req:'dout',pref:['D7']}],
     hint:'YY-IPS130-V4.0：1.3 吋 IPS LCD 螢幕，ST7789 驅動、240×240、SPI、RGB565。VCC 與 BLK（背光）接 3.3V、GND 接 GND；SCL 是時脈（SCLK）、SDA 是資料（MOSI），不使用 MISO。程式用 digitalWrite 軟體 SPI，所以任何數位腳都能接。'},
+  solar:{name:'太陽能板',bb:false,sigs:[{k:'sig',label:'+（分壓後）',req:'analog',pref:['A2','A3','A0','A1','A4','A5']}],
+    hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳，− 接 GND。UNO Q 類比腳最高 3.3V，不可直接接太陽能板。程式把讀值換算回電壓；模擬時可設定太陽能板電壓（0–6V）。'},
+  motor:{name:'輪子＋TT 馬達',bb:false,sigs:[{k:'ia',label:'IA',req:'pwm',pref:['D5','D6','D3','D10','D11','D9']},{k:'ib',label:'IB',req:'dout',pref:['D4','D2','D12','D13','D7','D8']}],
+    hint:'TT 馬達＋輪子一組，經 L9110S 馬達驅動模組控制：IA 接 PWM 腳（D3、D5、D6、D9、D10、D11）調速度，IB 接數位腳控制方向。馬達電流大，不可直接接腳位；VCC 建議接外接電源（4 顆 AA），GND 要和 UNO Q 共地。'},
   qwiic:{name:'Qwiic / Modulino',bb:false,sigs:[],
     hint:'用 Qwiic 線接到板子下緣的 Qwiic 插座（3.3V），不佔用排針。程式要用 Wire1。'},
 };
 let TYPES=TYPES_BASE;
-const TYPE_ORDER_ALL=['led','button','pot','ldr','buzzer','servo','oled','lcd','sonar','dht','qwiic'];
+const TYPE_ORDER_ALL=['led','button','pot','ldr','solar','buzzer','servo','motor','oled','lcd','sonar','dht','qwiic'];
 let TYPE_ORDER=TYPE_ORDER_ALL.slice();
 const SIG_COLORS=['#16a34a','#7c3aed','#0891b2','#db2777','#ca8a04','#0d9488','#9333ea','#65a30d','#2563eb','#be185d','#4d7c0f','#0369a1'];
 const C_V33='#ea7a10', C_V5='#dc2626', C_GND='#1f1f1f';
@@ -753,10 +760,11 @@ function freeCol(w,excludeId){
   return null;
 }
 function modulePos(type){
-  const v5 = type==='servo'||type==='sonar';
-  const group=state.comps.filter(c=>!TYPES[c.type].bb && ((c.type==='servo'||c.type==='sonar')===v5));
+  const is5=t=>t==='servo'||t==='sonar'||t==='motor';
+  const v5 = is5(type);
+  const group=state.comps.filter(c=>!TYPES[c.type].bb && (is5(c.type)===v5));
   const n=group.length;
-  return v5 ? {x:BB.x+BB.w+50+(n%2)*150, y:BB.y+10+Math.floor(n/2)*120}
+  return v5 ? {x:BB.x+BB.w+50+(n%2)*190, y:BB.y+10+Math.floor(n/2)*130}
             : {x:BOARD.x+BOARD.w+235+(n%2)*150, y:BOARD.y+10+Math.floor(n/2)*130};
 }
 
@@ -915,6 +923,24 @@ const MODULES={
     draw:c=>`<rect x="${c.x}" y="${c.y-8}" width="120" height="70" rx="4" fill="#1d4ed8" stroke="#1e3a8a"/><circle cx="${c.x+28}" cy="${c.y+36}" r="18" fill="#d4d4d8" stroke="#71717a" stroke-width="3"/><circle cx="${c.x+92}" cy="${c.y+36}" r="18" fill="#d4d4d8" stroke="#71717a" stroke-width="3"/><circle cx="${c.x+28}" cy="${c.y+36}" r="9" fill="#52525b"/><circle cx="${c.x+92}" cy="${c.y+36}" r="9" fill="#52525b"/>${SIM.running?`<rect x="${c.x+38}" y="${c.y+66}" width="44" height="14" rx="7" fill="#0f172a"/><text x="${c.x+60}" y="${c.y+76}" font-size="9" fill="#fff" text-anchor="middle">${inp(c).d} cm</text>`:''}`+hdr(c.x+30,c.y,['VCC','Trig','Echo','GND'],20)},
   lcd:{rail:'3V3',pins:[{label:'GND',to:'GND',dx:17,dy:0},{label:'VCC',to:'3V3',dx:31,dy:0},{label:'SCL（SCLK 時脈）',k:'sclk',to:'sig',dx:45,dy:0},{label:'SDA（MOSI 資料）',k:'mosi',to:'sig',dx:59,dy:0},{label:'RES（重置）',k:'rst',to:'sig',dx:73,dy:0},{label:'DC（命令／資料）',k:'dc',to:'sig',dx:87,dy:0},{label:'CS（片選）',k:'cs',to:'sig',dx:101,dy:0},{label:'BLK 背光',to:'3V3',dx:115,dy:0}],
     draw:c=>`<rect x="${c.x}" y="${c.y-8}" width="132" height="144" rx="5" fill="#1e40af" stroke="#172554"/><rect x="${c.x+10}" y="${c.y+22}" width="112" height="112" rx="3" fill="#0b0f19"/>${lcdScreen(c,c.x+14,c.y+26,104)}<text x="${c.x+66}" y="${c.y+20}" font-size="5.6" fill="#bfdbfe" text-anchor="middle">YY-IPS130-V4.0 · ST7789</text>`+hdr(c.x+17,c.y,['GND','VCC','SCL','SDA','RES','DC','CS','BLK'],14,5.6)},
+  solar:{rail:'3V3',pins:[{label:'+（正極）',k:'sig',to:'sig',dx:30,dy:0,via:'10k/10k 分壓 ÷2'},{label:'−（負極）',to:'GND',dx:70,dy:0}],
+    draw:c=>{ const V=inp(c).V, on=SIM.running, k=Math.max(0,Math.min(1,V/6));
+      let cells=''; for(let i=0;i<4;i++) for(let j=0;j<3;j++) cells+=`<rect x="${c.x+8+i*24}" y="${c.y+20+j*16}" width="22" height="14" fill="#1e3a8a" stroke="#93c5fd" stroke-width=".6"/>`;
+      return `<rect x="${c.x}" y="${c.y-8}" width="112" height="78" rx="4" fill="#334155" stroke="#0f172a"/>`+cells+
+        (on?`<rect x="${c.x}" y="${c.y-8}" width="112" height="78" rx="4" fill="#fde047" opacity="${(.45*k).toFixed(2)}" pointer-events="none"/><circle cx="${c.x+104}" cy="${c.y-18}" r="${6+6*k}" fill="#facc15" opacity="${(.4+.6*k).toFixed(2)}"/>`+
+          `<rect x="${c.x+22}" y="${c.y+72}" width="68" height="14" rx="7" fill="#0f172a"/><text x="${c.x+56}" y="${c.y+82}" font-size="9" fill="#fff" text-anchor="middle">${V.toFixed(1)} V</text>`:
+          `<text x="${c.x+56}" y="${c.y+82}" font-size="8" fill="#475569" text-anchor="middle">約 6V 太陽能板</text>`)+hdr(c.x+30,c.y,['+','−'],40); }},
+  motor:{rail:'5V',pins:[{label:'GND',to:'GND',dx:15,dy:0},{label:'VCC（建議外接電源）',to:'5V',dx:30,dy:0},{label:'IA（速度 PWM）',k:'ia',to:'sig',dx:45,dy:0},{label:'IB（方向）',k:'ib',to:'sig',dx:60,dy:0}],
+    draw:c=>{ const sp=simMotor(c), on=SIM.running, a=Math.abs(sp); const cx=c.x+152, cy=c.y+42;
+      let spokes=''; for(let i=0;i<6;i++){ const t=i*Math.PI/3; spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+Math.cos(t)*17).toFixed(1)}" y2="${(cy+Math.sin(t)*17).toFixed(1)}" stroke="#a16207" stroke-width="3" stroke-linecap="round"/>`; }
+      const period=a>0.02?(0.25/a):0; const anim=on&&period?`style="transform-box:fill-box;transform-origin:center;animation:wheelSpin ${period.toFixed(3)}s linear infinite ${sp<0?'reverse':'normal'};animation-delay:-${((performance.now()/1000)%period).toFixed(3)}s"`:'';
+      return `<rect x="${c.x}" y="${c.y-8}" width="76" height="62" rx="4" fill="#b91c1c" stroke="#7f1d1d"/><rect x="${c.x+12}" y="${c.y+16}" width="22" height="16" rx="2" fill="#111"/><rect x="${c.x+42}" y="${c.y+16}" width="22" height="16" rx="2" fill="#111"/>`+
+        `<text x="${c.x+38}" y="${c.y+46}" font-size="8" fill="#fff" text-anchor="middle" font-weight="700">L9110S</text>`+
+        `<path d="M${c.x+76},${c.y+30} C${c.x+86},${c.y+30} ${c.x+82},${c.y+50} ${c.x+92},${c.y+50}" stroke="#dc2626" stroke-width="2" fill="none"/><path d="M${c.x+76},${c.y+36} C${c.x+84},${c.y+36} ${c.x+82},${c.y+56} ${c.x+92},${c.y+56}" stroke="#111" stroke-width="2" fill="none"/>`+
+        `<rect x="${c.x+90}" y="${c.y+28}" width="34" height="30" rx="4" fill="#facc15" stroke="#a16207"/><text x="${c.x+105}" y="${c.y+47}" font-size="8" fill="#713f12" text-anchor="middle" font-weight="700">TT</text>`+
+        `<circle cx="${cx}" cy="${cy}" r="30" fill="#18181b" stroke="#000"/><circle cx="${cx}" cy="${cy}" r="21" fill="#fde68a"/><g ${anim}>${spokes}<circle cx="${cx}" cy="${cy}" r="21" fill="none"/></g><circle cx="${cx}" cy="${cy}" r="5" fill="#ca8a04"/>`+
+        (on?`<rect x="${c.x+116}" y="${c.y+78}" width="72" height="14" rx="7" fill="#0f172a"/><text x="${c.x+152}" y="${c.y+88}" font-size="9" fill="#fff" text-anchor="middle">${a<0.02?'停止':(sp>0?'前進 ':'後退 ')+Math.round(a*100)+'%'}</text>`:'')+
+        hdr(c.x+15,c.y,['GND','VCC','IA','IB'],15,6); }},
   qwiic:{rail:'3V3',pins:[{label:'Qwiic',to:'qwiic',dx:35,dy:0}],
     draw:c=>`<rect x="${c.x}" y="${c.y-6}" width="70" height="56" rx="7" fill="#0f766e" stroke="#115e59"/><rect x="${c.x+27}" y="${c.y-6}" width="16" height="8" fill="#e5e7eb"/><text x="${c.x+35}" y="${c.y+28}" font-size="9" fill="#fff" text-anchor="middle" font-weight="700">Modulino</text><text x="${c.x+35}" y="${c.y+40}" font-size="7" fill="#ccfbf1" text-anchor="middle">Wire1</text>`},
 };
@@ -1087,6 +1113,9 @@ function hubChecks(L,cs,has,usedPins){
   if(has('button').length) L.push(['ok','✔','按鈕使用 INPUT_PULLUP，不需外接電阻（按下 = LOW）。']);
   if(has('pot').length||has('ldr').length) L.push(['ok','✔','可變電阻／光敏電阻接 3.3V（上排電源軌），類比輸入最高 3.3V。']);
   has('servo').forEach(c=>{ if(!PINS[c.pins.sig].pwm) L.push(['err','✖',`${compName(c)} 不在 PWM 腳位`]);});
+  has('motor').forEach(c=>{ if(!PINS[c.pins.ia].pwm) L.push(['err','✖',`${compName(c)} 的 IA 不在 PWM 腳位，無法調速度`]);});
+  if(has('motor').length) L.push(['warn','⚠','TT 馬達要經 L9110S 驅動模組，不可直接接腳位；驅動模組建議用外接電源（4 顆 AA），GND 與 8735 共地。']);
+  if(has('solar').length) L.push(['warn','⚠','太陽能板 + 極要經 10kΩ／10kΩ 分壓再接類比腳（8735 最高 3.3V）。']);
   if(has('servo').length>=2) L.push(['warn','⚠',`伺服馬達 ${has('servo').length} 顆：建議外接 5V 電源，GND 與 8735 共地。`]);
   else if(has('servo').length) L.push(['ok','✔','伺服馬達接 5V（下排電源軌）；程式請用 AmebaServo。']);
   has('sonar').forEach(c=>L.push(['err','⚠',`${compName(c)} 的 Echo 會輸出 5V，8735 不耐 5V：Echo 必須經 1kΩ/2kΩ 分壓再接到 ${pinLabel(c.pins.echo)} 腳。`]));
@@ -1099,7 +1128,7 @@ function hubChecks(L,cs,has,usedPins){
              :['warn','⚠',`${compName(c)} 不是已驗證的接線。已驗證的是 SCLK→19、MOSI→20、CS→21、RST→22、DC→23（AMB_D19～AMB_D23）。`]); });
   if(has('lcd').length) L.push(['info','ℹ','LCD 程式要保留 digitalWrite 軟體 SPI、CS/DC 控制與初始化順序（01→11→3A 55→36 00→21→13→29），不要改成 SPI1.transfer()，也不要加 Y=80 偏移。']);
   if(usedPins.some(p=>p==='P0'||p==='P1')) L.push(['info','ℹ','0/1 是 Wire1（I2C1）腳位，之後要接第二組 I2C 時請保留。']);
-  if(cs.some(c=>c.type==='servo'||c.type==='sonar')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3.3V）供電。']);
+  if(cs.some(c=>c.type==='servo'||c.type==='sonar'||c.type==='motor')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3.3V）供電。']);
   L.push(['info','ℹ','上傳前：按住功能鍵 → 按一下 RST → 放開 RST → 放開功能鍵；上傳完成後按 RST 才會執行。']);
 }
 function hubPinsTab(){
@@ -1120,6 +1149,9 @@ function unoqChecks(L,cs,has,usedPins){
   if(has('button').length) L.push(['ok','✔','按鈕使用 INPUT_PULLUP，不需外接電阻（按下 = LOW）。']);
   if(has('pot').length||has('ldr').length) L.push(['ok','✔','可變電阻／光敏電阻接 3V3（上排電源軌），符合 A0–A5 最高 3.3V 的限制。']);
   has('servo').forEach(c=>{ if(!PINS[c.pins.sig].pwm) L.push(['err','✖',`${compName(c)} 不在 PWM 腳位`]);});
+  has('motor').forEach(c=>{ if(!PINS[c.pins.ia].pwm) L.push(['err','✖',`${compName(c)} 的 IA 不在 PWM 腳位，無法調速度`]);});
+  if(has('motor').length) L.push(['warn','⚠','TT 馬達要經 L9110S 驅動模組，不可直接接腳位；驅動模組建議用外接電源（4 顆 AA），GND 與 UNO Q 共地。']);
+  if(has('solar').length) L.push(['warn','⚠','太陽能板 + 極要經 10kΩ／10kΩ 分壓再接類比腳（UNO Q 類比腳最高 3.3V）。']);
   if(has('servo').length>=2) L.push(['warn','⚠',`伺服馬達 ${has('servo').length} 顆：建議外接 5V 電源，GND 與 UNO Q 共地。`]);
   else if(has('servo').length) L.push(['ok','✔','伺服馬達 1 顆可由板子 5V 供電（下排電源軌）；建議用 5V/3A 的 USB-C 電源。']);
   has('sonar').forEach(c=>L.push(['warn','⚠',`${compName(c)} 的 Echo 會輸出 5V：目前接 ${c.pins.echo}（5V 容忍），建議加 1kΩ/2kΩ 分壓更保險。`]));
@@ -1129,7 +1161,7 @@ function unoqChecks(L,cs,has,usedPins){
   has('lcd').forEach(c=>L.push(['ok','✔',`${compName(c)}：VCC、BLK 接 3V3（上排電源軌）。產生的程式用 digitalWrite 軟體 SPI；SCL 接 D13、SDA 接 D11 時，之後也能改用硬體 SPI 的 Adafruit_ST7789。`]));
   if(usedPins.includes('D0')||usedPins.includes('D1')) L.push(['warn','⚠','D0/D1 是硬體 UART（Serial），若之後要接藍牙等序列模組請保留。']);
   if(usedPins.some(p=>['A4','A5'].includes(p))) L.push(['info','ℹ','A4/A5 在 UNO Q 不是 Wire 的 I2C 腳，當一般腳位用沒問題。']);
-  if(cs.some(c=>c.type==='servo'||c.type==='sonar')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3V3）供電。']);
+  if(cs.some(c=>c.type==='servo'||c.type==='sonar'||c.type==='motor')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3V3）供電。']);
 }
 function unoqPinsTab(){
   return `<div class="ck err" style="margin-bottom:10px"><b>⚠</b><span>所有 MCU GPIO 為 3.3V 邏輯；除了 A0、A1 外都可容忍 5V 輸入（A2–A5 當類比用時也不可超過 3.3V，D3 最高 3.6V）。JCTL 是 1.8V，不能接 3.3V/5V。</span></div>
@@ -1142,7 +1174,9 @@ function unoqPinsTab(){
    IPO：I 輸入 → P 處理 → O 輸出
    元件分類、P 規則（學生寫的「當…就…否則…」）、規則文字、即時判斷、流程圖
    ========================================================= */
-const IPO_OF={led:'O',button:'I',pot:'I',ldr:'I',buzzer:'O',servo:'O',oled:'O',lcd:'O',sonar:'I',dht:'I',qwiic:'I'};
+const ICON_LIB=[{"k": "heart", "name": "愛心", "color": "LCD_PINK", "rows": [0, 0, 15420, 32382, 65535, 65535, 65535, 32766, 16380, 8184, 4080, 2016, 960, 384, 0, 0]}, {"k": "smile", "name": "笑臉", "color": "LCD_YELLOW", "rows": [2016, 6168, 8196, 16386, 18018, 34401, 32769, 32769, 36873, 34833, 18402, 16386, 8196, 6168, 2016, 0]}, {"k": "sad", "name": "哭臉", "color": "LCD_CYAN", "rows": [2016, 6168, 8196, 16386, 18018, 34401, 34401, 32769, 32769, 34785, 18450, 20490, 8196, 6168, 2016, 0]}, {"k": "sun", "name": "太陽", "color": "LCD_YELLOW", "rows": [384, 16770, 8196, 5064, 2016, 4080, 4080, 61431, 61431, 4080, 4080, 2016, 5064, 8196, 16770, 384]}, {"k": "star", "name": "星星", "color": "LCD_YELLOW", "rows": [384, 384, 960, 960, 2016, 65535, 32766, 16380, 8184, 4080, 4080, 7800, 7224, 14364, 12300, 16386]}, {"k": "check", "name": "打勾", "color": "LCD_GREEN", "rows": [0, 3, 7, 14, 28, 56, 112, 49376, 57792, 29568, 16128, 7680, 3072, 0, 0, 0]}, {"k": "cross", "name": "打叉", "color": "LCD_RED", "rows": [49155, 57351, 28686, 14364, 7224, 3696, 2016, 960, 960, 2016, 3696, 7224, 14364, 28686, 57351, 49155]}, {"k": "up", "name": "箭頭（上）", "color": "LCD_WHITE", "rows": [384, 960, 2016, 4080, 8184, 15324, 29646, 58311, 960, 960, 960, 960, 960, 960, 960, 960]}, {"k": "note", "name": "音符", "color": "LCD_CYAN", "rows": [4094, 4094, 3078, 3078, 3078, 3078, 3078, 3078, 3078, 3134, 3198, 31870, 64572, 64512, 30720, 0]}, {"k": "warn", "name": "驚嘆號", "color": "LCD_YELLOW", "rows": [0, 960, 960, 960, 960, 960, 960, 960, 960, 384, 0, 0, 960, 960, 0, 0]}];
+const LCD_FONT5X7=[[0, 0, 0, 0, 0, 0, 0], [4, 4, 4, 4, 4, 0, 4], [10, 10, 0, 0, 0, 0, 0], [10, 10, 31, 10, 31, 10, 10], [4, 15, 20, 14, 5, 30, 4], [24, 25, 2, 4, 8, 19, 3], [12, 18, 20, 8, 21, 18, 13], [4, 4, 0, 0, 0, 0, 0], [2, 4, 8, 8, 8, 4, 2], [8, 4, 2, 2, 2, 4, 8], [0, 4, 21, 14, 21, 4, 0], [0, 4, 4, 31, 4, 4, 0], [0, 0, 0, 0, 12, 4, 8], [0, 0, 0, 31, 0, 0, 0], [0, 0, 0, 0, 0, 12, 12], [0, 1, 2, 4, 8, 16, 0], [14, 17, 19, 21, 25, 17, 14], [4, 12, 4, 4, 4, 4, 14], [14, 17, 1, 2, 4, 8, 31], [31, 2, 4, 2, 1, 17, 14], [2, 6, 10, 18, 31, 2, 2], [31, 16, 30, 1, 1, 17, 14], [6, 8, 16, 30, 17, 17, 14], [31, 1, 2, 4, 8, 8, 8], [14, 17, 17, 14, 17, 17, 14], [14, 17, 17, 15, 1, 2, 12], [0, 12, 12, 0, 12, 12, 0], [0, 12, 12, 0, 12, 4, 8], [2, 4, 8, 16, 8, 4, 2], [0, 0, 31, 0, 31, 0, 0], [8, 4, 2, 1, 2, 4, 8], [14, 17, 1, 2, 4, 0, 4], [14, 17, 1, 13, 21, 21, 14], [14, 17, 17, 31, 17, 17, 17], [30, 17, 17, 30, 17, 17, 30], [14, 17, 16, 16, 16, 17, 14], [28, 18, 17, 17, 17, 18, 28], [31, 16, 16, 30, 16, 16, 31], [31, 16, 16, 30, 16, 16, 16], [14, 17, 16, 23, 17, 17, 15], [17, 17, 17, 31, 17, 17, 17], [14, 4, 4, 4, 4, 4, 14], [7, 2, 2, 2, 2, 18, 12], [17, 18, 20, 24, 20, 18, 17], [16, 16, 16, 16, 16, 16, 31], [17, 27, 21, 21, 17, 17, 17], [17, 17, 25, 21, 19, 17, 17], [14, 17, 17, 17, 17, 17, 14], [30, 17, 17, 30, 16, 16, 16], [14, 17, 17, 17, 21, 18, 13], [30, 17, 17, 30, 20, 18, 17], [15, 16, 16, 14, 1, 1, 30], [31, 4, 4, 4, 4, 4, 4], [17, 17, 17, 17, 17, 17, 14], [17, 17, 17, 17, 17, 10, 4], [17, 17, 17, 21, 21, 21, 10], [17, 17, 10, 4, 10, 17, 17], [17, 17, 10, 4, 4, 4, 4], [31, 1, 2, 4, 8, 16, 31]];
+const IPO_OF={led:'O',button:'I',pot:'I',ldr:'I',solar:'I',buzzer:'O',servo:'O',motor:'O',oled:'O',lcd:'O',sonar:'I',dht:'I',qwiic:'I'};
 const IPO_NAME={I:'輸入',P:'處理',O:'輸出'};
 const IPO_COL={I:'#2563eb',P:'#7c3aed',O:'#d9480f'};
 const IPO_BG={I:'#eff6ff',P:'#f5f3ff',O:'#fff4e6'};
@@ -1151,12 +1185,13 @@ const COND_OPTS={
   pot:[['gt','數值大於'],['lt','數值小於'],['always','（隨時）']],
   ldr:[['gt','光線大於'],['lt','光線小於'],['always','（隨時）']],
   sonar:[['lt','距離小於'],['gt','距離大於'],['always','（隨時）']],
+  solar:[['vgt','電壓高於'],['vlt','電壓低於'],['always','（隨時）']],
   dht:[['tgt','溫度高於'],['tlt','溫度低於'],['hgt','濕度高於'],['hlt','濕度低於'],['always','（隨時）']],
   timer:[['every','每隔']], qwiic:[['custom','自訂條件']]};
-const COND_DEF={gt:512,lt:512,tgt:28,tlt:20,hgt:70,hlt:40,every:1000,custom:''};
-const COND_UNIT=(t,cond)=>cond==='every'?'毫秒':t==='sonar'&&(cond==='gt'||cond==='lt')?'公分':cond==='tgt'||cond==='tlt'?'°C':cond==='hgt'||cond==='hlt'?'%':(t==='pot'||t==='ldr')&&(cond==='gt'||cond==='lt')?'（0–1023）':'';
+const COND_DEF={gt:512,lt:512,tgt:28,tlt:20,hgt:70,hlt:40,vgt:3,vlt:1.5,every:1000,custom:''};
+const COND_UNIT=(t,cond)=>cond==='every'?'毫秒':cond==='vgt'||cond==='vlt'?'V（伏特）':t==='sonar'&&(cond==='gt'||cond==='lt')?'公分':cond==='tgt'||cond==='tlt'?'°C':cond==='hgt'||cond==='hlt'?'%':(t==='pot'||t==='ldr')&&(cond==='gt'||cond==='lt')?'（0–1023）':'';
 const ACT_OPTS={led:[['on','亮'],['off','熄滅'],['blink','閃爍'],['follow','亮度跟著輸入']],buzzer:[['on','響'],['off','安靜'],['beep','嗶嗶叫']],
-  servo:[['angle','轉到（度）'],['follow','角度跟著輸入']],oled:[['show','顯示文字'],['clear','清除文字']],lcd:[['open','張開眼睛'],['close','閉上眼睛'],['blink','眨眼']]};
+  servo:[['angle','轉到（度）'],['follow','角度跟著輸入']],motor:[['fwd','前進'],['back','後退'],['stop','停止'],['follow','速度跟著輸入']],oled:[['show','顯示文字'],['icon','顯示圖案'],['clear','清除畫面']],lcd:[['show','顯示文字'],['icon','顯示圖案'],['open','機器人臉：張開眼睛'],['close','機器人臉：閉上眼睛'],['blink','機器人臉：眨眼']]};
 const LEVELS={full:'完整程式',fill:'架構填空',ask:'只問我問題'};
 const defaultIpo=()=>({level:'full',i:'',p:'',o:'',rules:[],function:{name:'',purpose:''},details:{I:{},O:{}}});
 function normIpo(q){ q=Object.assign(defaultIpo(),q||{}); if(!Array.isArray(q.rules)) q.rules=[]; if(!LEVELS[q.level]) q.level='full'; if(!q.function||typeof q.function!=='object') q.function={name:'',purpose:''}; q.function.name=q.function.name||'';q.function.purpose=q.function.purpose||[q.function.why,q.function.use].filter(Boolean).join('；'); if(!q.details||typeof q.details!=='object') q.details={I:{},O:{}}; q.details.I=q.details.I||{}; q.details.O=q.details.O||{}; return q; }
@@ -1176,15 +1211,19 @@ function condPhrase(r,fp){ const N=inName(r,fp), t=inpType(r), v=r.val;
     case 'gt': return t==='sonar'?`${N} 測到的距離大於 ${numOr(v,20)} 公分`:`${N} 的${t==='ldr'?'光線值':'數值'}大於 ${numOr(v,512)}`;
     case 'lt': return t==='sonar'?`${N} 測到的距離小於 ${numOr(v,20)} 公分`:`${N} 的${t==='ldr'?'光線值':'數值'}小於 ${numOr(v,512)}`;
     case 'tgt': return `${N} 測到的溫度高於 ${numOr(v,28)}°C`; case 'tlt': return `${N} 測到的溫度低於 ${numOr(v,20)}°C`;
+    case 'vgt': return `${N} 的電壓高於 ${numOr(v,3)} V`; case 'vlt': return `${N} 的電壓低於 ${numOr(v,1.5)} V`;
     case 'hgt': return `${N} 測到的濕度高於 ${numOr(v,70)}%`; case 'hlt': return `${N} 測到的濕度低於 ${numOr(v,40)}%`;
     case 'every': return `每隔 ${numOr(v,1000)} 毫秒（成立、不成立輪流）`; case 'custom': return `${N}：${v||'（自訂條件）'}`; case 'always': return `隨時`; }
   return N; }
-function srcName(r){ return r.cond==='always'||['pot','ldr','sonar','dht'].includes(inpType(r))?inName(r):'輸入'; }
+function srcName(r){ return r.cond==='always'||['pot','ldr','sonar','dht','solar'].includes(inpType(r))?inName(r):'輸入'; }
+function iconPreview(k){ const ic=ICON_LIB.find(x=>x.k===k)||ICON_LIB[0]; let p=''; ic.rows.forEach((row,y)=>{ for(let x=0;x<16;x++) if(row&(0x8000>>x)) p+=`M${x} ${y}h1v1h-1z`; });
+  return `<svg viewBox="0 0 16 16" width="22" height="22" style="vertical-align:middle;margin-left:4px;background:#0b0f19;border-radius:3px"><path d="${p}" fill="#9be0ff"/></svg>`; }
 function actPhrase(r,act,val){ const c=byId(r.out); if(!c) return ''; const t=c.type;
   switch(act){ case 'none': return '不改變';
     case 'on': return t==='buzzer'?'響':'亮'; case 'off': return t==='buzzer'?'安靜':'熄滅'; case 'blink': return t==='lcd'?'眨眼':'閃爍'; case 'beep': return '嗶嗶叫';
-    case 'follow': return t==='servo'?`角度跟著 ${srcName(r)} 變化`:`亮度跟著 ${srcName(r)} 變化`;
-    case 'angle': return `轉到 ${numOr(val,90)} 度`; case 'show': return `顯示「${val||''}」`; case 'clear': return '清除文字';
+    case 'follow': return t==='servo'?`角度跟著 ${srcName(r)} 變化`:t==='motor'?`速度跟著 ${srcName(r)} 變化`:`亮度跟著 ${srcName(r)} 變化`;
+    case 'fwd': return `前進（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'back': return `後退（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'stop': return '停止';
+    case 'angle': return `轉到 ${numOr(val,90)} 度`; case 'show': return `顯示「${val||''}」`; case 'clear': return '清除畫面'; case 'icon': return `顯示圖案「${(ICON_LIB.find(x=>x.k===val)||ICON_LIB[0]).name}」`;
     case 'open': return '張開眼睛'; case 'close': return '閉上眼睛'; }
   return act; }
 function ruleText(r,fp){ const O=outName(r,fp);
@@ -1194,8 +1233,9 @@ function newRule(){ const ins=ipoComps('I'), outs=ipoComps('O');
   const inp=ins[0]?ins[0].id:(Object.keys(BD().onboard)[0]?'ob_'+Object.keys(BD().onboard)[0]:'timer');
   const r={id:uid(),inp,cond:'',val:'',out:outs[0]?outs[0].id:'',act:'',aval:'',els:'none',eval:'',_fresh:true}; fixRule(r); return r; }
 function fixRule(r){ const t=inpType(r)||'timer'; const co=COND_OPTS[t]||COND_OPTS.timer; if(!co.some(o=>o[0]===r.cond)){ r.cond=co[0][0]; r.val=COND_DEF[r.cond]!==undefined?String(COND_DEF[r.cond]):''; }
-  const o=byId(r.out); const ao=o?ACT_OPTS[o.type]||[]:[]; if(!ao.some(x=>x[0]===r.act)){ r.act=ao[0]?ao[0][0]:''; r.aval=r.act==='angle'?'90':''; }
+  const o=byId(r.out); const ao=o?ACT_OPTS[o.type]||[]:[]; if(!ao.some(x=>x[0]===r.act)){ r.act=ao[0]?ao[0][0]:''; r.aval=r.act==='angle'?'90':r.act==='fwd'||r.act==='back'?'100':r.act==='icon'?'heart':''; }
   if(r.els!=='none'&&!ao.some(x=>x[0]===r.els)) r.els='none';
+  if(o&&o.type==='motor'&&r.act==='fwd'&&r.els==='none'&&r.cond!=='always'&&r._fresh){ r.els='stop'; }
   if(r.cond==='always') r.els='none';
   if(o&&o.type==='led'&&r.act==='on'&&r.els==='none'&&r.cond!=='always'&&r._fresh){ r.els='off'; }
   delete r._fresh; }
@@ -1203,16 +1243,17 @@ function fixRule(r){ const t=inpType(r)||'timer'; const co=COND_OPTS[t]||COND_OP
 /* ---------- 即時判斷（模擬中） ---------- */
 function inValue(r){ const t=inpType(r); const c=byId(r.inp);
   if(t==='button') return SIM.pressed[c.id]?1:0; if(t==='ob') return SIM.pressed[r.inp]?1:0;
-  if(t==='pot'||t==='ldr') return Math.round(inp(c).v*1023); if(t==='sonar') return inp(c).d;
+  if(t==='pot'||t==='ldr') return Math.round(inp(c).v*1023); if(t==='sonar') return inp(c).d; if(t==='solar') return inp(c).V;
   if(t==='dht') return (r.cond==='hgt'||r.cond==='hlt')?inp(c).h:inp(c).t; return 0; }
 function evalCond(r){ const v=inValue(r), n=numOr(r.val,COND_DEF[r.cond]||0);
-  switch(r.cond){ case 'press': return v===1; case 'release': return v===0; case 'gt': case 'tgt': case 'hgt': return v>n;
-    case 'lt': return inpType(r)==='sonar'?(v>0&&v<n):v<n; case 'tlt': case 'hlt': return v<n;
+  switch(r.cond){ case 'press': return v===1; case 'release': return v===0; case 'gt': case 'tgt': case 'hgt': case 'vgt': return v>n;
+    case 'lt': return inpType(r)==='sonar'?(v>0&&v<n):v<n; case 'tlt': case 'hlt': case 'vlt': return v<n;
     case 'every': return Math.floor((performance.now()-SIM.t0)/Math.max(1,n))%2===0; case 'always': return true; }
   return null; }
 function ioValue(c){ const v=inp(c);
   switch(c.type){ case 'button': return SIM.pressed[c.id]?'按下':'放開'; case 'pot': case 'ldr': return String(Math.round(v.v*((1<<SIM.res)-1)));
-    case 'sonar': return v.d+' cm'; case 'dht': return `${v.t}°C／${v.h}%`;
+    case 'sonar': return v.d+' cm'; case 'dht': return `${v.t}°C／${v.h}%`; case 'solar': return v.V.toFixed(1)+' V';
+    case 'motor': { const m=simMotor(c); return Math.abs(m)<0.02?'停止':(m>0?'前進 ':'後退 ')+Math.round(Math.abs(m)*100)+'%'; }
     case 'led': { const l=simLed(c); return l==null?'—':l<=0?'暗':l>=1?'亮':'亮度 '+Math.round(l*100)+'%'; }
     case 'buzzer': return simBuzz(c)?'響':'安靜'; case 'servo': return Math.round(simServo(c))+'°';
     case 'oled': return SIM.oled[c.id]?'顯示中':'—'; case 'lcd': { const L=SIM.lcd&&SIM.lcd[c.id]; return L&&L.on&&!L.sleep?'顯示中':'未開啟'; } }
@@ -1316,8 +1357,8 @@ function codeMap(){ const src=$('code').value; if(CM.src===src) return CM; const
   CM={src,lines,I:xI||(iI>=0?[iI,nextOf(iI)]:null),P:xP||(iP>=0?[iP,nextOf(iP)]:null),O:xO||(iO>=0?[iO,nextOf(iO)]:null)}; return CM; }
 function compWords(c){ if(c.id&&String(c.id).startsWith('ob_')) return ['fnKey'];
   const n=state.comps.filter(x=>x.type===c.type).indexOf(c)+1;
-  return ({button:['pressed'+n,'BTN'+n],pot:['pot'+n,'POT'+n],ldr:['light'+n,'LDR'+n],sonar:['dist'+n,'readDistance'+n],dht:['temp'+n,'hum'+n,'dht'+n,'lastDht'],
-    led:['LED'+n,'led'+n+'On','led'+n+'Level'],buzzer:['BUZ'+n,'buz'+n+'On'],servo:['servo'+n,'servo'+n+'Angle'],oled:['display','oledMsg'],lcd:['eyesOpen','shownEyes','drawEyes']})[c.type]||[]; }
+  return ({button:['pressed'+n,'BTN'+n],pot:['pot'+n,'POT'+n],ldr:['light'+n,'LDR'+n],sonar:['dist'+n,'readDistance'+n],solar:['solarV'+n,'SOLAR'+n],motor:['motor'+n+'Speed','MOTOR'+n+'_IA','MOTOR'+n+'_IB'],dht:['temp'+n,'hum'+n,'dht'+n,'lastDht'],
+    led:['LED'+n,'led'+n+'On','led'+n+'Level'],buzzer:['BUZ'+n,'buz'+n+'On'],servo:['servo'+n,'servo'+n+'Angle'],oled:['display','oledMsg','oledIcon','oledDrawIcon'],lcd:['eyesOpen','shownEyes','drawEyes','lcdMode','lcdText','lcdIcon','lcdDrawText','lcdDrawIcon']})[c.type]||[]; }
 function linesWith(range,words){ if(!range||!words.length) return []; const out=[]; const res=words.map(w=>new RegExp('(^|[^\\w])'+w+'([^\\w]|$)'));
   for(let k=range[0]+1;k<=range[1];k++){ if(res.some(re=>re.test(CM.lines[k]))) out.push(k); }
   if(out.length){ const last=out[out.length-1]; if(/\{\s*(\/\/.*)?$/.test(CM.lines[last])){ for(let k=last+1;k<=range[1];k++){ out.push(k); if(/^\s*\}/.test(CM.lines[k])) break; } } }
@@ -1392,7 +1433,7 @@ function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return; u
 let scrollKey='', lastTyped=0, runScrollLine=-1;
 function compRing(c,k){ let x,y,w,h;
   if(TYPES[c.type].bb){ x=colX(c.col)-12; w=colX(c.col+TYPES[c.type].w-1)+12-x; y=ROWS.a-12; h=ROWS.h-ROWS.a+24; }
-  else { const W={oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164}, Hh={oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172}; x=c.x-16; y=c.y-24; w=W[c.type]; h=Hh[c.type]; }
+  else { const W={oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164,solar:144,motor:222}, Hh={oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172,solar:114,motor:122}; x=c.x-16; y=c.y-24; w=W[c.type]; h=Hh[c.type]; }
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="${IPO_COL[k]}" fill-opacity=".10" stroke="${IPO_COL[k]}" stroke-width="3" pointer-events="none"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="none" stroke="${IPO_COL[k]}" stroke-width="8" opacity=".35" filter="url(#glow)" pointer-events="none"/>`; }
 
 /* ---------- IPO 流程圖檢視 ---------- */
@@ -1526,7 +1567,7 @@ function renderCanvas(){
 }
 function selBox(c){
   if(TYPES[c.type].bb){const x1=colX(c.col)-10,x2=colX(c.col+TYPES[c.type].w-1)+10;return `<rect x="${x1}" y="${ROWS.a-12}" width="${x2-x1}" height="${ROWS.h-ROWS.a+24}" rx="8" fill="none" stroke="#f26b21" stroke-width="2" stroke-dasharray="5 4"/>`;}
-  return `<rect x="${c.x-16}" y="${c.y-24}" width="${({oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164})[c.type]}" height="${({oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172})[c.type]}" rx="10" fill="none" stroke="#f26b21" stroke-width="2" stroke-dasharray="5 4"/>`;
+  return `<rect x="${c.x-16}" y="${c.y-24}" width="${({oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164,solar:144,motor:222})[c.type]}" height="${({oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172,solar:114,motor:122})[c.type]}" rx="10" fill="none" stroke="#f26b21" stroke-width="2" stroke-dasharray="5 4"/>`;
 }
 const ICONS={
   led:`<svg viewBox="0 0 30 30"><path d="M9 20V11a6 6 0 0 1 12 0v9z" fill="#ef4444"/><rect x="7" y="19" width="16" height="3" fill="#dc2626"/><path d="M12 22v6M18 22v5" stroke="#999" stroke-width="1.6"/></svg>`,
@@ -1539,6 +1580,8 @@ const ICONS={
   sonar:`<svg viewBox="0 0 30 30"><rect x="1" y="8" width="28" height="15" rx="2" fill="#1d4ed8"/><circle cx="8" cy="15.5" r="5" fill="#d4d4d8"/><circle cx="22" cy="15.5" r="5" fill="#d4d4d8"/></svg>`,
   dht:`<svg viewBox="0 0 30 30"><rect x="7" y="3" width="16" height="24" rx="2" fill="#1d4ed8"/><rect x="10" y="7" width="10" height="14" rx="1" fill="#7dd3fc"/></svg>`,
   lcd:`<svg viewBox="0 0 30 30"><rect x="3" y="3" width="24" height="25" rx="2" fill="#1e40af"/><rect x="6" y="8" width="18" height="18" fill="#0b0f19"/><circle cx="15" cy="17" r="6" fill="#22d3ee"/><rect x="11.5" y="15" width="2" height="3" fill="#0b0f19"/><rect x="16.5" y="15" width="2" height="3" fill="#0b0f19"/></svg>`,
+  solar:`<svg viewBox="0 0 30 30"><circle cx="24" cy="6" r="4" fill="#facc15"/><rect x="3" y="9" width="22" height="16" rx="1.5" fill="#1e3a8a" stroke="#94a3b8"/><path d="M10.3 9v16M17.6 9v16M3 14.3h22M3 19.6h22" stroke="#93c5fd" stroke-width=".8"/></svg>`,
+  motor:`<svg viewBox="0 0 30 30"><rect x="2" y="11" width="12" height="10" rx="2" fill="#facc15" stroke="#a16207"/><circle cx="20" cy="16" r="9" fill="#18181b"/><circle cx="20" cy="16" r="5.5" fill="#fde68a"/><path d="M20 10.5v11M14.5 16h11" stroke="#a16207" stroke-width="1.6"/></svg>`,
   qwiic:`<svg viewBox="0 0 30 30"><rect x="4" y="7" width="22" height="18" rx="4" fill="#0f766e"/><rect x="11" y="4" width="8" height="5" fill="#ccc"/><text x="15" y="19" font-size="6" fill="#fff" text-anchor="middle" font-family="sans-serif">I²C</text></svg>`,
 };
 function renderPalette(){
@@ -1635,6 +1678,8 @@ function compLine(c){ const p=c.pins;
     case 'lcd': return `1.3 吋 IPS LCD 螢幕 YY-IPS130-V4.0「${compName(c)}」（ST7789，240×240，SPI，RGB565）：SCL(SCLK) 接 ${pinWord(p.sclk)}、SDA(MOSI) 接 ${pinWord(p.mosi)}、CS 接 ${pinWord(p.cs)}、RES(RST) 接 ${pinWord(p.rst)}、DC 接 ${pinWord(p.dc)}；VCC 與 BLK 接 3.3V、GND 接 GND，不使用 MISO ${BD().lcdPrompt}`;
     case 'sonar': return `超音波 HC-SR04「${compName(c)}」Trig 連接到 ${pinWord(p.trig)}、Echo 連接到 ${pinWord(p.echo)}（VCC 接 5V${BD().fiveVTol?'':'，Echo 經 1kΩ/2kΩ 分壓'}，量測距離單位公分）`;
     case 'dht': return `溫溼度感測器 DHT11「${compName(c)}」資料腳連接到 ${pinWord(p.sig)}（+ 接 3.3V）`;
+    case 'solar': return `太陽能板（約 6V）「${compName(c)}」+ 極經 10kΩ／10kΩ 分壓（電壓 ÷2）後連接到 ${pinWord(p.sig)}，− 極接 GND；程式用 analogRead 讀值，換算電壓 = 讀值 × 3.3 ÷ 1023 × 2（單位 V）`;
+    case 'motor': return `輪子＋TT 馬達「${compName(c)}」經 L9110S 馬達驅動模組控制：IA 連接到 ${pinWord(p.ia)}（PWM 控制速度）、IB 連接到 ${pinWord(p.ib)}（控制方向）；前進：IA 輸出 PWM、IB 為 LOW；後退：IA 輸出 255−速度、IB 為 HIGH；停止：兩腳都 LOW。驅動模組 VCC 接外接電源，GND 與開發板共地`;
     case 'qwiic': return `Qwiic / Modulino 模組「${compName(c)}」接在板上 Qwiic 插座，程式要用 Wire1`;
   } return compName(c); }
 const LEVEL_TEXT={
@@ -1678,11 +1723,15 @@ function ruleRow(r,k){ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g
   const inOpts=[...ipoComps('I').map(c=>[c.id,compName(c)]),...Object.keys(BD().onboard).map(id=>['ob_'+id,BD().onboard[id].label]),['timer','計時器']];
   const outOpts=ipoComps('O').map(c=>[c.id,compName(c)]);
   const needV=!['press','release','always'].includes(r.cond), unit=COND_UNIT(t,r.cond);
-  const av=a=>a==='angle'?`<input data-rk="${a===r.act?'aval':'eval'}" type="number" min="0" max="180" value="${esc(a===r.act?r.aval:r.eval)}"><span class="unit">度</span>`:a==='show'?`<input class="txt" data-rk="${a===r.act?'aval':'eval'}" value="${esc(a===r.act?r.aval:r.eval)}" placeholder="要顯示的字">`:'';
+  const av=(a,k)=>{ const v=esc(k==='aval'?r.aval:r.eval); return a==='angle'?`<input data-rk="${k}" type="number" min="0" max="180" value="${v}"><span class="unit">度</span>`:a==='show'?`<input class="txt" data-rk="${k}" value="${v}" placeholder="要顯示的字">`:a==='icon'?`<select data-rk="${k}">${ICON_LIB.map(x=>`<option value="${x.k}" ${x.k===(k==='aval'?r.aval:r.eval)?'selected':''}>${x.name}</option>`).join('')}</select>${iconPreview(k==='aval'?r.aval:r.eval)}`:(a==='fwd'||a==='back')?`<span class="unit">速度</span><input data-rk="${k}" type="number" min="0" max="100" value="${v}"><span class="unit">%</span>`:''; };
+  const cjk=o&&o.type==='oled'&&[r.act==='show'?r.aval:'',r.els==='show'?r.eval:''].some(x=>/[^\x00-\x7f]/.test(x||''));
+  const lcdTxt=o&&o.type==='lcd'&&(r.act==='show'||r.els==='show');
   return `<div class="rule" data-rid="${r.id}"><div class="rh">規則 ${k+1}<button class="iconbtn" data-rdel title="刪除規則">✕</button></div>
    <div class="rl">${r.cond==='always'?'':'當'} <select data-rk="inp">${optList(inOpts,r.inp)}</select><select data-rk="cond">${optList(COND_OPTS[t]||COND_OPTS.timer,r.cond)}</select>${needV?`<input data-rk="val" ${r.cond==='custom'?'class="txt" placeholder="描述條件"':'type="number"'} value="${esc(r.val)}">`:''}${unit&&needV?`<span class="unit">${unit}</span>`:''}${r.cond==='always'?'':' 時，'}</div>
-   <div class="rl">就 ${outOpts.length?`<select data-rk="out">${optList(outOpts,r.out)}</select><select data-rk="act">${optList(ao,r.act)}</select>${av(r.act)}`:'<span class="unit">（先在左側加入輸出元件）</span>'}</div>
-   ${r.cond==='always'?'':`<div class="rl">否則 <select data-rk="els">${optList([['none','不改變'],...ao],r.els)}</select>${r.els&&r.els!=='none'?av(r.els):''}</div>`}
+   <div class="rl">就 ${outOpts.length?`<select data-rk="out">${optList(outOpts,r.out)}</select><select data-rk="act">${optList(ao,r.act)}</select>${av(r.act,'aval')}`:'<span class="unit">（先在左側加入輸出元件）</span>'}</div>
+   ${r.cond==='always'?'':`<div class="rl">否則 <select data-rk="els">${optList([['none','不改變'],...ao],r.els)}</select>${r.els&&r.els!=='none'?av(r.els,'eval'):''}</div>`}
+   ${lcdTxt?'<div class="say" style="color:#b45309">ℹ LCD 文字用內建字型：英文、數字、常用符號（小寫會顯示成大寫），一行 9 個字；中文會顯示成「?」。</div>':''}
+   ${cjk?'<div class="say" style="color:#b45309">⚠ 模擬畫面看得到中文，但實體 OLED 用 Adafruit_SSD1306 程式庫無法顯示中文。實機請改用英文，或在 AI 提示詞請 AI 改用 U8g2 中文字型。</div>':''}
    <div class="say">${ruleValid(r)?esc(ruleText(r)):'這條規則還不完整：請選好輸入和輸出元件。'}</div></div>`; }
 function ensureFunctionStore(){if(!Array.isArray(state.functions)||!state.functions.length){const id='fn_'+uid();state.functions=[{id,ipo:JSON.parse(JSON.stringify(normIpo(state.ipo)))}];state.activeFunctionId=id;}let f=state.functions.find(x=>x.id===state.activeFunctionId);if(!f){f=state.functions[0];state.activeFunctionId=f.id;}f.ipo=normIpo(f.ipo);}
 function saveActiveFunction(){ensureFunctionStore();const f=state.functions.find(x=>x.id===state.activeFunctionId);if(f)f.ipo=JSON.parse(JSON.stringify(normIpo(state.ipo)));}
@@ -1718,11 +1767,11 @@ function renderIPO(force){
     $('ruleList').innerHTML=(q.rules.map(ruleRow).join('')||'<div class="auto none" style="margin-bottom:6px">還沒有規則。按「新增規則」，用「當…就…否則…」寫下開發板要怎麼判斷。</div>')+dup.map(t=>`<div class="ck warn" style="margin-bottom:7px"><b>⚠</b><span>${t}</span></div>`).join(''); }
   $('promptTxt').value=promptText();
 }
-function ipoChanged(regen){ persist(); if(regen){ stopSim(); if(state.codeAuto){ state.code=genCode(); $('code').value=state.code; } renderFlow(); } renderIPO(); if(viewMode==='ipo'||regen) renderCanvas(); }
+function ipoChanged(regen){ persist(); if(regen){ stopSim(); if(state.codeAuto){ state.code=genCode(); $('code').value=state.code; } else toast('程式已手動修改，規則不會自動寫進程式；要套用規則請按「依接線產生程式」'); renderFlow(); } renderIPO(); if(viewMode==='ipo'||regen) renderCanvas(); }
 /* ================= 視角：縮放／平移 ================= */
 const svg=$('cv');
 function applyView(){const r=svg.getBoundingClientRect();svg.setAttribute('viewBox',`${view.x} ${view.y} ${r.width/view.k} ${r.height/view.k}`);$('zVal').textContent=Math.round(view.k*100)+'%';}
-function bounds(){ if(viewMode==='ipo'){ const {H}=ipoLayout(); return {W:IPO_L.XO+IPO_L.WO+40,Hh:IPO_L.Y0+H+50}; } let W=BB.x+BB.w+20,Hh=BB.y+BB.h+20;state.comps.forEach(c=>{if(!TYPES[c.type].bb){W=Math.max(W,c.x+170);Hh=Math.max(Hh,c.y+130);}});return {W,Hh};}
+function bounds(){ if(viewMode==='ipo'){ const {H}=ipoLayout(); return {W:IPO_L.XO+IPO_L.WO+40,Hh:IPO_L.Y0+H+50}; } let W=BB.x+BB.w+20,Hh=BB.y+BB.h+20;state.comps.forEach(c=>{if(!TYPES[c.type].bb){W=Math.max(W,c.x+(c.type==='motor'?210:170));Hh=Math.max(Hh,c.y+130);}});return {W,Hh};}
 function fit(){const r=svg.getBoundingClientRect();const {W,Hh}=bounds();const k=Math.min(r.width/(W+20),r.height/(Hh+20));view.k=k;view.x=-10-(r.width/k-W)/2;view.y=-10-(r.height/k-Hh)/2;applyView();}
 function toWorld(cx,cy){const r=svg.getBoundingClientRect();return {x:view.x+(cx-r.left)/view.k,y:view.y+(cy-r.top)/view.k};}
 function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();const w=toWorld(cx,cy);view.k=Math.max(.2,Math.min(4,view.k*f));view.x=w.x-(cx-r.left)/view.k;view.y=w.y-(cy-r.top)/view.k;applyView();}
@@ -1737,7 +1786,9 @@ svg.addEventListener('pointerdown',e=>{
     const c=g&&state.comps.find(x=>x.id===g.dataset.id);
     const obEl=e.target.closest('[data-ob]'); if(!c&&obEl){const k='ob_'+obEl.dataset.ob;SIM.pressed[k]=true;syncHold();schedule();simPtr={hold:k};svg.setPointerCapture(e.pointerId);return;}
     if(c&&c.type==='button'){SIM.pressed[c.id]=true;syncHold();schedule();simPtr={hold:c.id};svg.setPointerCapture(e.pointerId);return;}
-    if(c&&(c.type==='pot'||c.type==='ldr')){simPtr={knob:c,sy:e.clientY,v0:inp(c).v};svg.setPointerCapture(e.pointerId);return;}
+    if(c&&(c.type==='pot'||c.type==='ldr')){simPtr={knob:c,k:'v',min:0,max:1,per:1/160,step:1000,sy:e.clientY,v0:inp(c).v};svg.setPointerCapture(e.pointerId);return;}
+    if(c&&c.type==='sonar'){simPtr={knob:c,k:'d',min:2,max:300,per:1,step:1,sy:e.clientY,v0:inp(c).d};svg.setPointerCapture(e.pointerId);return;}
+    if(c&&c.type==='solar'){simPtr={knob:c,k:'V',min:0,max:6,per:6/160,step:10,sy:e.clientY,v0:inp(c).V};svg.setPointerCapture(e.pointerId);return;}
     drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y,moved:false};svg.classList.add('pan');svg.setPointerCapture(e.pointerId);return;
   }
   if(g&&viewMode!=='ipo'){const c=state.comps.find(x=>x.id===g.dataset.id);drag={mode:'part',c,start:w,orig:{col:c.col,x:c.x,y:c.y},moved:false};}
@@ -1747,7 +1798,7 @@ svg.addEventListener('pointerdown',e=>{
 svg.addEventListener('pointermove',e=>{
   if(!ptrs.has(e.pointerId)) return; ptrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(pinch&&ptrs.size===2){const [a,b]=[...ptrs.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);zoomAt(d/pinch.d,(a.x+b.x)/2,(a.y+b.y)/2);pinch.d=d;return;}
-  if(simPtr&&simPtr.knob){const v=Math.max(0,Math.min(1,simPtr.v0-(e.clientY-simPtr.sy)/160));inp(simPtr.knob).v=Math.round(v*1000)/1000;syncCtrls();schedule();return;}
+  if(simPtr&&simPtr.knob){const q=simPtr;const v=Math.max(q.min,Math.min(q.max,q.v0-(e.clientY-q.sy)*q.per));inp(q.knob)[q.k]=Math.round(v*q.step)/q.step;syncCtrls();schedule();return;}
   if(!drag) return;
   if(drag.mode==='pan'){const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;view.x=drag.vx-dx/view.k;view.y=drag.vy-dy/view.k;applyView();}
   else{ const w=toWorld(e.clientX,e.clientY);const dx=w.x-drag.start.x,dy=w.y-drag.start.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;
@@ -1870,6 +1921,8 @@ $('ruleList').addEventListener('click',e=>{ const d=e.target.closest('[data-rdel
 $('ruleList').addEventListener('change',e=>{ const el=e.target.closest('[data-rk]'); if(!el) return; const r=state.ipo.rules.find(x=>x.id===el.closest('.rule').dataset.rid); if(!r) return;
   const k=el.dataset.rk; r[k]=el.value; if(k==='inp'){ r.cond=''; } if(k==='cond'){ r.val=COND_DEF[r.cond]!==undefined?String(COND_DEF[r.cond]):''; if(r.cond==='always') r.els='none'; }
   if(k==='out'){ r.act=''; r.els='none'; } if(k==='act'&&r.act==='angle'&&!r.aval) r.aval='90'; if(k==='els'&&r.els==='angle'&&!r.eval) r.eval='0';
+  if(k==='act'&&r.act==='icon'&&!ICON_LIB.some(x=>x.k===r.aval)) r.aval='heart'; if(k==='els'&&r.els==='icon'&&!ICON_LIB.some(x=>x.k===r.eval)) r.eval='smile';
+  if(k==='act'&&(r.act==='fwd'||r.act==='back')&&!r.aval) r.aval='100'; if(k==='els'&&(r.els==='fwd'||r.els==='back')&&!r.eval) r.eval='100';
   fixRule(r); ipoChanged(true); });
 $('ruleList').addEventListener('input',e=>{ const el=e.target.closest('input[data-rk]'); if(!el) return; const r=state.ipo.rules.find(x=>x.id===el.closest('.rule').dataset.rid); if(!r) return;
   r[el.dataset.rk]=el.value; persist(); $('promptTxt').value=promptText(); const say=el.closest('.rule').querySelector('.say'); if(say&&ruleValid(r)) say.textContent=ruleText(r); });
@@ -2071,7 +2124,7 @@ function lcdScreen(c,x,y,w){
     g.putImageData(im,0,0); L.url=lcdCv.toDataURL(); L.dirty=false; L.renderAt=performance.now(); }
   return `<image href="${L.url}" x="${x}" y="${y}" width="${w}" height="${w}" style="image-rendering:pixelated"/>`;
 }
-function inp(c){ if(!INPUTS[c.id]) INPUTS[c.id]=c.type==='pot'?{v:.5}:c.type==='ldr'?{v:.6}:c.type==='sonar'?{d:30}:c.type==='dht'?{t:26,h:60}:{}; return INPUTS[c.id]; }
+function inp(c){ if(!INPUTS[c.id]) INPUTS[c.id]=c.type==='pot'?{v:.5}:c.type==='ldr'?{v:.6}:c.type==='sonar'?{d:30}:c.type==='dht'?{t:26,h:60}:c.type==='solar'?{V:3}:{}; return INPUTS[c.id]; }
 const SIM={running:false,run:null,P:{},pressed:{},servo:{},oled:{},bl:{},pulses:[],hold:{},lastIn:{},obRead:{},t0:0,warned:new Set(),trig:{},res:10,ac:null,osc:{},execLine:-1,execAt:0,focusLine:-1,focusStage:'',focusRange:null};
 const STOP={stop:true};
 function pinOf(n){ return BD().pinOf(n); }
@@ -2079,6 +2132,9 @@ function ps(id){ return SIM.P[id]||(SIM.P[id]={mode:'INPUT',v:0,pwm:null,tone:0}
 function compsOnPin(id){ return state.comps.filter(c=>Object.values(c.pins||{}).includes(id)); }
 function simLed(c){ if(!SIM.running) return null; const h=holdOf(c); if(h) return h.v; const s=SIM.P[c.pins.sig]; if(!s||s.mode!=='OUTPUT') return 0; return s.pwm!=null? s.pwm/255 : (s.v?1:0); }
 function simBuzz(c){ if(!SIM.running) return false; const h=holdOf(c); if(h) return !!h.v; const s=SIM.P[c.pins.sig]; return !!(s&&(s.tone||(s.mode==='OUTPUT'&&(s.v||s.pwm>0)))); }
+function motorLvl(id){ const s=SIM.P[id]; if(!s||s.mode!=='OUTPUT') return 0; return s.pwm!=null?s.pwm/255:(s.v?1:0); }
+function simMotorRaw(c){ return SIM.running?motorLvl(c.pins.ia)-motorLvl(c.pins.ib):0; }
+function simMotor(c){ if(!SIM.running) return 0; const h=holdOf(c); if(h) return h.v; return simMotorRaw(c); }
 function simServo(c){ const h=holdOf(c); if(h) return h.v; const a=SIM.servo[c.pins.sig]; return a==null?90:a; }
 let rafPending=false;
 function schedule(){ if(rafPending) return; rafPending=true; requestAnimationFrame(()=>{rafPending=false; renderCanvas(); updateAudio();}); }
@@ -2116,7 +2172,7 @@ function transpile(src){
   s=s.replace(/^[ \t]*#.*$/gm,'');
   s=s.replace(/\b(\d+(?:\.\d+)?)(?:UL|ul|LL|ll|L|l|U|u|f|F)\b/g,'$1');
   s=s.replace(/\(\s*(?:unsigned\s+)?(?:int|long|float|double|byte|char|bool|uint8_t|uint16_t|uint32_t|int16_t|int32_t)\s*\)/g,'');
-  s=s.replace(/\.length\(\)/g,'.length').replace(/\.toInt\(\)/g,'*1').replace(/\.toFloat\(\)/g,'*1').replace(/\.c_str\(\)/g,'');
+  s=s.replace(/\.length\(\)/g,'.length').replace(/\.toInt\(\)/g,'*1').replace(/\.toFloat\(\)/g,'*1').replace(/\.c_str\(\)/g,'').replace(/\.charAt\(/g,'.charCodeAt(');
   // 物件宣告
   s=s.replace(/\bAmebaServo\b/g,'Servo');
   s=s.replace(/\bServo\s+([\w\s,\[\]]+?)\s*;/g,(m,names)=>names.split(',').map(n=>{n=n.trim();const a=n.match(/^(\w+)\s*\[(\d+)\]$/);return a?`let ${a[1]} = Array.from({length:${a[2]}},()=>new Servo());`:`let ${n} = new Servo();`;}).join(' '));
@@ -2224,9 +2280,11 @@ function makeApi(run){
   const pidc=new Map();
   const pid=(p,fn)=>{ let id=pidc.get(p); if(id===undefined){ id=pinOf(p); pidc.set(p,id); } if(!id) warnOnce('bad'+p+fn,`${fn}(${p})：${BD().short} 沒有這個腳位`); return id; };
   A.pinMode=(p,m)=>{ const id=pid(p,'pinMode'); if(!id) return; ps(id).mode=m;
-    if(m==='OUTPUT'&&compsOnPin(id).some(c=>c.type==='button'||c.type==='pot'||c.type==='ldr'||(c.type==='sonar'&&c.pins.echo===id))) warnOnce('outin'+id,`${pinLabel(id)} 接的是輸入元件，卻被設成 OUTPUT`);
+    if(m==='OUTPUT'&&compsOnPin(id).some(c=>c.type==='button'||c.type==='pot'||c.type==='ldr'||c.type==='solar'||(c.type==='sonar'&&c.pins.echo===id))) warnOnce('outin'+id,`${pinLabel(id)} 接的是輸入元件，卻被設成 OUTPUT`);
     schedule(); };
-  A.digitalWrite=(p,v)=>{ markExec(); const id=pid(p,'digitalWrite'); if(!id) return; const s=ps(id); v=v?1:0; const prev=s.v; s.v=v; s.pwm=null;
+  const motorPre=id=>compsOnPin(id).filter(c=>c.type==='motor').map(c=>[c,simMotorRaw(c)]);
+  const motorPost=list=>list.forEach(([c,o])=>{ if(Math.abs(simMotorRaw(c)-o)>=0.03) outputChange(c,o); });
+  A.digitalWrite=(p,v)=>{ markExec(); const id=pid(p,'digitalWrite'); if(!id) return; const mp=motorPre(id); const s=ps(id); v=v?1:0; const prev=s.v; s.v=v; s.pwm=null; motorPost(mp);
     if(SIM.lcdPins[id]){ if(s.mode!=='OUTPUT') warnOnce('lpm'+id,`${pinLabel(id)} 接的是 LCD，要先用 pinMode(…, OUTPUT) 設成輸出`); lcdWire(id,v,prev); return; }
     const bi=BD().builtins[id];
     if(bi){ SIM.bl[id]=bi.activeLow?(v?0:1):v; if(bi.msg) warnOnce('bi'+id,bi.msg); schedule(); if(!PINS[id]) return; }
@@ -2235,11 +2293,11 @@ function makeApi(run){
     if(v!==prev) compsOnPin(id).forEach(c=>{ if(c.type==='led') outputChange(c,prev?1:0); else if(c.type==='buzzer') outputChange(c,!!prev); });
     if(v) state.comps.forEach(c=>{ if(c.type==='sonar'&&c.pins.trig===id) SIM.trig[id]=performance.now(); });
     schedule(); };
-  A.analogWrite=(p,v)=>{ const id=pid(p,'analogWrite'); if(!id) return; const s=ps(id); v=Math.max(0,Math.min(255,Math.round(Number(v)||0))); { const oldL=s.pwm==null?(s.v?255:0):s.pwm; if(Math.abs(oldL-v)>=4) compsOnPin(id).forEach(c=>{ if(c.type==='led') outputChange(c,s.mode==='OUTPUT'?oldL/255:0); }); }
+  A.analogWrite=(p,v)=>{ const id=pid(p,'analogWrite'); if(!id) return; const mp=motorPre(id); const s=ps(id); v=Math.max(0,Math.min(255,Math.round(Number(v)||0))); { const oldL=s.pwm==null?(s.v?255:0):s.pwm; if(Math.abs(oldL-v)>=4) compsOnPin(id).forEach(c=>{ if(c.type==='led') outputChange(c,s.mode==='OUTPUT'?oldL/255:0); }); }
     if(!PINS[id]||!PINS[id].pwm){ warnOnce('pwm'+id,`${pinLabel(id)} 不是 PWM 腳，analogWrite 只會全亮或全暗（PWM：${BD().pwmText}）`); s.pwm=null; s.v=v>=128?1:0; }
     else s.pwm=v;
     const bi=BD().builtins[id]; if(bi){ SIM.bl[id]=s.pwm!=null?s.pwm/255:s.v; schedule(); }
-    s.mode='OUTPUT'; if(!compsOnPin(id).length&&!bi) warnOnce('nc'+id,`程式在 ${pinLabel(id)} 輸出，但接線圖中這個腳位沒有接元件`); schedule(); };
+    s.mode='OUTPUT'; motorPost(mp); if(!compsOnPin(id).length&&!bi) warnOnce('nc'+id,`程式在 ${pinLabel(id)} 輸出，但接線圖中這個腳位沒有接元件`); schedule(); };
   A.digitalRead=p=>{ markExec(); const id=pid(p,'digitalRead'); if(!id) return 0; const s=ps(id); const cs=compsOnPin(id);
     const b=cs.find(c=>c.type==='button');
     const ob=BD().onboard[id]; if(!b&&ob&&ob.type==='button'){ SIM.obRead[id]=1; const pv=SIM.pressed['ob_'+id]?1:0; if((SIM.lastIn['ob_'+id]===undefined?0:SIM.lastIn['ob_'+id])!==pv) inputPulse({id:'ob_'+id}); SIM.lastIn['ob_'+id]=pv; return pv?0:1; }
@@ -2253,6 +2311,8 @@ function makeApi(run){
     if(!PINS[id]||!PINS[id].analog){ warnOnce('ana'+id,`${pinLabel(id)} 不是類比腳，analogRead 請用 ${BD().analogText}`); return 0; }
     const c=compsOnPin(id).find(c=>c.type==='pot'||c.type==='ldr');
     if(c){ const val=Math.round(inp(c).v*max); readMark(c,val); return val; }
+    const sp=compsOnPin(id).find(c=>c.type==='solar');
+    if(sp){ const pinV=inp(sp).V/2; if(pinV>3.3) warnOnce('solHi'+id,`${compName(sp)} 分壓後是 ${pinV.toFixed(2)}V，超過 3.3V，讀值會停在最大值`); const val=Math.round(Math.min(pinV,3.3)/3.3*max); readMark(sp,val,sp.id+'V'); return val; }
     warnOnce('ncA'+id,`程式讀取 ${id}，但接線圖中這個腳位沒有接元件（讀值會亂跳）`); return Math.round(Math.random()*max*.3); };
   A.tone=(p,f,d)=>{ const id=pid(p,'tone'); if(!id) return; const s=ps(id); if(!s.tone) compsOnPin(id).forEach(c=>{ if(c.type==='buzzer') outputChange(c,false); }); s.tone=Number(f)||0; s.mode='OUTPUT'; if(d){ setTimeout(()=>{ if(s.tone===f){s.tone=0;schedule();} },d);} schedule(); };
   A.noTone=p=>{ const id=pinOf(p); if(!id) return; ps(id).tone=0; schedule(); };
@@ -2296,7 +2356,9 @@ function makeApi(run){
     setTextSize(n){ this.size=Math.max(1,n|0); } setTextColor(c){ this.col=c; } setCursor(x,y){ this.cx=x; this.cy=y; } setTextWrap(){} setRotation(){} invertDisplay(){} dim(){} cp437(){} setFont(){}
     width(){return 128;} height(){return 64;} getCursorX(){return this.cx;} getCursorY(){return this.cy;}
     print(v,f){ const t=fmt(v,f), z=this.size, g=this.g; g.font=`bold ${8*z}px monospace`; g.textBaseline='top';
-      for(const ch of t){ if(ch==='\n'){ this.cx=0; this.cy+=8*z; continue; } if(this.cx+6*z>128){ this.cx=0; this.cy+=8*z; } g.fillStyle=this._f(); g.fillText(ch,this.cx,this.cy,6*z); this.cx+=6*z; } }
+      for(const ch of t){ if(ch==='\n'){ this.cx=0; this.cy+=8*z; continue; } const wide=ch.charCodeAt(0)>0x2e7f, cw=(wide?12:6)*z; if(this.cx+cw>128){ this.cx=0; this.cy+=8*z; }
+        g.fillStyle=this._f(); if(wide){ g.font=`${12*z}px sans-serif`; g.fillText(ch,this.cx,this.cy-2*z,cw); g.font=`bold ${8*z}px monospace`; } else g.fillText(ch,this.cx,this.cy,cw); this.cx+=cw; }
+      if(/[^\x00-\x7f]/.test(t)) warnOnce('oledcjk','模擬畫面可以看到中文，但實體 OLED 用 Adafruit_SSD1306 無法顯示中文（請用英文或改用 U8g2）'); }
     println(v,f){ this.print((v===undefined?'':fmt(v,f))+'\n'); }
     drawPixel(x,y,c){ this.g.fillStyle=this._f(c); this.g.fillRect(x|0,y|0,1,1); }
     drawLine(x0,y0,x1,y1,c){ const g=this.g; g.strokeStyle=this._f(c); g.lineWidth=1; g.beginPath(); g.moveTo(x0+.5,y0+.5); g.lineTo(x1+.5,y1+.5); g.stroke(); }
@@ -2349,9 +2411,9 @@ function updateSimUI(){
   $('left').classList.toggle('simRunning',r); $('monitorPanel').classList.toggle('on',r);
   $('simBanner').style.display=r?'flex':'none';
   const boot=r&&SIM.phase==='setup';
-  $('simBannerTxt').textContent=boot?'開機中：正在執行 setup()，完成後 loop() 才會讀取輸入':'模擬中・點住按鈕、上下拖曳旋鈕';
+  $('simBannerTxt').textContent=boot?'開機中：正在執行 setup()，完成後 loop() 才會讀取輸入':'模擬中・點住按鈕；上下拖曳旋鈕、超音波、太陽能板';
   $('simBanner').classList.toggle('boot',boot);
-  $('simStatus').textContent=boot?'開機中：程式正在執行 setup()（例如 LCD 初始化、畫第一個畫面）。setup() 跑完、開始 loop() 之後，才會讀取按鈕等輸入。':r?'模擬中：點住畫面上的按鈕、上下拖曳旋鈕，或用下方控制項。':'按「執行」開始模擬。執行中可以點住畫面上的按鈕、上下拖曳旋鈕。';
+  $('simStatus').textContent=boot?'開機中：程式正在執行 setup()（例如 LCD 初始化、畫第一個畫面）。setup() 跑完、開始 loop() 之後，才會讀取按鈕等輸入。':r?'模擬中：點住畫面上的按鈕、上下拖曳旋鈕，或用下方控制項。':'按「執行」開始模擬。執行中可以點住畫面上的按鈕；上下拖曳旋鈕、超音波（距離）、太陽能板（電壓），或用下方「互動控制」的拉桿。';
 }
 
 /* ---------- 互動控制 ---------- */
@@ -2364,6 +2426,7 @@ function renderSimCtrls(){
     if(c.type==='button') h+=`<div class="ctl"><label>${compName(c)}</label><button class="hold" data-hold="${c.id}">按住</button></div>`;
     if(c.type==='pot') h+=`<div class="ctl"><label>${compName(c)}</label><input type="range" min="0" max="1000" value="${v.v*1000}" data-in="${c.id}" data-k="v" data-s="1000"><span class="val" data-val="${c.id}v"></span></div>`;
     if(c.type==='ldr') h+=`<div class="ctl"><label>${compName(c)} 光線</label><input type="range" min="0" max="1000" value="${v.v*1000}" data-in="${c.id}" data-k="v" data-s="1000"><span class="val" data-val="${c.id}v"></span></div>`;
+    if(c.type==='solar') h+=`<div class="ctl"><label>${compName(c)} 電壓</label><input type="range" min="0" max="60" value="${v.V*10}" data-in="${c.id}" data-k="V" data-s="10"><span class="val" data-val="${c.id}V"></span></div>`;
     if(c.type==='sonar') h+=`<div class="ctl"><label>${compName(c)} 距離</label><input type="range" min="2" max="300" value="${v.d}" data-in="${c.id}" data-k="d" data-s="1"><span class="val" data-val="${c.id}d"></span></div>`;
     if(c.type==='dht') h+=`<div class="ctl"><label>${compName(c)} 溫度</label><input type="range" min="-10" max="50" value="${v.t}" data-in="${c.id}" data-k="t" data-s="1"><span class="val" data-val="${c.id}t"></span></div>
       <div class="ctl"><label>${compName(c)} 濕度</label><input type="range" min="0" max="100" value="${v.h}" data-in="${c.id}" data-k="h" data-s="1"><span class="val" data-val="${c.id}h"></span></div>`;
@@ -2374,7 +2437,7 @@ function renderSimCtrls(){
 function syncCtrls(all){
   document.querySelectorAll('#simCtrls [data-in]').forEach(r=>{ const c=state.comps.find(x=>x.id===r.dataset.in); if(!c) return; const v=inp(c)[r.dataset.k];
     if(document.activeElement!==r||all) r.value=v*Number(r.dataset.s);
-    const lab=document.querySelector(`[data-val="${c.id}${r.dataset.k}"]`); if(lab) lab.textContent=r.dataset.k==='v'?Math.round(v*((1<<SIM.res)-1)):r.dataset.k==='d'?v+' cm':r.dataset.k==='t'?v+' °C':v+' %'; });
+    const lab=document.querySelector(`[data-val="${c.id}${r.dataset.k}"]`); if(lab) lab.textContent=r.dataset.k==='v'?Math.round(v*((1<<SIM.res)-1)):r.dataset.k==='d'?v+' cm':r.dataset.k==='V'?v.toFixed(1)+' V':r.dataset.k==='t'?v+' °C':v+' %'; });
 }
 function syncHold(){ document.querySelectorAll('#simCtrls [data-hold]').forEach(b=>b.classList.toggle('on',!!SIM.pressed[b.dataset.hold])); }
 $('simCtrls').addEventListener('input',e=>{ const r=e.target.closest('[data-in]'); if(!r) return; const c=state.comps.find(x=>x.id===r.dataset.in); inp(c)[r.dataset.k]=Number(r.value)/Number(r.dataset.s); syncCtrls(); schedule(); });
@@ -2403,7 +2466,7 @@ $('bGen').onclick=()=>{ const go=()=>{ stopSim(); state.codeAuto=true; state.cod
 let generatedCodeMap={src:null,rules:new Map()};
 function genCode(){
   const cs=state.comps, by=t=>cs.filter(c=>c.type===t);
-  const leds=by('led'),btns=by('button'),pots=by('pot'),ldrs=by('ldr'),buzz=by('buzzer'),servos=by('servo'),oleds=by('oled'),sonars=by('sonar'),dhts=by('dht'),lcds=by('lcd');
+  const leds=by('led'),btns=by('button'),pots=by('pot'),ldrs=by('ldr'),buzz=by('buzzer'),servos=by('servo'),oleds=by('oled'),sonars=by('sonar'),dhts=by('dht'),lcds=by('lcd'),solars=by('solar'),motors=by('motor');
   const hubLcd=B_ID==='hub8735'&&lcds.length>0;
   const debounceButtons=hubLcd&&btns.length>0;
   const pc=p=>BD().codePin(p), pa=p=>BD().codePinA(p), SER=BD().ser;
@@ -2422,6 +2485,8 @@ function genCode(){
   servos.forEach((c,i)=>a(`const int SERVO${i+1}_PIN = ${pc(c.pins.sig)};  // ${compName(c)}`));
   sonars.forEach((c,i)=>{ a(`const int TRIG${i+1} = ${pc(c.pins.trig)};       // ${compName(c)} Trig`); a(`const int ECHO${i+1} = ${pc(c.pins.echo)};       // ${compName(c)} Echo`); });
   dhts.forEach((c,i)=>a(`const int DHT${i+1}_PIN = ${pc(c.pins.sig)};    // ${compName(c)}`));
+  solars.forEach((c,i)=>a(`const int SOLAR${i+1} = ${pa(c.pins.sig)};      // ${compName(c)}（經 10k/10k 分壓）`));
+  motors.forEach((c,i)=>{ a(`const int MOTOR${i+1}_IA = ${pc(c.pins.ia)};   // ${compName(c)} L9110S IA（PWM 速度）`); a(`const int MOTOR${i+1}_IB = ${pc(c.pins.ib)};   // ${compName(c)} L9110S IB（方向）`); });
   const lp=p=>B_ID==='hub8735'?'AMB_D'+PINS[p].num:pc(p);
   if(lcds.length){ const c=lcds[0].pins; a(`// ${compName(lcds[0])}：YY-IPS130-V4.0（ST7789，240×240）；VCC、BLK 接 3.3V`);
     a(`const int LCD_SCLK = ${lp(c.sclk)};   // SCL`); a(`const int LCD_MOSI = ${lp(c.mosi)};   // SDA`); a(`const int LCD_CS   = ${lp(c.cs)};`); a(`const int LCD_RST  = ${lp(c.rst)};   // RES`); a(`const int LCD_DC   = ${lp(c.dc)};`); }
@@ -2431,18 +2496,27 @@ function genCode(){
   dhts.forEach((c,i)=>a(`DHT dht${i+1}(DHT${i+1}_PIN, DHT11);`));
   dhts.forEach((c,i)=>a(`float temp${i+1} = 0;\nfloat hum${i+1} = 0;`));
   if(dhts.length) a('unsigned long lastDht = 0;');
-  if(lcds.length){ a('const uint16_t LCD_BLACK = 0x0000;'); a('const uint16_t LCD_CYAN  = 0x07FF;'); a('const uint16_t LCD_WHITE = 0xFFFF;'); a('const uint16_t LCD_PINK  = 0xF81F;'); }
+  if(lcds.length){ a('const uint16_t LCD_BLACK = 0x0000;'); a('const uint16_t LCD_CYAN  = 0x07FF;'); a('const uint16_t LCD_WHITE = 0xFFFF;'); a('const uint16_t LCD_PINK  = 0xF81F;'); if(validRules().some(r=>{const o=byId(r.out);return o&&o.type==='lcd'&&(r.act==='show'||r.act==='icon'||r.els==='show'||r.els==='icon');})){ a('const uint16_t LCD_YELLOW = 0xFFE0;'); a('const uint16_t LCD_GREEN  = 0x07E0;'); a('const uint16_t LCD_RED    = 0xF800;'); } }
   a('unsigned long lastPrint = 0;');
   // 輸出狀態變數：P 處理決定它們的值，O 輸出依它們驅動元件
-  const rules=validRules(), idx={}; [leds,btns,pots,ldrs,buzz,servos,oleds,sonars,dhts,lcds].forEach(arr=>arr.forEach((c,i)=>idx[c.id]=i+1));
+  const rules=validRules(), idx={}; [leds,btns,pots,ldrs,buzz,servos,oleds,sonars,dhts,lcds,solars,motors].forEach(arr=>arr.forEach((c,i)=>idx[c.id]=i+1));
   const lvl={}; leds.forEach((c,i)=>{ lvl[c.id]=rules.length?rules.some(r=>r.out===c.id&&(r.act==='follow'||r.els==='follow')):(i===0&&!btns.length&&(pots.length||ldrs.length)&&!!PINS[c.pins.sig].pwm); });
-  const oledMsg=oleds.length&&rules.some(r=>(r.act==='show'||r.els==='show')&&byId(r.out)&&byId(r.out).type==='oled');
-  if(leds.length||buzz.length||servos.length||lcds.length||oledMsg){ a(''); a('// ---- 輸出狀態：P 處理決定，O 輸出使用 ----'); }
+  const outIs=(r,t,a)=>byId(r.out)&&byId(r.out).type===t&&(r.act===a||r.els===a);
+  const oledMsg=oleds.length&&rules.some(r=>outIs(r,'oled','show'));
+  const oledIcon=oleds.length&&rules.some(r=>outIs(r,'oled','icon'));
+  const lcdTextUsed=lcds.length&&rules.some(r=>outIs(r,'lcd','show')), lcdIconUsed=lcds.length&&rules.some(r=>outIs(r,'lcd','icon'));
+  const lcdRich=lcdTextUsed||lcdIconUsed;
+  const usedIcons=ICON_LIB.filter(ic=>rules.some(r=>{ const o=byId(r.out); return o&&(o.type==='oled'||o.type==='lcd')&&((r.act==='icon'&&(r.aval||'heart')===ic.k)||(r.els==='icon'&&(r.eval||'smile')===ic.k)); }));
+  const iconConst=k=>'ICON_'+k.toUpperCase();
+  if(leds.length||buzz.length||servos.length||lcds.length||motors.length||oledMsg){ a(''); a('// ---- 輸出狀態：P 處理決定，O 輸出使用 ----'); }
+  motors.forEach((c,i)=>a(`int motor${i+1}Speed = 0;   // ${compName(c)}：-255 後退 … 0 停止 … 255 前進`));
   leds.forEach((c,i)=>a(lvl[c.id]?`int led${i+1}Level = 0;     // ${compName(c)} 亮度 0–255`:`bool led${i+1}On = false;  // ${compName(c)} 亮或暗`));
   buzz.forEach((c,i)=>a(`bool buz${i+1}On = false;  // ${compName(c)} 響或安靜`));
   servos.forEach((c,i)=>a(`int servo${i+1}Angle = 90;  // ${compName(c)} 角度 0–180`));
   if(oledMsg) a('String oledMsg = "";      // OLED 要顯示的文字');
+  if(oledIcon) a('int oledIcon = -1;        // OLED 要顯示的圖案（-1 = 不顯示）');
   if(lcds.length){ a('bool eyesOpen = true;     // LCD 機器人眼睛：張開或閉上'); a('bool shownEyes = true;    // LCD 目前畫的狀態'); a('bool lcdFirstFrame = true; // 第一次 loop 才繪製畫面'); }
+  if(lcdRich){ a('int lcdMode = 0;          // LCD 要顯示什麼：0 機器人臉、1 文字、2 圖案'); a('String lcdText = "";      // LCD 要顯示的文字'); a('int lcdIcon = 0;          // LCD 要顯示的圖案'); a('int shownMode = -1;       // LCD 目前畫的內容（用來判斷要不要重畫）'); a('String shownText = "";'); a('int shownIcon = -1;'); }
   if(debounceButtons){
     a('const unsigned long BUTTON_DEBOUNCE_MS = 25;');
     btns.forEach((c,i)=>{
@@ -2454,6 +2528,22 @@ function genCode(){
   }
   a('');
   sonars.forEach((c,i)=>{ a(`// 讀取超音波距離（公分）\nlong readDistance${i+1}() {\n  digitalWrite(TRIG${i+1}, LOW);\n  delayMicroseconds(2);\n  digitalWrite(TRIG${i+1}, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(TRIG${i+1}, LOW);\n  long duration = pulseIn(ECHO${i+1}, HIGH, 30000);\n  return duration / 58;\n}\n`); });
+  if(motors.length) [
+    '// 控制 L9110S 馬達：speed 正數前進、負數後退、0 停止',
+    'void driveMotor(int pinA, int pinB, int speed) {',
+    '  speed = constrain(speed, -255, 255);',
+    '  if (speed > 0) {',
+    '    analogWrite(pinA, speed);',
+    '    digitalWrite(pinB, LOW);',
+    '  } else if (speed < 0) {',
+    '    analogWrite(pinA, 255 + speed);   // IB 為 HIGH 時，IA 越低轉越快',
+    '    digitalWrite(pinB, HIGH);',
+    '  } else {',
+    '    digitalWrite(pinA, LOW);',
+    '    digitalWrite(pinB, LOW);',
+    '  }',
+    '}',
+    ''].forEach(a);
   if(lcds.length) [
     '// ---- LCD 驅動：digitalWrite 軟體 SPI（已實機驗證的傳輸方式） ----',
     'void lcdSpiWrite(uint8_t value) {',
@@ -2559,6 +2649,84 @@ function genCode(){
     ...(!hubLcd?['  drawEyes(true);']:[]),
     '}',
     ''].forEach(a);
+  if(usedIcons.length){
+    a('// ---- 圖案：16×16 點陣，每一列用 16 個位元表示（1 = 亮） ----');
+    usedIcons.forEach((ic,i)=>a(`const int ${iconConst(ic.k)} = ${i};   // ${ic.name}`));
+    a(`const uint16_t ICONS[${usedIcons.length}][16] = {`);
+    usedIcons.forEach((ic,i)=>a(`  {${ic.rows.map(v=>'0x'+v.toString(16).toUpperCase().padStart(4,'0')).join(', ')}}${i<usedIcons.length-1?',':''}   // ${ic.name}`));
+    a('};');
+    if(lcdIconUsed){ a(`const uint16_t ICON_COLORS[${usedIcons.length}] = {${usedIcons.map(ic=>ic.color).join(', ')}};   // LCD 上每個圖案的顏色`); }
+    a('');
+  }
+  if(oledIcon) [
+    '// 在 OLED 畫圖案：每個點放大成 2×2，圖案大小 32×32',
+    'void oledDrawIcon(int id, int x, int y) {',
+    '  for (int r = 0; r < 16; r++) {',
+    '    for (int c = 0; c < 16; c++) {',
+    '      if (ICONS[id][r] & (0x8000 >> c)) display.fillRect(x + c * 2, y + r * 2, 2, 2, SSD1306_WHITE);',
+    '    }',
+    '  }',
+    '}',
+    ''].forEach(a);
+  if(lcdIconUsed) [
+    '// 在 LCD 畫圖案：每個點放大成 12×12，圖案大小 192×192，置中',
+    'void lcdDrawIcon(int id, uint16_t color) {',
+    '  int s = 12;',
+    '  for (int r = 0; r < 16; r++) {',
+    '    int c = 0;',
+    '    while (c < 16) {',
+    '      if (ICONS[id][r] & (0x8000 >> c)) {',
+    '        int start = c;',
+    '        while (c < 16 && (ICONS[id][r] & (0x8000 >> c))) c++;   // 連續亮的點一次畫完，比較快',
+    '        lcdFillRect(24 + start * s, 24 + r * s, (c - start) * s, s, color);',
+    '      } else {',
+    '        c++;',
+    '      }',
+    '    }',
+    '  }',
+    '}',
+    ''].forEach(a);
+  if(lcdTextUsed){
+    a('// ---- LCD 文字：5×7 點陣字型（空白、符號、0–9、A–Z），每個字 7 列 ----');
+    a('const uint8_t LCD_FONT[59][7] = {');
+    LCD_FONT5X7.forEach((g,i)=>a(`  {${g.map(v=>'0x'+v.toString(16).toUpperCase().padStart(2,'0')).join(', ')}}${i<58?',':''}   // ${JSON.stringify(String.fromCharCode(32+i))}`));
+    a('};');
+    [
+    'void lcdDrawChar(char ch, int x, int y, int s, uint16_t color) {',
+    '  if (ch >= 97 && ch <= 122) ch = ch - 32;   // 小寫 a–z 轉成大寫',
+    '  if (ch < 32 || ch > 90) ch = 63;           // 字型裡沒有的字（例如中文）顯示成 ?',
+    '  for (int r = 0; r < 7; r++) {',
+    '    uint8_t bits = LCD_FONT[ch - 32][r];',
+    '    int c = 0;',
+    '    while (c < 5) {',
+    '      if (bits & (0x10 >> c)) {',
+    '        int start = c;',
+    '        while (c < 5 && (bits & (0x10 >> c))) c++;',
+    '        lcdFillRect(x + start * s, y + r * s, (c - start) * s, s, color);',
+    '      } else {',
+    '        c++;',
+    '      }',
+    '    }',
+    '  }',
+    '}',
+    '// 在 LCD 中間顯示文字：每個點放大 4 倍，一行最多 9 個字',
+    'void lcdDrawText(String t, uint16_t color) {',
+    '  int s = 4;',
+    '  int perLine = 9;',
+    '  int len = t.length();',
+    '  int lines = (len + perLine - 1) / perLine;',
+    '  if (lines < 1) lines = 1;',
+    '  int top = (240 - lines * 8 * s) / 2;',
+    '  for (int i = 0; i < len; i++) {',
+    '    int line = i / perLine;',
+    '    int n = len - line * perLine;   // 這一行有幾個字',
+    '    if (n > perLine) n = perLine;',
+    '    int x = (240 - n * 6 * s) / 2 + (i % perLine) * 6 * s;',
+    '    lcdDrawChar(t.charAt(i), x, top + line * 8 * s, s, color);',
+    '  }',
+    '}',
+    ''].forEach(a);
+  }
   a('void setup() {'); a('  '+BD().serBegin);
   if(hubLcd) a('  delay(200);  // HUB 8735 上電後等待穩定');
   leds.forEach((c,i)=>a(`  pinMode(LED${i+1}, OUTPUT);`));
@@ -2569,6 +2737,7 @@ function genCode(){
   });
   sonars.forEach((c,i)=>{ a(`  pinMode(TRIG${i+1}, OUTPUT);`); a(`  pinMode(ECHO${i+1}, INPUT);`); });
   servos.forEach((c,i)=>a(`  servo${i+1}.attach(SERVO${i+1}_PIN);`));
+  motors.forEach((c,i)=>{ a(`  pinMode(MOTOR${i+1}_IA, OUTPUT);`); a(`  pinMode(MOTOR${i+1}_IB, OUTPUT);`); });
   dhts.forEach((c,i)=>a(`  dht${i+1}.begin();`));
   const obIds=Object.keys(BD().onboard).filter(id=>rules.some(r=>r.inp==='ob_'+id));
   obIds.forEach(id=>a(`  pinMode(${PINS[id].num}, INPUT);   // 板上功能鍵`));
@@ -2576,7 +2745,7 @@ function genCode(){
   if(lcds.length){ a('  lcdInit();          // LCD 初始化（約 0.5 秒），不在 setup 繪圖'); }
   a(`  ${SER}.println("${BD().short} start");`); a('}'); a('');
   a('void loop() {');
-  if(lcds.length&&!hubLcd){ a('  if (lcdFirstFrame) {'); a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);'); a('    drawRobotFace();'); a('    lcdFirstFrame = false;'); a('  }'); }
+  if(lcds.length&&!hubLcd&&!lcdRich){ a('  if (lcdFirstFrame) {'); a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);'); a('    drawRobotFace();'); a('    lcdFirstFrame = false;'); a('  }'); }
   // ===== I 輸入 =====
   a('  // ===== I 輸入：讀取感測器，存進變數 =====');
   btns.forEach((c,i)=>{
@@ -2586,9 +2755,10 @@ function genCode(){
   pots.forEach((c,i)=>a(`  int pot${i+1} = analogRead(POT${i+1});   // ${compName(c)}：0–1023`));
   ldrs.forEach((c,i)=>a(`  int light${i+1} = analogRead(LDR${i+1});   // ${compName(c)}：越亮數值越大`));
   sonars.forEach((c,i)=>a(`  long dist${i+1} = readDistance${i+1}();   // ${compName(c)}：距離（公分）`));
+  solars.forEach((c,i)=>a(`  float solarV${i+1} = analogRead(SOLAR${i+1}) * 3.3 / 1023.0 * 2;   // ${compName(c)}：電壓（V），分壓 ÷2 所以乘回 2`));
   if(dhts.length){ a('  if (lastDht == 0 || millis() - lastDht >= 2000) {   // DHT11 每 2 秒讀一次'); a('    lastDht = millis();'); dhts.forEach((c,i)=>{a(`    temp${i+1} = dht${i+1}.readTemperature();`);a(`    hum${i+1} = dht${i+1}.readHumidity();`);}); a('  }'); }
   obIds.forEach(id=>a(`  bool fnKey = digitalRead(${PINS[id].num}) == LOW;   // 板上功能鍵：按下 = true`));
-  if(!btns.length&&!pots.length&&!ldrs.length&&!sonars.length&&!dhts.length&&!obIds.length) a('  // （沒有輸入元件）');
+  if(!btns.length&&!pots.length&&!ldrs.length&&!sonars.length&&!dhts.length&&!solars.length&&!obIds.length) a('  // （沒有輸入元件）');
   // ===== P 處理 =====
   a(''); a('  // ===== P 處理：依規則判斷，把結果存進輸出狀態變數 =====');
   if(debounceButtons){
@@ -2604,13 +2774,13 @@ function genCode(){
       a('  }');
     });
   }
-  const vIn=r=>{ const t=inpType(r), n=idx[r.inp]; return t==='button'?`pressed${n}`:t==='pot'?`pot${n}`:t==='ldr'?`light${n}`:t==='sonar'?`dist${n}`:t==='dht'?((r.cond==='hgt'||r.cond==='hlt')?`hum${n}`:`temp${n}`):t==='ob'?'fnKey':'0'; };
+  const vIn=r=>{ const t=inpType(r), n=idx[r.inp]; return t==='button'?`pressed${n}`:t==='pot'?`pot${n}`:t==='ldr'?`light${n}`:t==='sonar'?`dist${n}`:t==='solar'?`solarV${n}`:t==='dht'?((r.cond==='hgt'||r.cond==='hlt')?`hum${n}`:`temp${n}`):t==='ob'?'fnKey':'0'; };
   const nv=(v,d)=>String(numOr(v,d));
   const cond=r=>{ const v=vIn(r); switch(r.cond){ case 'press': return v; case 'release': return '!'+v;
       case 'gt': return `${v} > ${nv(r.val,512)}`; case 'lt': return inpType(r)==='sonar'?`${v} > 0 && ${v} < ${nv(r.val,20)}`:`${v} < ${nv(r.val,512)}`;
-      case 'tgt': case 'hgt': return `${v} > ${nv(r.val,COND_DEF[r.cond])}`; case 'tlt': case 'hlt': return `${v} < ${nv(r.val,COND_DEF[r.cond])}`;
+      case 'tgt': case 'hgt': case 'vgt': return `${v} > ${nv(r.val,COND_DEF[r.cond])}`; case 'tlt': case 'hlt': case 'vlt': return `${v} < ${nv(r.val,COND_DEF[r.cond])}`;
       case 'every': return `(millis() / ${nv(r.val,1000)}) % 2 == 0`; case 'custom': return `false /* TODO：${String(r.val||'自訂條件').replace(/\*\//g,'')} */`; } return 'true'; };
-  const src=r=>{ const t=inpType(r), n=idx[r.inp]; return t==='pot'?[`pot${n}`,1023]:t==='ldr'?[`light${n}`,1023]:t==='sonar'?[`dist${n}`,100]:t==='dht'?[`temp${n}`,40]:null; };
+  const src=r=>{ const t=inpType(r), n=idx[r.inp]; return t==='pot'?[`pot${n}`,1023]:t==='ldr'?[`light${n}`,1023]:t==='sonar'?[`dist${n}`,100]:t==='solar'?[`solarV${n} * 100`,600]:t==='dht'?[`temp${n}`,40]:null; };
   const act=(r,a1,val)=>{ const c=byId(r.out), n=idx[r.out], s=src(r);
     if(c.type==='led'){ const L=lvl[c.id];
       if(a1==='on') return L?`led${n}Level = 255;`:`led${n}On = true;`; if(a1==='off') return L?`led${n}Level = 0;`:`led${n}On = false;`;
@@ -2618,8 +2788,15 @@ function genCode(){
       if(a1==='follow') return s?`led${n}Level = constrain(map(${s[0]}, 0, ${s[1]}, 0, 255), 0, 255);`:`led${n}Level = 255;`; }
     if(c.type==='buzzer'){ if(a1==='on') return `buz${n}On = true;`; if(a1==='off') return `buz${n}On = false;`; if(a1==='beep') return `buz${n}On = millis() % 1000 < 100;`; }
     if(c.type==='servo'){ if(a1==='angle') return `servo${n}Angle = ${Math.max(0,Math.min(180,numOr(val,90)))};`; if(a1==='follow') return s?`servo${n}Angle = constrain(map(${s[0]}, 0, ${s[1]}, 0, 180), 0, 180);`:`servo${n}Angle = 90;`; }
-    if(c.type==='oled'){ if(a1==='show') return `oledMsg = "${String(val||'').replace(/["\\]/g,'')}";`; if(a1==='clear') return 'oledMsg = "";'; }
-    if(c.type==='lcd'){ if(a1==='open') return 'eyesOpen = true;'; if(a1==='close') return 'eyesOpen = false;'; if(a1==='blink') return 'eyesOpen = millis() % 3150 < 3000;'; }
+    if(c.type==='motor'){ const pct=Math.max(0,Math.min(100,numOr(val,100))), sp=Math.round(pct*2.55);
+      if(a1==='fwd') return `motor${n}Speed = ${sp};   // 前進 ${pct}%`; if(a1==='back') return `motor${n}Speed = -${sp};   // 後退 ${pct}%`; if(a1==='stop') return `motor${n}Speed = 0;`;
+      if(a1==='follow') return s?`motor${n}Speed = constrain(map(${s[0]}, 0, ${s[1]}, 0, 255), 0, 255);`:`motor${n}Speed = 200;`; }
+    const txt=v=>String(v||'').replace(/["\\]/g,''), ic=(v,d)=>iconConst((ICON_LIB.find(x=>x.k===v)||ICON_LIB.find(x=>x.k===d)).k);
+    if(c.type==='oled'){ if(a1==='show') return `oledMsg = "${txt(val)}";`; if(a1==='icon') return `oledIcon = ${ic(val,'heart')};`;
+      if(a1==='clear') return [oledMsg?'oledMsg = "";':'',oledIcon?'oledIcon = -1;':''].filter(Boolean).join(' ')||'// （沒有要清除的內容）'; }
+    if(c.type==='lcd'){ const face=lcdRich?'lcdMode = 0; ':'';
+      if(a1==='show') return `lcdMode = 1; lcdText = "${txt(val)}";`; if(a1==='icon') return `lcdMode = 2; lcdIcon = ${ic(val,'heart')};`;
+      if(a1==='open') return face+'eyesOpen = true;'; if(a1==='close') return face+'eyesOpen = false;'; if(a1==='blink') return face+'eyesOpen = millis() % 3150 < 3000;'; }
     return ''; };
   if(rules.length){
     rules.forEach((r,k)=>{
@@ -2634,10 +2811,10 @@ function genCode(){
       }
       if(s1) ruleRanges.set(r.id,[start,lineCount-1]);
     });
-    const ruled=new Set(rules.map(r=>r.out)); const idle=[...leds,...buzz,...servos,...lcds].filter(c=>!ruled.has(c.id));
+    const ruled=new Set(rules.map(r=>r.out)); const idle=[...leds,...buzz,...servos,...lcds,...motors].filter(c=>!ruled.has(c.id));
     if(idle.length) a(`  // （${idle.map(compName).join('、')} 還沒有規則控制，維持原狀）`);
   } else {
-    const any=leds.length||buzz.length||servos.length||lcds.length;
+    const any=leds.length||buzz.length||servos.length||lcds.length||motors.length;
     if(!any) a('  // （沒有輸出元件需要判斷）');
     else a('  // 還沒有寫 P 規則，先用範例規則；在「AI 提示詞」的 P 欄寫規則後，這裡會換成你的規則');
     leds.forEach((c,i)=>{ const n=i+1;
@@ -2645,6 +2822,7 @@ function genCode(){
       else if(lvl[c.id]) a(`  led${n}Level = ${pots.length?'pot1':'light1'} / 4;   // 範例規則：亮度跟著${pots.length?'旋鈕':'光線'}變化`);
       else if(n===1&&(pots.length||ldrs.length)) a(`  led1On = ${pots.length?'pot1':'light1'} > 512;   // 範例規則：超過一半就亮`);
       else if(n===1&&sonars.length) a(`  led1On = dist1 > 0 && dist1 < 20;   // 範例規則：20 公分內就亮`);
+      else if(n===1&&solars.length) a(`  led1On = solarV1 < 1.5;   // 範例規則：天暗（太陽能板電壓低於 1.5V）就亮`);
       else a(`  led${n}On = (millis() + ${i*500}) % 1000 < 500;   // 範例規則：輪流閃爍`); });
     buzz.forEach((c,i)=>{
       if(sonars.length) a(`  buz${i+1}On = dist1 > 0 && dist1 < 10;   // 範例規則：太近（10 公分內）就叫`);
@@ -2658,13 +2836,38 @@ function genCode(){
       else if(btns.length) a(`  servo${n}Angle = pressed1 ? 180 : 0;   // 範例規則：按住按鈕轉到 180 度`);
       else { if(!sweep){ a('  int sweep = (millis() / 20) % 360;'); sweep=true; } a(`  servo${n}Angle = sweep < 180 ? sweep : 360 - sweep;   // 範例規則：來回擺動`); } });
     if(lcds.length) a('  eyesOpen = millis() % 3150 < 3000;   // 範例規則：每 3 秒眨一次眼');
+    motors.forEach((c,i)=>{ const n=i+1;
+      if(sonars.length) a(`  motor${n}Speed = (dist1 > 0 && dist1 < 20) ? 0 : 200;   // 範例規則：前方 20 公分內有東西就停，否則前進`);
+      else if(solars.length) a(`  motor${n}Speed = solarV1 > 3 ? constrain(map(solarV1 * 100, 300, 600, 100, 255), 0, 255) : 0;   // 範例規則：太陽能板電壓超過 3V 才前進，越亮越快`);
+      else if(btns.length) a(`  motor${n}Speed = pressed${(i%btns.length)+1} ? 200 : 0;   // 範例規則：按住按鈕就前進`);
+      else if(pots.length) a(`  motor${n}Speed = map(pot1, 0, 1023, -255, 255);   // 範例規則：旋鈕左轉後退、右轉前進`);
+      else a(`  motor${n}Speed = (millis() / 2000) % 2 ? 200 : -200;   // 範例規則：每 2 秒換方向`); });
   }
   // ===== O 輸出 =====
   a(''); a('  // ===== O 輸出：依輸出狀態變數驅動元件 =====');
   leds.forEach((c,i)=>{ const n=i+1; if(lvl[c.id]) a(PINS[c.pins.sig].pwm?`  analogWrite(LED${n}, led${n}Level);`:`  digitalWrite(LED${n}, led${n}Level > 127 ? HIGH : LOW);   // 這腳不是 PWM，只能全亮或全暗`); else a(`  digitalWrite(LED${n}, led${n}On ? HIGH : LOW);`); });
   buzz.forEach((c,i)=>a(`  digitalWrite(BUZ${i+1}, buz${i+1}On ? HIGH : LOW);`));
   servos.forEach((c,i)=>a(`  servo${i+1}.write(servo${i+1}Angle);`));
-  if(hubLcd){
+  motors.forEach((c,i)=>a(`  driveMotor(MOTOR${i+1}_IA, MOTOR${i+1}_IB, motor${i+1}Speed);`));
+  if(lcdRich){
+    a('  if (lcdMode != shownMode || lcdText != shownText || lcdIcon != shownIcon) {   // 畫面內容改變才重畫（LCD 比較慢）');
+    a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);');
+    a('    if (lcdMode == 0) {');
+    a('      drawRobotFace();');
+    a('      drawEyes(eyesOpen);');
+    a('      shownEyes = eyesOpen;');
+    a('    } else if (lcdMode == 1) {');
+    a(lcdTextUsed?'      lcdDrawText(lcdText, LCD_WHITE);':'      // （沒有文字規則）');
+    a('    } else {');
+    a(lcdIconUsed?'      lcdDrawIcon(lcdIcon, ICON_COLORS[lcdIcon]);':'      // （沒有圖案規則）');
+    a('    }');
+    a('    shownMode = lcdMode; shownText = lcdText; shownIcon = lcdIcon;');
+    a('    lcdFirstFrame = false;');
+    a('  } else if (lcdMode == 0 && eyesOpen != shownEyes) {   // 機器人臉只重畫眼睛');
+    a('    drawEyes(eyesOpen);');
+    a('    shownEyes = eyesOpen;');
+    a('  }');
+  }else if(hubLcd){
     a('  if (lcdFirstFrame) {');
     a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);');
     a('    drawRobotFace();');
@@ -2676,19 +2879,23 @@ function genCode(){
     a('  }');
   }else if(lcds.length){ a('  if (eyesOpen != shownEyes) {   // 狀態改變時才重畫，LCD 比較慢'); a('    drawEyes(eyesOpen);'); a('    shownEyes = eyesOpen;'); a('  }'); }
   if(oleds.length){
-    a('  display.clearDisplay();'); a('  display.setTextSize(1);'); a('  display.setCursor(0, 0);'); a(`  display.println("${BD().short} IPO");`);
-    if(oledMsg) a('  display.println(oledMsg);');
+    a('  display.clearDisplay();');
+    if(oledIcon) a('  if (oledIcon >= 0) oledDrawIcon(oledIcon, 96, 0);   // 圖案畫在右上角（32×32）');
+    if(oledMsg){ a('  display.setTextSize(2);          // 規則要顯示的文字：放大放在最上面'); a('  display.setCursor(0, 0);'); a('  display.println(oledMsg);'); }
+    if(oledMsg||oledIcon){ a('  display.setTextSize(1);'); a(`  display.setCursor(0, ${oledIcon?34:24});`); }
+    else { a('  display.setTextSize(1);'); a('  display.setCursor(0, 0);'); a(`  display.println("${BD().short} IPO");`); }
     btns.forEach((c,i)=>a(`  display.print("Button${i+1}: "); display.println(pressed${i+1} ? "ON" : "OFF");`));
     pots.forEach((c,i)=>a(`  display.print("Pot${i+1}: "); display.println(pot${i+1});`));
     ldrs.forEach((c,i)=>a(`  display.print("Light${i+1}: "); display.println(light${i+1});`));
     sonars.forEach((c,i)=>a(`  display.print("Dist${i+1}: "); display.print(dist${i+1}); display.println(" cm");`));
     dhts.forEach((c,i)=>a(`  display.print("Temp${i+1}: "); display.print(temp${i+1}, 1); display.println(" C");\n  display.print("Hum${i+1}: "); display.print(hum${i+1}, 0); display.println(" %");`));
-    if(!btns.length&&!pots.length&&!ldrs.length&&!sonars.length&&!dhts.length) a('  display.print("Time: "); display.print(millis() / 1000); display.println(" s");');
+    solars.forEach((c,i)=>a(`  display.print("Solar${i+1}: "); display.print(solarV${i+1}, 1); display.println(" V");`));
+    if(!btns.length&&!pots.length&&!ldrs.length&&!sonars.length&&!dhts.length&&!solars.length) a('  display.print("Time: "); display.print(millis() / 1000); display.println(" s");');
     a('  display.display();');
   }
   a('  if (millis() - lastPrint >= 500) {   // 每 0.5 秒把數值送到序列監控（也是一種輸出）'); a('    lastPrint = millis();');
   const pr=[]; btns.forEach((c,i)=>pr.push([`btn${i+1}=`,`pressed${i+1}`])); pots.forEach((c,i)=>pr.push([`pot${i+1}=`,`pot${i+1}`])); ldrs.forEach((c,i)=>pr.push([`light${i+1}=`,`light${i+1}`]));
-  sonars.forEach((c,i)=>pr.push([`dist${i+1}=`,`dist${i+1}`])); dhts.forEach((c,i)=>{pr.push([`temp${i+1}=`,`temp${i+1}`]);pr.push([`hum${i+1}=`,`hum${i+1}`]);});
+  sonars.forEach((c,i)=>pr.push([`dist${i+1}=`,`dist${i+1}`])); solars.forEach((c,i)=>pr.push([`solarV${i+1}=`,`solarV${i+1}`])); motors.forEach((c,i)=>pr.push([`motor${i+1}=`,`motor${i+1}Speed`])); dhts.forEach((c,i)=>{pr.push([`temp${i+1}=`,`temp${i+1}`]);pr.push([`hum${i+1}=`,`hum${i+1}`]);});
   if(!pr.length) pr.push(['millis=','millis()']);
   pr.forEach(([k,v],i)=>a(`    ${SER}.print("${i?'  ':''}${k}"); ${SER}.print(${v});`));
   a(`    ${SER}.println();`); a('  }'); a(''); a('  delay(20);'); a('}');
