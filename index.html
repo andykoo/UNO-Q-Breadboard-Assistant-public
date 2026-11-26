@@ -475,7 +475,7 @@ BOARD_DEFS.unoq = {
     ['A5',63.2,{alt:'D19',fn:'SCL',fc:'i2c3',mcu:'PC0',analog:1,tol:0,desc:'ADC・I2C3 SCL（不是 Wire）'}],
   ],
   qwiic:{x:14,y:68.2}, i2c:{sda:'SDA',scl:'SCL'}, fiveVTol:true,
-  types:['led','button','pot','ldr','solar','buzzer','servo','motor','oled','lcd','sonar','dht','qwiic'],
+  types:['led','button','pot','ldr','solar','buzzer','servo','motor','car','oled','lcd','sonar','dht','qwiic'],
   digOrder:['D2','D4','D7','D8','D12','D13','D11','D10','D6','D5','D9','D3','A2','A3','A4','A5','A0','A1','D0','D1'],
   ser:'Monitor', serialPins:['D0','D1'],
   builtins:{LED_BUILTIN:{x:45.2,y:63.8,color:'#ef4444',activeLow:true,msg:'LED_BUILTIN 是板上的 RGB LED 3，低電位（LOW）時點亮'}},
@@ -552,7 +552,7 @@ BOARD_DEFS.hub8735 = {
     ['SPK',g2[7],{disp:'SPK',kind:'aux',desc:'AOUT 喇叭輸出'}],
   ],
   qwiic:null, i2c:{sda:'P3',scl:'P4'}, fiveVTol:false,
-  types:['led','button','pot','ldr','solar','buzzer','servo','motor','oled','lcd','sonar','dht'],
+  types:['led','button','pot','ldr','solar','buzzer','servo','motor','car','oled','lcd','sonar','dht'],
   digOrder:['P22','P23','P24','P21','P20','P19','P18','P11','P7','P15','P8','P5','P6','P2','P9','P10','P0','P1','P3','P4','P12','P13'],
   ser:'Serial', serialPins:[],
   builtins:{
@@ -579,6 +579,7 @@ BOARD_DEFS.hub8735 = {
     sonar:{pref:{trig:['P7','P15','P8'],echo:['P8','P11','P7']},hint:'VCC 需 5V。8735 的 GPIO 不耐 5V，Echo 一定要經 1kΩ/2kΩ 分壓後再接到腳位。'},
     dht:{pref:{sig:['P7','P15','P11']},hint:'模組版 DHT11：S 接腳位、+ 接 3.3V、− 接 GND。'},
     solar:{pref:{sig:['P9','P10','P2','P0','P1']},hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳（0、1、2、9、10），− 接 GND。8735 腳位最高 3.3V，不可直接接太陽能板。模擬時可設定太陽能板電壓。'},
+    car:{pref:{aia:['P18','P19','P24'],aib:['P11','P15','P7'],bia:['P21','P22','P23','P13'],bib:['P8','P5','P6','P2']},hint:'雙輪車：一片 L9110S 雙路驅動模組控制左右兩顆 TT 馬達。A-IA、B-IA 接 PWM 腳（11–13、18–24）調速度，A-IB、B-IB 接任一腳控制方向。A 路接左輪、B 路接右輪。VCC 建議接外接電源（4 顆 AA），GND 與 8735 共地。'},
     motor:{pref:{ia:['P18','P19','P24','P21','P13'],ib:['P11','P15','P7','P8']},hint:'TT 馬達＋輪子一組，經 L9110S 馬達驅動模組控制：IA 接 PWM 腳（11–13、18–24）調速度，IB 接任一腳控制方向。VCC 建議接外接電源（4 顆 AA），GND 要和 8735 共地。不可把馬達直接接腳位。'},
     lcd:{pref:{sclk:['P19'],mosi:['P20'],cs:['P21'],rst:['P22'],dc:['P23']},hint:'YY-IPS130-V4.0（ST7789、240×240）已實機驗證的接線：SCLK→19、MOSI→20、CS→21、RST→22、DC→23（程式寫 AMB_D19～AMB_D23），VCC 與 BLK 接 3.3V、GND 接 GND。程式用 digitalWrite 軟體 SPI，不要改成 SPI1.transfer()；座標用完整 240×240，不要加 Y=80 偏移。'},
   },
@@ -677,13 +678,15 @@ const TYPES_BASE = {
     hint:'YY-IPS130-V4.0：1.3 吋 IPS LCD 螢幕，ST7789 驅動、240×240、SPI、RGB565。VCC 與 BLK（背光）接 3.3V、GND 接 GND；SCL 是時脈（SCLK）、SDA 是資料（MOSI），不使用 MISO。程式用 digitalWrite 軟體 SPI，所以任何數位腳都能接。'},
   solar:{name:'太陽能板',bb:false,sigs:[{k:'sig',label:'+（分壓後）',req:'analog',pref:['A2','A3','A0','A1','A4','A5']}],
     hint:'小型太陽能板（約 6V）：+ 經 10kΩ／10kΩ 分壓（電壓 ÷2）後接類比腳，− 接 GND。UNO Q 類比腳最高 3.3V，不可直接接太陽能板。程式把讀值換算回電壓；模擬時可設定太陽能板電壓（0–6V）。'},
+  car:{name:'雙輪車',bb:false,sigs:[{k:'aia',label:'A-IA（左輪速度）',req:'pwm',pref:['D5','D3','D6']},{k:'aib',label:'A-IB（左輪方向）',req:'dout',pref:['D4','D2','D12']},{k:'bia',label:'B-IA（右輪速度）',req:'pwm',pref:['D6','D9','D10','D11','D3']},{k:'bib',label:'B-IB（右輪方向）',req:'dout',pref:['D7','D8','D13','D12','D2']}],
+    hint:'雙輪車：一片 L9110S 雙路驅動模組控制左右兩顆 TT 馬達。A-IA、B-IA 接 PWM 腳（D3、D5、D6、D9、D10、D11）調速度，A-IB、B-IB 接數位腳控制方向；A 路接左輪、B 路接右輪。VCC 建議接外接電源（4 顆 AA），GND 要和 UNO Q 共地。'},
   motor:{name:'輪子＋TT 馬達',bb:false,sigs:[{k:'ia',label:'IA',req:'pwm',pref:['D5','D6','D3','D10','D11','D9']},{k:'ib',label:'IB',req:'dout',pref:['D4','D2','D12','D13','D7','D8']}],
     hint:'TT 馬達＋輪子一組，經 L9110S 馬達驅動模組控制：IA 接 PWM 腳（D3、D5、D6、D9、D10、D11）調速度，IB 接數位腳控制方向。馬達電流大，不可直接接腳位；VCC 建議接外接電源（4 顆 AA），GND 要和 UNO Q 共地。'},
   qwiic:{name:'Qwiic / Modulino',bb:false,sigs:[],
     hint:'用 Qwiic 線接到板子下緣的 Qwiic 插座（3.3V），不佔用排針。程式要用 Wire1。'},
 };
 let TYPES=TYPES_BASE;
-const TYPE_ORDER_ALL=['led','button','pot','ldr','solar','buzzer','servo','motor','oled','lcd','sonar','dht','qwiic'];
+const TYPE_ORDER_ALL=['led','button','pot','ldr','solar','buzzer','servo','motor','car','oled','lcd','sonar','dht','qwiic'];
 let TYPE_ORDER=TYPE_ORDER_ALL.slice();
 const SIG_COLORS=['#16a34a','#7c3aed','#0891b2','#db2777','#ca8a04','#0d9488','#9333ea','#65a30d','#2563eb','#be185d','#4d7c0f','#0369a1'];
 const C_V33='#ea7a10', C_V5='#dc2626', C_GND='#1f1f1f';
@@ -768,11 +771,11 @@ function freeCol(w,excludeId){
   return null;
 }
 function modulePos(type){
-  const is5=t=>t==='servo'||t==='sonar'||t==='motor';
+  const is5=t=>t==='servo'||t==='sonar'||t==='motor'||t==='car';
   const v5 = is5(type);
   const group=state.comps.filter(c=>!TYPES[c.type].bb && (is5(c.type)===v5));
   const n=group.length;
-  return v5 ? {x:BB.x+BB.w+50+(n%2)*190, y:BB.y+10+Math.floor(n/2)*130}
+  return v5 ? {x:BB.x+BB.w+50+(n%2)*190, y:BB.y+10+Math.floor(n/2)*165}
             : {x:BOARD.x+BOARD.w+235+(n%2)*150, y:BOARD.y+10+Math.floor(n/2)*130};
 }
 
@@ -938,6 +941,20 @@ const MODULES={
         (on?`<rect x="${c.x}" y="${c.y-8}" width="112" height="78" rx="4" fill="#fde047" opacity="${(.45*k).toFixed(2)}" pointer-events="none"/><circle cx="${c.x+104}" cy="${c.y-18}" r="${6+6*k}" fill="#facc15" opacity="${(.4+.6*k).toFixed(2)}"/>`+
           `<rect x="${c.x+22}" y="${c.y+72}" width="68" height="14" rx="7" fill="#0f172a"/><text x="${c.x+56}" y="${c.y+82}" font-size="9" fill="#fff" text-anchor="middle">${V.toFixed(1)} V</text>`:
           `<text x="${c.x+56}" y="${c.y+82}" font-size="8" fill="#475569" text-anchor="middle">約 6V 太陽能板</text>`)+hdr(c.x+30,c.y,['+','−'],40); }},
+  car:{rail:'5V',pins:[{label:'B-IA（右輪速度 PWM）',k:'bia',to:'sig',dx:10,dy:0},{label:'B-IB（右輪方向）',k:'bib',to:'sig',dx:22,dy:0},{label:'GND',to:'GND',dx:34,dy:0},{label:'VCC（建議外接電源）',to:'5V',dx:46,dy:0},{label:'A-IA（左輪速度 PWM）',k:'aia',to:'sig',dx:58,dy:0},{label:'A-IB（左輪方向）',k:'aib',to:'sig',dx:70,dy:0}],
+    draw:c=>{ const [L,R]=simCar(c), on=SIM.running;
+      const wheel=(cx,cy,sp,tag)=>{ const a=Math.abs(sp); let spokes=''; for(let i=0;i<6;i++){ const t=i*Math.PI/3; spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+Math.cos(t)*14).toFixed(1)}" y2="${(cy+Math.sin(t)*14).toFixed(1)}" stroke="#a16207" stroke-width="2.6" stroke-linecap="round"/>`; }
+        const period=a>0.02?(0.25/a):0; const anim=on&&period?`style="transform-box:fill-box;transform-origin:center;animation:wheelSpin ${period.toFixed(3)}s linear infinite ${sp<0?'reverse':'normal'};animation-delay:-${((performance.now()/1000)%period).toFixed(3)}s"`:'';
+        return `<rect x="${cx-50}" y="${cy-12}" width="26" height="24" rx="3" fill="#facc15" stroke="#a16207"/><text x="${cx-37}" y="${cy+4}" font-size="8" fill="#713f12" text-anchor="middle" font-weight="700">TT</text>`+
+          `<circle cx="${cx}" cy="${cy}" r="24" fill="#18181b"/><circle cx="${cx}" cy="${cy}" r="17" fill="#fde68a"/><g ${anim}>${spokes}<circle cx="${cx}" cy="${cy}" r="17" fill="none"/></g><circle cx="${cx}" cy="${cy}" r="4" fill="#ca8a04"/>`+
+          `<text x="${cx+30}" y="${cy+4}" font-size="10" fill="#334155" font-weight="700">${tag}</text>`; };
+      const st=carState(L,R);
+      return `<rect x="${c.x}" y="${c.y-8}" width="82" height="70" rx="4" fill="#b91c1c" stroke="#7f1d1d"/><rect x="${c.x+10}" y="${c.y+18}" width="22" height="16" rx="2" fill="#111"/><rect x="${c.x+48}" y="${c.y+18}" width="22" height="16" rx="2" fill="#111"/>`+
+        `<text x="${c.x+41}" y="${c.y+48}" font-size="8" fill="#fff" text-anchor="middle" font-weight="700">L9110S</text><text x="${c.x+21}" y="${c.y+58}" font-size="7" fill="#fecaca" text-anchor="middle">B 右</text><text x="${c.x+59}" y="${c.y+58}" font-size="7" fill="#fecaca" text-anchor="middle">A 左</text>`+
+        `<path d="M${c.x+82},${c.y+40} C${c.x+92},${c.y+40} ${c.x+88},${c.y+22} ${c.x+100},${c.y+22}" stroke="#dc2626" stroke-width="2" fill="none"/><path d="M${c.x+82},${c.y+50} C${c.x+92},${c.y+50} ${c.x+88},${c.y+92} ${c.x+100},${c.y+92}" stroke="#2563eb" stroke-width="2" fill="none"/>`+
+        wheel(c.x+150,c.y+22,L,'左')+wheel(c.x+150,c.y+92,R,'右')+
+        (on?`<rect x="${c.x+4}" y="${c.y+110}" width="96" height="16" rx="8" fill="#0f172a"/><text x="${c.x+52}" y="${c.y+121}" font-size="10" fill="#fff" text-anchor="middle">${st}</text>`:'')+
+        hdr(c.x+10,c.y,['BIA','BIB','GND','VCC','AIA','AIB'],12,5); }},
   motor:{rail:'5V',pins:[{label:'GND',to:'GND',dx:15,dy:0},{label:'VCC（建議外接電源）',to:'5V',dx:30,dy:0},{label:'IA（速度 PWM）',k:'ia',to:'sig',dx:45,dy:0},{label:'IB（方向）',k:'ib',to:'sig',dx:60,dy:0}],
     draw:c=>{ const sp=simMotor(c), on=SIM.running, a=Math.abs(sp); const cx=c.x+152, cy=c.y+42;
       let spokes=''; for(let i=0;i<6;i++){ const t=i*Math.PI/3; spokes+=`<line x1="${cx}" y1="${cy}" x2="${(cx+Math.cos(t)*17).toFixed(1)}" y2="${(cy+Math.sin(t)*17).toFixed(1)}" stroke="#a16207" stroke-width="3" stroke-linecap="round"/>`; }
@@ -1122,7 +1139,9 @@ function hubChecks(L,cs,has,usedPins){
   if(has('pot').length||has('ldr').length) L.push(['ok','✔','可變電阻／光敏電阻接 3.3V（上排電源軌），類比輸入最高 3.3V。']);
   has('servo').forEach(c=>{ if(!PINS[c.pins.sig].pwm) L.push(['err','✖',`${compName(c)} 不在 PWM 腳位`]);});
   has('motor').forEach(c=>{ if(!PINS[c.pins.ia].pwm) L.push(['err','✖',`${compName(c)} 的 IA 不在 PWM 腳位，無法調速度`]);});
-  if(has('motor').length) L.push(['warn','⚠','TT 馬達要經 L9110S 驅動模組，不可直接接腳位；驅動模組建議用外接電源（4 顆 AA），GND 與 8735 共地。']);
+  has('car').forEach(c=>['aia','bia'].forEach(k=>{ if(!PINS[c.pins[k]].pwm) L.push(['err','✖',`${compName(c)} 的 ${k==='aia'?'A-IA（左輪）':'B-IA（右輪）'} 不在 PWM 腳位，無法調速度`]); }));
+  if(has('motor').length||has('car').length) L.push(['warn','⚠','TT 馬達要經 L9110S 驅動模組，不可直接接腳位；驅動模組建議用外接電源（4 顆 AA），GND 與 8735 共地。']);
+  if(has('car').length) L.push(['info','ℹ','雙輪車：A 路接左輪、B 路接右輪。如果某一邊輪子轉反了，把那顆馬達的兩條線對調即可。']);
   if(has('solar').length) L.push(['warn','⚠','太陽能板 + 極要經 10kΩ／10kΩ 分壓再接類比腳（8735 最高 3.3V）。']);
   if(has('servo').length>=2) L.push(['warn','⚠',`伺服馬達 ${has('servo').length} 顆：建議外接 5V 電源，GND 與 8735 共地。`]);
   else if(has('servo').length) L.push(['ok','✔','伺服馬達接 5V（下排電源軌）；程式請用 AmebaServo。']);
@@ -1136,7 +1155,7 @@ function hubChecks(L,cs,has,usedPins){
              :['warn','⚠',`${compName(c)} 不是已驗證的接線。已驗證的是 SCLK→19、MOSI→20、CS→21、RST→22、DC→23（AMB_D19～AMB_D23）。`]); });
   if(has('lcd').length) L.push(['info','ℹ','LCD 程式要保留 digitalWrite 軟體 SPI、CS/DC 控制與初始化順序（01→11→3A 55→36 00→21→13→29），不要改成 SPI1.transfer()，也不要加 Y=80 偏移。']);
   if(usedPins.some(p=>p==='P0'||p==='P1')) L.push(['info','ℹ','0/1 是 Wire1（I2C1）腳位，之後要接第二組 I2C 時請保留。']);
-  if(cs.some(c=>c.type==='servo'||c.type==='sonar'||c.type==='motor')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3.3V）供電。']);
+  if(cs.some(c=>c.type==='servo'||c.type==='sonar'||c.type==='motor'||c.type==='car')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3.3V）供電。']);
   L.push(['info','ℹ','上傳前：按住功能鍵 → 按一下 RST → 放開 RST → 放開功能鍵；上傳完成後按 RST 才會執行。']);
 }
 function hubPinsTab(){
@@ -1158,7 +1177,9 @@ function unoqChecks(L,cs,has,usedPins){
   if(has('pot').length||has('ldr').length) L.push(['ok','✔','可變電阻／光敏電阻接 3V3（上排電源軌），符合 A0–A5 最高 3.3V 的限制。']);
   has('servo').forEach(c=>{ if(!PINS[c.pins.sig].pwm) L.push(['err','✖',`${compName(c)} 不在 PWM 腳位`]);});
   has('motor').forEach(c=>{ if(!PINS[c.pins.ia].pwm) L.push(['err','✖',`${compName(c)} 的 IA 不在 PWM 腳位，無法調速度`]);});
-  if(has('motor').length) L.push(['warn','⚠','TT 馬達要經 L9110S 驅動模組，不可直接接腳位；驅動模組建議用外接電源（4 顆 AA），GND 與 UNO Q 共地。']);
+  has('car').forEach(c=>['aia','bia'].forEach(k=>{ if(!PINS[c.pins[k]].pwm) L.push(['err','✖',`${compName(c)} 的 ${k==='aia'?'A-IA（左輪）':'B-IA（右輪）'} 不在 PWM 腳位，無法調速度`]); }));
+  if(has('motor').length||has('car').length) L.push(['warn','⚠','TT 馬達要經 L9110S 驅動模組，不可直接接腳位；驅動模組建議用外接電源（4 顆 AA），GND 與 UNO Q 共地。']);
+  if(has('car').length) L.push(['info','ℹ','雙輪車：A 路接左輪、B 路接右輪。如果某一邊輪子轉反了，把那顆馬達的兩條線對調即可。']);
   if(has('solar').length) L.push(['warn','⚠','太陽能板 + 極要經 10kΩ／10kΩ 分壓再接類比腳（UNO Q 類比腳最高 3.3V）。']);
   if(has('servo').length>=2) L.push(['warn','⚠',`伺服馬達 ${has('servo').length} 顆：建議外接 5V 電源，GND 與 UNO Q 共地。`]);
   else if(has('servo').length) L.push(['ok','✔','伺服馬達 1 顆可由板子 5V 供電（下排電源軌）；建議用 5V/3A 的 USB-C 電源。']);
@@ -1169,7 +1190,7 @@ function unoqChecks(L,cs,has,usedPins){
   has('lcd').forEach(c=>L.push(['ok','✔',`${compName(c)}：VCC、BLK 接 3V3（上排電源軌）。產生的程式用 digitalWrite 軟體 SPI；SCL 接 D13、SDA 接 D11 時，之後也能改用硬體 SPI 的 Adafruit_ST7789。`]));
   if(usedPins.includes('D0')||usedPins.includes('D1')) L.push(['warn','⚠','D0/D1 是硬體 UART（Serial），若之後要接藍牙等序列模組請保留。']);
   if(usedPins.some(p=>['A4','A5'].includes(p))) L.push(['info','ℹ','A4/A5 在 UNO Q 不是 Wire 的 I2C 腳，當一般腳位用沒問題。']);
-  if(cs.some(c=>c.type==='servo'||c.type==='sonar'||c.type==='motor')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3V3）供電。']);
+  if(cs.some(c=>c.type==='servo'||c.type==='sonar'||c.type==='motor'||c.type==='car')) L.push(['info','ℹ','5V 元件由下排電源軌（5V）供電；3.3V 元件由上排（3V3）供電。']);
 }
 function unoqPinsTab(){
   return `<div class="ck err" style="margin-bottom:10px"><b>⚠</b><span>所有 MCU GPIO 為 3.3V 邏輯；除了 A0、A1 外都可容忍 5V 輸入（A2–A5 當類比用時也不可超過 3.3V，D3 最高 3.6V）。JCTL 是 1.8V，不能接 3.3V/5V。</span></div>
@@ -1184,7 +1205,7 @@ function unoqPinsTab(){
    ========================================================= */
 const ICON_LIB=[{"k": "heart", "name": "愛心", "color": "LCD_PINK", "rows": [0, 0, 15420, 32382, 65535, 65535, 65535, 32766, 16380, 8184, 4080, 2016, 960, 384, 0, 0]}, {"k": "smile", "name": "笑臉", "color": "LCD_YELLOW", "rows": [2016, 6168, 8196, 16386, 18018, 34401, 32769, 32769, 36873, 34833, 18402, 16386, 8196, 6168, 2016, 0]}, {"k": "sad", "name": "哭臉", "color": "LCD_CYAN", "rows": [2016, 6168, 8196, 16386, 18018, 34401, 34401, 32769, 32769, 34785, 18450, 20490, 8196, 6168, 2016, 0]}, {"k": "sun", "name": "太陽", "color": "LCD_YELLOW", "rows": [384, 16770, 8196, 5064, 2016, 4080, 4080, 61431, 61431, 4080, 4080, 2016, 5064, 8196, 16770, 384]}, {"k": "star", "name": "星星", "color": "LCD_YELLOW", "rows": [384, 384, 960, 960, 2016, 65535, 32766, 16380, 8184, 4080, 4080, 7800, 7224, 14364, 12300, 16386]}, {"k": "check", "name": "打勾", "color": "LCD_GREEN", "rows": [0, 3, 7, 14, 28, 56, 112, 49376, 57792, 29568, 16128, 7680, 3072, 0, 0, 0]}, {"k": "cross", "name": "打叉", "color": "LCD_RED", "rows": [49155, 57351, 28686, 14364, 7224, 3696, 2016, 960, 960, 2016, 3696, 7224, 14364, 28686, 57351, 49155]}, {"k": "up", "name": "箭頭（上）", "color": "LCD_WHITE", "rows": [384, 960, 2016, 4080, 8184, 15324, 29646, 58311, 960, 960, 960, 960, 960, 960, 960, 960]}, {"k": "note", "name": "音符", "color": "LCD_CYAN", "rows": [4094, 4094, 3078, 3078, 3078, 3078, 3078, 3078, 3078, 3134, 3198, 31870, 64572, 64512, 30720, 0]}, {"k": "warn", "name": "驚嘆號", "color": "LCD_YELLOW", "rows": [0, 960, 960, 960, 960, 960, 960, 960, 960, 384, 0, 0, 960, 960, 0, 0]}];
 const LCD_FONT5X7=[[0, 0, 0, 0, 0, 0, 0], [4, 4, 4, 4, 4, 0, 4], [10, 10, 0, 0, 0, 0, 0], [10, 10, 31, 10, 31, 10, 10], [4, 15, 20, 14, 5, 30, 4], [24, 25, 2, 4, 8, 19, 3], [12, 18, 20, 8, 21, 18, 13], [4, 4, 0, 0, 0, 0, 0], [2, 4, 8, 8, 8, 4, 2], [8, 4, 2, 2, 2, 4, 8], [0, 4, 21, 14, 21, 4, 0], [0, 4, 4, 31, 4, 4, 0], [0, 0, 0, 0, 12, 4, 8], [0, 0, 0, 31, 0, 0, 0], [0, 0, 0, 0, 0, 12, 12], [0, 1, 2, 4, 8, 16, 0], [14, 17, 19, 21, 25, 17, 14], [4, 12, 4, 4, 4, 4, 14], [14, 17, 1, 2, 4, 8, 31], [31, 2, 4, 2, 1, 17, 14], [2, 6, 10, 18, 31, 2, 2], [31, 16, 30, 1, 1, 17, 14], [6, 8, 16, 30, 17, 17, 14], [31, 1, 2, 4, 8, 8, 8], [14, 17, 17, 14, 17, 17, 14], [14, 17, 17, 15, 1, 2, 12], [0, 12, 12, 0, 12, 12, 0], [0, 12, 12, 0, 12, 4, 8], [2, 4, 8, 16, 8, 4, 2], [0, 0, 31, 0, 31, 0, 0], [8, 4, 2, 1, 2, 4, 8], [14, 17, 1, 2, 4, 0, 4], [14, 17, 1, 13, 21, 21, 14], [14, 17, 17, 31, 17, 17, 17], [30, 17, 17, 30, 17, 17, 30], [14, 17, 16, 16, 16, 17, 14], [28, 18, 17, 17, 17, 18, 28], [31, 16, 16, 30, 16, 16, 31], [31, 16, 16, 30, 16, 16, 16], [14, 17, 16, 23, 17, 17, 15], [17, 17, 17, 31, 17, 17, 17], [14, 4, 4, 4, 4, 4, 14], [7, 2, 2, 2, 2, 18, 12], [17, 18, 20, 24, 20, 18, 17], [16, 16, 16, 16, 16, 16, 31], [17, 27, 21, 21, 17, 17, 17], [17, 17, 25, 21, 19, 17, 17], [14, 17, 17, 17, 17, 17, 14], [30, 17, 17, 30, 16, 16, 16], [14, 17, 17, 17, 21, 18, 13], [30, 17, 17, 30, 20, 18, 17], [15, 16, 16, 14, 1, 1, 30], [31, 4, 4, 4, 4, 4, 4], [17, 17, 17, 17, 17, 17, 14], [17, 17, 17, 17, 17, 10, 4], [17, 17, 17, 21, 21, 21, 10], [17, 17, 10, 4, 10, 17, 17], [17, 17, 10, 4, 4, 4, 4], [31, 1, 2, 4, 8, 16, 31]];
-const IPO_OF={led:'O',button:'I',pot:'I',ldr:'I',solar:'I',buzzer:'O',servo:'O',motor:'O',oled:'O',lcd:'O',sonar:'I',dht:'I',qwiic:'I'};
+const IPO_OF={led:'O',button:'I',pot:'I',ldr:'I',solar:'I',buzzer:'O',servo:'O',motor:'O',car:'O',oled:'O',lcd:'O',sonar:'I',dht:'I',qwiic:'I'};
 const IPO_NAME={I:'輸入',P:'處理',O:'輸出'};
 const IPO_COL={I:'#2563eb',P:'#7c3aed',O:'#d9480f'};
 const IPO_BG={I:'#eff6ff',P:'#f5f3ff',O:'#fff4e6'};
@@ -1199,7 +1220,7 @@ const COND_OPTS={
 const COND_DEF={gt:512,lt:512,tgt:28,tlt:20,hgt:70,hlt:40,vgt:3,vlt:1.5,every:1000,custom:''};
 const COND_UNIT=(t,cond)=>cond==='every'?'毫秒':cond==='vgt'||cond==='vlt'?'V（伏特）':t==='sonar'&&(cond==='gt'||cond==='lt')?'公分':cond==='tgt'||cond==='tlt'?'°C':cond==='hgt'||cond==='hlt'?'%':(t==='pot'||t==='ldr')&&(cond==='gt'||cond==='lt')?'（0–1023）':'';
 const ACT_OPTS={led:[['on','亮'],['off','熄滅'],['blink','閃爍'],['follow','亮度跟著輸入']],buzzer:[['on','響'],['off','安靜'],['beep','嗶嗶叫']],
-  servo:[['angle','轉到（度）'],['follow','角度跟著輸入']],motor:[['fwd','前進'],['back','後退'],['stop','停止'],['follow','速度跟著輸入']],oled:[['show','顯示文字'],['icon','顯示圖案'],['clear','清除畫面']],lcd:[['show','顯示文字'],['icon','顯示圖案'],['open','機器人臉：張開眼睛'],['close','機器人臉：閉上眼睛'],['blink','機器人臉：眨眼']]};
+  servo:[['angle','轉到（度）'],['follow','角度跟著輸入']],motor:[['fwd','前進'],['back','後退'],['stop','停止'],['follow','速度跟著輸入']],car:[['fwd','前進'],['back','後退'],['left','左轉'],['right','右轉'],['stop','停止'],['follow','前進速度跟著輸入']],oled:[['show','顯示文字'],['icon','顯示圖案'],['clear','清除畫面']],lcd:[['show','顯示文字'],['icon','顯示圖案'],['open','機器人臉：張開眼睛'],['close','機器人臉：閉上眼睛'],['blink','機器人臉：眨眼']]};
 const LEVELS={full:'完整程式',fill:'架構填空',ask:'只問我問題'};
 const defaultIpo=()=>({level:'full',i:'',p:'',o:'',rules:[],function:{name:'',purpose:''},details:{I:{},O:{}}});
 function normIpo(q){ q=Object.assign(defaultIpo(),q||{}); if(!Array.isArray(q.rules)) q.rules=[]; if(!LEVELS[q.level]) q.level='full'; if(!q.function||typeof q.function!=='object') q.function={name:'',purpose:''}; q.function.name=q.function.name||'';q.function.purpose=q.function.purpose||[q.function.why,q.function.use].filter(Boolean).join('；'); if(!q.details||typeof q.details!=='object') q.details={I:{},O:{}}; q.details.I=q.details.I||{}; q.details.O=q.details.O||{}; return q; }
@@ -1229,8 +1250,8 @@ function iconPreview(k){ const ic=ICON_LIB.find(x=>x.k===k)||ICON_LIB[0]; let p=
 function actPhrase(r,act,val){ const c=byId(r.out); if(!c) return ''; const t=c.type;
   switch(act){ case 'none': return '不改變';
     case 'on': return t==='buzzer'?'響':'亮'; case 'off': return t==='buzzer'?'安靜':'熄滅'; case 'blink': return t==='lcd'?'眨眼':'閃爍'; case 'beep': return '嗶嗶叫';
-    case 'follow': return t==='servo'?`角度跟著 ${srcName(r)} 變化`:t==='motor'?`速度跟著 ${srcName(r)} 變化`:`亮度跟著 ${srcName(r)} 變化`;
-    case 'fwd': return `前進（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'back': return `後退（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'stop': return '停止';
+    case 'follow': return t==='servo'?`角度跟著 ${srcName(r)} 變化`:t==='motor'||t==='car'?`速度跟著 ${srcName(r)} 變化`:`亮度跟著 ${srcName(r)} 變化`;
+    case 'fwd': return `前進（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'back': return `後退（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'left': return `左轉（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'right': return `右轉（速度 ${Math.max(0,Math.min(100,numOr(val,100)))}%）`; case 'stop': return '停止';
     case 'angle': return `轉到 ${numOr(val,90)} 度`; case 'show': return `顯示「${val||''}」`; case 'clear': return '清除畫面'; case 'icon': return `顯示圖案「${(ICON_LIB.find(x=>x.k===val)||ICON_LIB[0]).name}」`;
     case 'open': return '張開眼睛'; case 'close': return '閉上眼睛'; }
   return act; }
@@ -1241,9 +1262,9 @@ function newRule(){ const ins=ipoComps('I'), outs=ipoComps('O');
   const inp=ins[0]?ins[0].id:(Object.keys(BD().onboard)[0]?'ob_'+Object.keys(BD().onboard)[0]:'timer');
   const r={id:uid(),inp,cond:'',val:'',out:outs[0]?outs[0].id:'',act:'',aval:'',els:'none',eval:'',_fresh:true}; fixRule(r); return r; }
 function fixRule(r){ const t=inpType(r)||'timer'; const co=COND_OPTS[t]||COND_OPTS.timer; if(!co.some(o=>o[0]===r.cond)){ r.cond=co[0][0]; r.val=COND_DEF[r.cond]!==undefined?String(COND_DEF[r.cond]):''; }
-  const o=byId(r.out); const ao=o?ACT_OPTS[o.type]||[]:[]; if(!ao.some(x=>x[0]===r.act)){ r.act=ao[0]?ao[0][0]:''; r.aval=r.act==='angle'?'90':r.act==='fwd'||r.act==='back'?'100':r.act==='icon'?'heart':''; }
+  const o=byId(r.out); const ao=o?ACT_OPTS[o.type]||[]:[]; if(!ao.some(x=>x[0]===r.act)){ r.act=ao[0]?ao[0][0]:''; r.aval=r.act==='angle'?'90':['fwd','back','left','right'].includes(r.act)?'100':r.act==='icon'?'heart':''; }
   if(r.els!=='none'&&!ao.some(x=>x[0]===r.els)) r.els='none';
-  if(o&&o.type==='motor'&&r.act==='fwd'&&r.els==='none'&&r.cond!=='always'&&r._fresh){ r.els='stop'; }
+  if(o&&(o.type==='motor'||o.type==='car')&&r.act==='fwd'&&r.els==='none'&&r.cond!=='always'&&r._fresh){ r.els='stop'; }
   if(r.cond==='always') r.els='none';
   if(o&&o.type==='led'&&r.act==='on'&&r.els==='none'&&r.cond!=='always'&&r._fresh){ r.els='off'; }
   delete r._fresh; }
@@ -1261,6 +1282,7 @@ function evalCond(r){ const v=inValue(r), n=numOr(r.val,COND_DEF[r.cond]||0);
 function ioValue(c){ const v=inp(c);
   switch(c.type){ case 'button': return SIM.pressed[c.id]?'按下':'放開'; case 'pot': case 'ldr': return String(Math.round(v.v*((1<<SIM.res)-1)));
     case 'sonar': return v.d+' cm'; case 'dht': return `${v.t}°C／${v.h}%`; case 'solar': return v.V.toFixed(1)+' V';
+    case 'car': return carState(...simCar(c));
     case 'motor': { const m=simMotor(c); return Math.abs(m)<0.02?'停止':(m>0?'前進 ':'後退 ')+Math.round(Math.abs(m)*100)+'%'; }
     case 'led': { const l=simLed(c); return l==null?'—':l<=0?'暗':l>=1?'亮':'亮度 '+Math.round(l*100)+'%'; }
     case 'buzzer': return simBuzz(c)?'響':'安靜'; case 'servo': return Math.round(simServo(c))+'°';
@@ -1365,7 +1387,7 @@ function codeMap(){ const src=$('code').value; if(CM.src===src) return CM; const
   CM={src,lines,I:xI||(iI>=0?[iI,nextOf(iI)]:null),P:xP||(iP>=0?[iP,nextOf(iP)]:null),O:xO||(iO>=0?[iO,nextOf(iO)]:null)}; return CM; }
 function compWords(c){ if(c.id&&String(c.id).startsWith('ob_')) return ['fnKey'];
   const n=state.comps.filter(x=>x.type===c.type).indexOf(c)+1;
-  return ({button:['pressed'+n,'BTN'+n],pot:['pot'+n,'POT'+n],ldr:['light'+n,'LDR'+n],sonar:['dist'+n,'readDistance'+n],solar:['solarV'+n,'SOLAR'+n],motor:['motor'+n+'Speed','MOTOR'+n+'_IA','MOTOR'+n+'_IB'],dht:['temp'+n,'hum'+n,'dht'+n,'lastDht'],
+  return ({button:['pressed'+n,'BTN'+n],pot:['pot'+n,'POT'+n],ldr:['light'+n,'LDR'+n],sonar:['dist'+n,'readDistance'+n],solar:['solarV'+n,'SOLAR'+n],car:['carLeft'+n,'carRight'+n,'CAR'+n+'_AIA','CAR'+n+'_AIB','CAR'+n+'_BIA','CAR'+n+'_BIB'],motor:['motor'+n+'Speed','MOTOR'+n+'_IA','MOTOR'+n+'_IB'],dht:['temp'+n,'hum'+n,'dht'+n,'lastDht'],
     led:['LED'+n,'led'+n+'On','led'+n+'Level'],buzzer:['BUZ'+n,'buz'+n+'On'],servo:['servo'+n,'servo'+n+'Angle'],oled:['display','oledMsg','oledIcon','oledDrawIcon'],lcd:['eyesOpen','shownEyes','drawEyes','lcdMode','lcdText','lcdIcon','lcdDrawText','lcdDrawIcon']})[c.type]||[]; }
 function linesWith(range,words){ if(!range||!words.length) return []; const out=[]; const res=words.map(w=>new RegExp('(^|[^\\w])'+w+'([^\\w]|$)'));
   for(let k=range[0]+1;k<=range[1];k++){ if(res.some(re=>re.test(CM.lines[k]))) out.push(k); }
@@ -1441,7 +1463,7 @@ function updateCodeHL(){ const ta=$('code'), box=$('codeHL'); if(!box) return; u
 let scrollKey='', lastTyped=0, runScrollLine=-1;
 function compRing(c,k){ let x,y,w,h;
   if(TYPES[c.type].bb){ x=colX(c.col)-12; w=colX(c.col+TYPES[c.type].w-1)+12-x; y=ROWS.a-12; h=ROWS.h-ROWS.a+24; }
-  else { const W={oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164,solar:144,motor:222}, Hh={oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172,solar:114,motor:122}; x=c.x-16; y=c.y-24; w=W[c.type]; h=Hh[c.type]; }
+  else { const W={oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164,solar:144,motor:222,car:222}, Hh={oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172,solar:114,motor:122,car:172}; x=c.x-16; y=c.y-24; w=W[c.type]; h=Hh[c.type]; }
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="${IPO_COL[k]}" fill-opacity=".10" stroke="${IPO_COL[k]}" stroke-width="3" pointer-events="none"/><rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="none" stroke="${IPO_COL[k]}" stroke-width="8" opacity=".35" filter="url(#glow)" pointer-events="none"/>`; }
 
 /* ---------- IPO 流程圖檢視 ---------- */
@@ -1575,7 +1597,7 @@ function renderCanvas(){
 }
 function selBox(c){
   if(TYPES[c.type].bb){const x1=colX(c.col)-10,x2=colX(c.col+TYPES[c.type].w-1)+10;return `<rect x="${x1}" y="${ROWS.a-12}" width="${x2-x1}" height="${ROWS.h-ROWS.a+24}" rx="8" fill="none" stroke="#f26b21" stroke-width="2" stroke-dasharray="5 4"/>`;}
-  return `<rect x="${c.x-16}" y="${c.y-24}" width="${({oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164,solar:144,motor:222})[c.type]}" height="${({oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172,solar:114,motor:122})[c.type]}" rx="10" fill="none" stroke="#f26b21" stroke-width="2" stroke-dasharray="5 4"/>`;
+  return `<rect x="${c.x-16}" y="${c.y-24}" width="${({oled:142,dht:92,servo:132,sonar:152,qwiic:102,lcd:164,solar:144,motor:222,car:222})[c.type]}" height="${({oled:120,dht:110,servo:92,sonar:94,qwiic:82,lcd:172,solar:114,motor:122,car:172})[c.type]}" rx="10" fill="none" stroke="#f26b21" stroke-width="2" stroke-dasharray="5 4"/>`;
 }
 const ICONS={
   led:`<svg viewBox="0 0 30 30"><path d="M9 20V11a6 6 0 0 1 12 0v9z" fill="#ef4444"/><rect x="7" y="19" width="16" height="3" fill="#dc2626"/><path d="M12 22v6M18 22v5" stroke="#999" stroke-width="1.6"/></svg>`,
@@ -1589,6 +1611,7 @@ const ICONS={
   dht:`<svg viewBox="0 0 30 30"><rect x="7" y="3" width="16" height="24" rx="2" fill="#1d4ed8"/><rect x="10" y="7" width="10" height="14" rx="1" fill="#7dd3fc"/></svg>`,
   lcd:`<svg viewBox="0 0 30 30"><rect x="3" y="3" width="24" height="25" rx="2" fill="#1e40af"/><rect x="6" y="8" width="18" height="18" fill="#0b0f19"/><circle cx="15" cy="17" r="6" fill="#22d3ee"/><rect x="11.5" y="15" width="2" height="3" fill="#0b0f19"/><rect x="16.5" y="15" width="2" height="3" fill="#0b0f19"/></svg>`,
   solar:`<svg viewBox="0 0 30 30"><circle cx="24" cy="6" r="4" fill="#facc15"/><rect x="3" y="9" width="22" height="16" rx="1.5" fill="#1e3a8a" stroke="#94a3b8"/><path d="M10.3 9v16M17.6 9v16M3 14.3h22M3 19.6h22" stroke="#93c5fd" stroke-width=".8"/></svg>`,
+  car:`<svg viewBox="0 0 30 30"><rect x="6" y="8" width="18" height="14" rx="3" fill="#b91c1c"/><rect x="1" y="5" width="5" height="9" rx="1.5" fill="#18181b"/><rect x="24" y="5" width="5" height="9" rx="1.5" fill="#18181b"/><rect x="1" y="17" width="5" height="9" rx="1.5" fill="#18181b"/><rect x="24" y="17" width="5" height="9" rx="1.5" fill="#18181b"/><path d="M15 11l-3 4h6z" fill="#fff"/></svg>`,
   motor:`<svg viewBox="0 0 30 30"><rect x="2" y="11" width="12" height="10" rx="2" fill="#facc15" stroke="#a16207"/><circle cx="20" cy="16" r="9" fill="#18181b"/><circle cx="20" cy="16" r="5.5" fill="#fde68a"/><path d="M20 10.5v11M14.5 16h11" stroke="#a16207" stroke-width="1.6"/></svg>`,
   qwiic:`<svg viewBox="0 0 30 30"><rect x="4" y="7" width="22" height="18" rx="4" fill="#0f766e"/><rect x="11" y="4" width="8" height="5" fill="#ccc"/><text x="15" y="19" font-size="6" fill="#fff" text-anchor="middle" font-family="sans-serif">I²C</text></svg>`,
 };
@@ -1687,6 +1710,7 @@ function compLine(c){ const p=c.pins;
     case 'sonar': return `超音波 HC-SR04「${compName(c)}」Trig 連接到 ${pinWord(p.trig)}、Echo 連接到 ${pinWord(p.echo)}（VCC 接 5V${BD().fiveVTol?'':'，Echo 經 1kΩ/2kΩ 分壓'}，量測距離單位公分）`;
     case 'dht': return `溫溼度感測器 DHT11「${compName(c)}」資料腳連接到 ${pinWord(p.sig)}（+ 接 3.3V）`;
     case 'solar': return `太陽能板（約 6V）「${compName(c)}」+ 極經 10kΩ／10kΩ 分壓（電壓 ÷2）後連接到 ${pinWord(p.sig)}，− 極接 GND；程式用 analogRead 讀值，換算電壓 = 讀值 × 3.3 ÷ 1023 × 2（單位 V）`;
+    case 'car': return `雙輪車「${compName(c)}」用一片 L9110S 雙路馬達驅動模組控制左右兩顆 TT 馬達：A-IA 連接到 ${pinWord(p.aia)}、A-IB 連接到 ${pinWord(p.aib)}（A 路＝左輪）；B-IA 連接到 ${pinWord(p.bia)}、B-IB 連接到 ${pinWord(p.bib)}（B 路＝右輪）。IA 輸出 PWM 控制速度、IB 控制方向；前進兩輪都正轉，左轉＝左輪停、右輪前進，右轉＝右輪停、左輪前進。驅動模組 VCC 接外接電源，GND 與開發板共地`;
     case 'motor': return `輪子＋TT 馬達「${compName(c)}」經 L9110S 馬達驅動模組控制：IA 連接到 ${pinWord(p.ia)}（PWM 控制速度）、IB 連接到 ${pinWord(p.ib)}（控制方向）；前進：IA 輸出 PWM、IB 為 LOW；後退：IA 輸出 255−速度、IB 為 HIGH；停止：兩腳都 LOW。驅動模組 VCC 接外接電源，GND 與開發板共地`;
     case 'qwiic': return `Qwiic / Modulino 模組「${compName(c)}」接在板上 Qwiic 插座，程式要用 Wire1`;
   } return compName(c); }
@@ -1731,7 +1755,7 @@ function ruleRow(r,k){ const esc=s=>String(s).replace(/&/g,'&amp;').replace(/"/g
   const inOpts=[...ipoComps('I').map(c=>[c.id,compName(c)]),...Object.keys(BD().onboard).map(id=>['ob_'+id,BD().onboard[id].label]),['timer','計時器']];
   const outOpts=ipoComps('O').map(c=>[c.id,compName(c)]);
   const needV=!['press','release','always'].includes(r.cond), unit=COND_UNIT(t,r.cond);
-  const av=(a,k)=>{ const v=esc(k==='aval'?r.aval:r.eval); return a==='angle'?`<input data-rk="${k}" type="number" min="0" max="180" value="${v}"><span class="unit">度</span>`:a==='show'?`<input class="txt" data-rk="${k}" value="${v}" placeholder="要顯示的字">`:a==='icon'?`<select data-rk="${k}">${ICON_LIB.map(x=>`<option value="${x.k}" ${x.k===(k==='aval'?r.aval:r.eval)?'selected':''}>${x.name}</option>`).join('')}</select>${iconPreview(k==='aval'?r.aval:r.eval)}`:(a==='fwd'||a==='back')?`<span class="unit">速度</span><input data-rk="${k}" type="number" min="0" max="100" value="${v}"><span class="unit">%</span>`:''; };
+  const av=(a,k)=>{ const v=esc(k==='aval'?r.aval:r.eval); return a==='angle'?`<input data-rk="${k}" type="number" min="0" max="180" value="${v}"><span class="unit">度</span>`:a==='show'?`<input class="txt" data-rk="${k}" value="${v}" placeholder="要顯示的字">`:a==='icon'?`<select data-rk="${k}">${ICON_LIB.map(x=>`<option value="${x.k}" ${x.k===(k==='aval'?r.aval:r.eval)?'selected':''}>${x.name}</option>`).join('')}</select>${iconPreview(k==='aval'?r.aval:r.eval)}`:(a==='fwd'||a==='back'||a==='left'||a==='right')?`<span class="unit">速度</span><input data-rk="${k}" type="number" min="0" max="100" value="${v}"><span class="unit">%</span>`:''; };
   const cjk=o&&o.type==='oled'&&[r.act==='show'?r.aval:'',r.els==='show'?r.eval:''].some(x=>/[^\x00-\x7f]/.test(x||''));
   const lcdTxt=o&&o.type==='lcd'&&(r.act==='show'||r.els==='show');
   return `<div class="rule" data-rid="${r.id}"><div class="rh">規則 ${k+1}<button class="iconbtn" data-rdel title="刪除規則">✕</button></div>
@@ -1779,7 +1803,7 @@ function ipoChanged(regen){ persist(); if(regen){ stopSim(); if(state.codeAuto){
 /* ================= 視角：縮放／平移 ================= */
 const svg=$('cv');
 function applyView(){const r=svg.getBoundingClientRect();svg.setAttribute('viewBox',`${view.x} ${view.y} ${r.width/view.k} ${r.height/view.k}`);$('zVal').textContent=Math.round(view.k*100)+'%';}
-function bounds(){ if(viewMode==='ipo'){ const {H}=ipoLayout(); return {W:IPO_L.XO+IPO_L.WO+40,Hh:IPO_L.Y0+H+50}; } let W=BB.x+BB.w+20,Hh=BB.y+BB.h+20;state.comps.forEach(c=>{if(!TYPES[c.type].bb){W=Math.max(W,c.x+(c.type==='motor'?210:170));Hh=Math.max(Hh,c.y+130);}});return {W,Hh};}
+function bounds(){ if(viewMode==='ipo'){ const {H}=ipoLayout(); return {W:IPO_L.XO+IPO_L.WO+40,Hh:IPO_L.Y0+H+50}; } let W=BB.x+BB.w+20,Hh=BB.y+BB.h+20;state.comps.forEach(c=>{if(!TYPES[c.type].bb){W=Math.max(W,c.x+(c.type==='motor'||c.type==='car'?210:170));Hh=Math.max(Hh,c.y+(c.type==='car'?160:130));}});return {W,Hh};}
 function fit(){const r=svg.getBoundingClientRect();const {W,Hh}=bounds();const k=Math.min(r.width/(W+20),r.height/(Hh+20));view.k=k;view.x=-10-(r.width/k-W)/2;view.y=-10-(r.height/k-Hh)/2;applyView();}
 function toWorld(cx,cy){const r=svg.getBoundingClientRect();return {x:view.x+(cx-r.left)/view.k,y:view.y+(cy-r.top)/view.k};}
 function zoomAt(f,cx,cy){const r=svg.getBoundingClientRect();const w=toWorld(cx,cy);view.k=Math.max(.2,Math.min(4,view.k*f));view.x=w.x-(cx-r.left)/view.k;view.y=w.y-(cy-r.top)/view.k;applyView();}
@@ -1930,7 +1954,7 @@ $('ruleList').addEventListener('change',e=>{ const el=e.target.closest('[data-rk
   const k=el.dataset.rk; r[k]=el.value; if(k==='inp'){ r.cond=''; } if(k==='cond'){ r.val=COND_DEF[r.cond]!==undefined?String(COND_DEF[r.cond]):''; if(r.cond==='always') r.els='none'; }
   if(k==='out'){ r.act=''; r.els='none'; } if(k==='act'&&r.act==='angle'&&!r.aval) r.aval='90'; if(k==='els'&&r.els==='angle'&&!r.eval) r.eval='0';
   if(k==='act'&&r.act==='icon'&&!ICON_LIB.some(x=>x.k===r.aval)) r.aval='heart'; if(k==='els'&&r.els==='icon'&&!ICON_LIB.some(x=>x.k===r.eval)) r.eval='smile';
-  if(k==='act'&&(r.act==='fwd'||r.act==='back')&&!r.aval) r.aval='100'; if(k==='els'&&(r.els==='fwd'||r.els==='back')&&!r.eval) r.eval='100';
+  if(k==='act'&&['fwd','back','left','right'].includes(r.act)&&!r.aval) r.aval='100'; if(k==='els'&&['fwd','back','left','right'].includes(r.els)&&!r.eval) r.eval='100';
   fixRule(r); ipoChanged(true); });
 $('ruleList').addEventListener('input',e=>{ const el=e.target.closest('input[data-rk]'); if(!el) return; const r=state.ipo.rules.find(x=>x.id===el.closest('.rule').dataset.rid); if(!r) return;
   r[el.dataset.rk]=el.value; persist(); $('promptTxt').value=promptText(); const say=el.closest('.rule').querySelector('.say'); if(say&&ruleValid(r)) say.textContent=ruleText(r); });
@@ -2142,6 +2166,11 @@ function simLed(c){ if(!SIM.running) return null; const h=holdOf(c); if(h) retur
 function simBuzz(c){ if(!SIM.running) return false; const h=holdOf(c); if(h) return !!h.v; const s=SIM.P[c.pins.sig]; return !!(s&&(s.tone||(s.mode==='OUTPUT'&&(s.v||s.pwm>0)))); }
 function motorLvl(id){ const s=SIM.P[id]; if(!s||s.mode!=='OUTPUT') return 0; return s.pwm!=null?s.pwm/255:(s.v?1:0); }
 function simMotorRaw(c){ return SIM.running?motorLvl(c.pins.ia)-motorLvl(c.pins.ib):0; }
+function simCarRaw(c){ return SIM.running?[motorLvl(c.pins.aia)-motorLvl(c.pins.aib),motorLvl(c.pins.bia)-motorLvl(c.pins.bib)]:[0,0]; }
+function simCar(c){ if(!SIM.running) return [0,0]; const h=holdOf(c); if(h&&Array.isArray(h.v)) return h.v; return simCarRaw(c); }
+function carState(L,R){ const z=v=>Math.abs(v)<0.02, pct=v=>Math.round(Math.abs(v)*100)+'%'; if(z(L)&&z(R)) return '停止';
+  if(L>0&&R>0) return Math.abs(L-R)<0.05?'前進 '+pct(L):(L>R?'前進偏右':'前進偏左'); if(L<0&&R<0) return '後退 '+pct(L);
+  if(z(L)&&R>0||L<0&&R>0) return '左轉'; if(z(R)&&L>0||R<0&&L>0) return '右轉'; return '左 '+Math.round(L*100)+'%／右 '+Math.round(R*100)+'%'; }
 function simMotor(c){ if(!SIM.running) return 0; const h=holdOf(c); if(h) return h.v; return simMotorRaw(c); }
 function simServo(c){ const h=holdOf(c); if(h) return h.v; const a=SIM.servo[c.pins.sig]; return a==null?90:a; }
 let rafPending=false;
@@ -2290,8 +2319,8 @@ function makeApi(run){
   A.pinMode=(p,m)=>{ const id=pid(p,'pinMode'); if(!id) return; ps(id).mode=m;
     if(m==='OUTPUT'&&compsOnPin(id).some(c=>c.type==='button'||c.type==='pot'||c.type==='ldr'||c.type==='solar'||(c.type==='sonar'&&c.pins.echo===id))) warnOnce('outin'+id,`${pinLabel(id)} 接的是輸入元件，卻被設成 OUTPUT`);
     schedule(); };
-  const motorPre=id=>compsOnPin(id).filter(c=>c.type==='motor').map(c=>[c,simMotorRaw(c)]);
-  const motorPost=list=>list.forEach(([c,o])=>{ if(Math.abs(simMotorRaw(c)-o)>=0.03) outputChange(c,o); });
+  const motorPre=id=>compsOnPin(id).filter(c=>c.type==='motor'||c.type==='car').map(c=>[c,c.type==='car'?simCarRaw(c):simMotorRaw(c)]);
+  const motorPost=list=>list.forEach(([c,o])=>{ if(c.type==='car'){ const n=simCarRaw(c); if(Math.abs(n[0]-o[0])>=0.03||Math.abs(n[1]-o[1])>=0.03) outputChange(c,o); } else if(Math.abs(simMotorRaw(c)-o)>=0.03) outputChange(c,o); });
   A.digitalWrite=(p,v)=>{ markExec(); const id=pid(p,'digitalWrite'); if(!id) return; const mp=motorPre(id); const s=ps(id); v=v?1:0; const prev=s.v; s.v=v; s.pwm=null; motorPost(mp);
     if(SIM.lcdPins[id]){ if(s.mode!=='OUTPUT') warnOnce('lpm'+id,`${pinLabel(id)} 接的是 LCD，要先用 pinMode(…, OUTPUT) 設成輸出`); lcdWire(id,v,prev); return; }
     const bi=BD().builtins[id];
@@ -2484,7 +2513,7 @@ $('bGen').onclick=()=>{ const go=()=>{ stopSim(); state.codeAuto=true; state.cod
 let generatedCodeMap={src:null,rules:new Map()};
 function genCode(){
   const cs=state.comps, by=t=>cs.filter(c=>c.type===t);
-  const leds=by('led'),btns=by('button'),pots=by('pot'),ldrs=by('ldr'),buzz=by('buzzer'),servos=by('servo'),oleds=by('oled'),sonars=by('sonar'),dhts=by('dht'),lcds=by('lcd'),solars=by('solar'),motors=by('motor');
+  const leds=by('led'),btns=by('button'),pots=by('pot'),ldrs=by('ldr'),buzz=by('buzzer'),servos=by('servo'),oleds=by('oled'),sonars=by('sonar'),dhts=by('dht'),lcds=by('lcd'),solars=by('solar'),motors=by('motor'),cars=by('car');
   const hubLcd=B_ID==='hub8735'&&lcds.length>0;
   const debounceButtons=hubLcd&&btns.length>0;
   const pc=p=>BD().codePin(p), pa=p=>BD().codePinA(p), SER=BD().ser;
@@ -2504,6 +2533,7 @@ function genCode(){
   sonars.forEach((c,i)=>{ a(`const int TRIG${i+1} = ${pc(c.pins.trig)};       // ${compName(c)} Trig`); a(`const int ECHO${i+1} = ${pc(c.pins.echo)};       // ${compName(c)} Echo`); });
   dhts.forEach((c,i)=>a(`const int DHT${i+1}_PIN = ${pc(c.pins.sig)};    // ${compName(c)}`));
   solars.forEach((c,i)=>a(`const int SOLAR${i+1} = ${pa(c.pins.sig)};      // ${compName(c)}（經 10k/10k 分壓）`));
+  cars.forEach((c,i)=>{ const n=i+1, p=c.pins; a(`const int CAR${n}_AIA = ${pc(p.aia)};   // ${compName(c)} L9110S A-IA：左輪速度（PWM）`); a(`const int CAR${n}_AIB = ${pc(p.aib)};   // ${compName(c)} L9110S A-IB：左輪方向`); a(`const int CAR${n}_BIA = ${pc(p.bia)};   // ${compName(c)} L9110S B-IA：右輪速度（PWM）`); a(`const int CAR${n}_BIB = ${pc(p.bib)};   // ${compName(c)} L9110S B-IB：右輪方向`); });
   motors.forEach((c,i)=>{ a(`const int MOTOR${i+1}_IA = ${pc(c.pins.ia)};   // ${compName(c)} L9110S IA（PWM 速度）`); a(`const int MOTOR${i+1}_IB = ${pc(c.pins.ib)};   // ${compName(c)} L9110S IB（方向）`); });
   const lp=p=>B_ID==='hub8735'?'AMB_D'+PINS[p].num:pc(p);
   if(lcds.length){ const c=lcds[0].pins; a(`// ${compName(lcds[0])}：YY-IPS130-V4.0（ST7789，240×240）；VCC、BLK 接 3.3V`);
@@ -2517,7 +2547,7 @@ function genCode(){
   if(lcds.length){ a('const uint16_t LCD_BLACK = 0x0000;'); a('const uint16_t LCD_CYAN  = 0x07FF;'); a('const uint16_t LCD_WHITE = 0xFFFF;'); a('const uint16_t LCD_PINK  = 0xF81F;'); if(validRules().some(r=>{const o=byId(r.out);return o&&o.type==='lcd'&&(r.act==='show'||r.act==='icon'||r.els==='show'||r.els==='icon');})){ a('const uint16_t LCD_YELLOW = 0xFFE0;'); a('const uint16_t LCD_GREEN  = 0x07E0;'); a('const uint16_t LCD_RED    = 0xF800;'); } }
   a('unsigned long lastPrint = 0;');
   // 輸出狀態變數：P 處理決定它們的值，O 輸出依它們驅動元件
-  const rules=validRules(), idx={}; [leds,btns,pots,ldrs,buzz,servos,oleds,sonars,dhts,lcds,solars,motors].forEach(arr=>arr.forEach((c,i)=>idx[c.id]=i+1));
+  const rules=validRules(), idx={}; [leds,btns,pots,ldrs,buzz,servos,oleds,sonars,dhts,lcds,solars,motors,cars].forEach(arr=>arr.forEach((c,i)=>idx[c.id]=i+1));
   const lvl={}; leds.forEach((c,i)=>{ lvl[c.id]=rules.length?rules.some(r=>r.out===c.id&&(r.act==='follow'||r.els==='follow')):(i===0&&!btns.length&&(pots.length||ldrs.length)&&!!PINS[c.pins.sig].pwm); });
   const outIs=(r,t,a)=>byId(r.out)&&byId(r.out).type===t&&(r.act===a||r.els===a);
   const oledMsg=oleds.length&&rules.some(r=>outIs(r,'oled','show'));
@@ -2526,7 +2556,8 @@ function genCode(){
   const lcdRich=lcdTextUsed||lcdIconUsed;
   const usedIcons=ICON_LIB.filter(ic=>rules.some(r=>{ const o=byId(r.out); return o&&(o.type==='oled'||o.type==='lcd')&&((r.act==='icon'&&(r.aval||'heart')===ic.k)||(r.els==='icon'&&(r.eval||'smile')===ic.k)); }));
   const iconConst=k=>'ICON_'+k.toUpperCase();
-  if(leds.length||buzz.length||servos.length||lcds.length||motors.length||oledMsg){ a(''); a('// ---- 輸出狀態：P 處理決定，O 輸出使用 ----'); }
+  if(leds.length||buzz.length||servos.length||lcds.length||motors.length||cars.length||oledMsg){ a(''); a('// ---- 輸出狀態：P 處理決定，O 輸出使用 ----'); }
+  cars.forEach((c,i)=>{ a(`int carLeft${i+1} = 0;    // ${compName(c)} 左輪：-255 後退 … 0 停止 … 255 前進`); a(`int carRight${i+1} = 0;   // ${compName(c)} 右輪`); });
   motors.forEach((c,i)=>a(`int motor${i+1}Speed = 0;   // ${compName(c)}：-255 後退 … 0 停止 … 255 前進`));
   leds.forEach((c,i)=>a(lvl[c.id]?`int led${i+1}Level = 0;     // ${compName(c)} 亮度 0–255`:`bool led${i+1}On = false;  // ${compName(c)} 亮或暗`));
   buzz.forEach((c,i)=>a(`bool buz${i+1}On = false;  // ${compName(c)} 響或安靜`));
@@ -2546,7 +2577,7 @@ function genCode(){
   }
   a('');
   sonars.forEach((c,i)=>{ a(`// 讀取超音波距離（公分）\nlong readDistance${i+1}() {\n  digitalWrite(TRIG${i+1}, LOW);\n  delayMicroseconds(2);\n  digitalWrite(TRIG${i+1}, HIGH);\n  delayMicroseconds(10);\n  digitalWrite(TRIG${i+1}, LOW);\n  long duration = pulseIn(ECHO${i+1}, HIGH, 30000);\n  return duration / 58;\n}\n`); });
-  if(motors.length) [
+  if(motors.length||cars.length) [
     '// 控制 L9110S 馬達：speed 正數前進、負數後退、0 停止',
     'void driveMotor(int pinA, int pinB, int speed) {',
     '  speed = constrain(speed, -255, 255);',
@@ -2755,6 +2786,7 @@ function genCode(){
   });
   sonars.forEach((c,i)=>{ a(`  pinMode(TRIG${i+1}, OUTPUT);`); a(`  pinMode(ECHO${i+1}, INPUT);`); });
   servos.forEach((c,i)=>a(`  servo${i+1}.attach(SERVO${i+1}_PIN);`));
+  cars.forEach((c,i)=>['AIA','AIB','BIA','BIB'].forEach(k=>a(`  pinMode(CAR${i+1}_${k}, OUTPUT);`)));
   motors.forEach((c,i)=>{ a(`  pinMode(MOTOR${i+1}_IA, OUTPUT);`); a(`  pinMode(MOTOR${i+1}_IB, OUTPUT);`); });
   dhts.forEach((c,i)=>a(`  dht${i+1}.begin();`));
   const obIds=Object.keys(BD().onboard).filter(id=>rules.some(r=>r.inp==='ob_'+id));
@@ -2806,6 +2838,11 @@ function genCode(){
       if(a1==='follow') return s?`led${n}Level = constrain(map(${s[0]}, 0, ${s[1]}, 0, 255), 0, 255);`:`led${n}Level = 255;`; }
     if(c.type==='buzzer'){ if(a1==='on') return `buz${n}On = true;`; if(a1==='off') return `buz${n}On = false;`; if(a1==='beep') return `buz${n}On = millis() % 1000 < 100;`; }
     if(c.type==='servo'){ if(a1==='angle') return `servo${n}Angle = ${Math.max(0,Math.min(180,numOr(val,90)))};`; if(a1==='follow') return s?`servo${n}Angle = constrain(map(${s[0]}, 0, ${s[1]}, 0, 180), 0, 180);`:`servo${n}Angle = 90;`; }
+    if(c.type==='car'){ const pct=Math.max(0,Math.min(100,numOr(val,100))), sp=Math.round(pct*2.55), set=(l,r,cm)=>`carLeft${n} = ${l}; carRight${n} = ${r};   // ${cm}`;
+      if(a1==='fwd') return set(sp,sp,`前進 ${pct}%`); if(a1==='back') return set(-sp,-sp,`後退 ${pct}%`);
+      if(a1==='left') return set(0,sp,`左轉：左輪停、右輪前進 ${pct}%`); if(a1==='right') return set(sp,0,`右轉：右輪停、左輪前進 ${pct}%`);
+      if(a1==='stop') return set(0,0,'停止');
+      if(a1==='follow') return s?`carLeft${n} = constrain(map(${s[0]}, 0, ${s[1]}, 0, 255), 0, 255); carRight${n} = carLeft${n};`:set(200,200,'前進'); }
     if(c.type==='motor'){ const pct=Math.max(0,Math.min(100,numOr(val,100))), sp=Math.round(pct*2.55);
       if(a1==='fwd') return `motor${n}Speed = ${sp};   // 前進 ${pct}%`; if(a1==='back') return `motor${n}Speed = -${sp};   // 後退 ${pct}%`; if(a1==='stop') return `motor${n}Speed = 0;`;
       if(a1==='follow') return s?`motor${n}Speed = constrain(map(${s[0]}, 0, ${s[1]}, 0, 255), 0, 255);`:`motor${n}Speed = 200;`; }
@@ -2829,10 +2866,10 @@ function genCode(){
       }
       if(s1) ruleRanges.set(r.id,[start,lineCount-1]);
     });
-    const ruled=new Set(rules.map(r=>r.out)); const idle=[...leds,...buzz,...servos,...lcds,...motors].filter(c=>!ruled.has(c.id));
+    const ruled=new Set(rules.map(r=>r.out)); const idle=[...leds,...buzz,...servos,...lcds,...motors,...cars].filter(c=>!ruled.has(c.id));
     if(idle.length) a(`  // （${idle.map(compName).join('、')} 還沒有規則控制，維持原狀）`);
   } else {
-    const any=leds.length||buzz.length||servos.length||lcds.length||motors.length;
+    const any=leds.length||buzz.length||servos.length||lcds.length||motors.length||cars.length;
     if(!any) a('  // （沒有輸出元件需要判斷）');
     else a('  // 還沒有寫 P 規則，先用範例規則；在「AI 提示詞」的 P 欄寫規則後，這裡會換成你的規則');
     leds.forEach((c,i)=>{ const n=i+1;
@@ -2854,6 +2891,10 @@ function genCode(){
       else if(btns.length) a(`  servo${n}Angle = pressed1 ? 180 : 0;   // 範例規則：按住按鈕轉到 180 度`);
       else { if(!sweep){ a('  int sweep = (millis() / 20) % 360;'); sweep=true; } a(`  servo${n}Angle = sweep < 180 ? sweep : 360 - sweep;   // 範例規則：來回擺動`); } });
     if(lcds.length) a('  eyesOpen = millis() % 3150 < 3000;   // 範例規則：每 3 秒眨一次眼');
+    cars.forEach((c,i)=>{ const n=i+1;
+      if(sonars.length){ a(`  if (dist1 > 0 && dist1 < 20) {   // 範例規則：前方 20 公分內有東西就左轉避開，否則前進`); a(`    carLeft${n} = 0; carRight${n} = 200;`); a('  } else {'); a(`    carLeft${n} = 200; carRight${n} = 200;`); a('  }'); }
+      else if(btns.length){ a(`  carLeft${n} = pressed1 ? 200 : 0;   // 範例規則：按住按鈕就前進`); a(`  carRight${n} = carLeft${n};`); }
+      else { a(`  carLeft${n} = (millis() / 2000) % 2 ? 200 : 0;   // 範例規則：前進 2 秒、停 2 秒`); a(`  carRight${n} = carLeft${n};`); } });
     motors.forEach((c,i)=>{ const n=i+1;
       if(sonars.length) a(`  motor${n}Speed = (dist1 > 0 && dist1 < 20) ? 0 : 200;   // 範例規則：前方 20 公分內有東西就停，否則前進`);
       else if(solars.length) a(`  motor${n}Speed = solarV1 > 3 ? constrain(map(solarV1 * 100, 300, 600, 100, 255), 0, 255) : 0;   // 範例規則：太陽能板電壓超過 3V 才前進，越亮越快`);
@@ -2867,6 +2908,7 @@ function genCode(){
   buzz.forEach((c,i)=>a(`  digitalWrite(BUZ${i+1}, buz${i+1}On ? HIGH : LOW);`));
   servos.forEach((c,i)=>a(`  servo${i+1}.write(servo${i+1}Angle);`));
   motors.forEach((c,i)=>a(`  driveMotor(MOTOR${i+1}_IA, MOTOR${i+1}_IB, motor${i+1}Speed);`));
+  cars.forEach((c,i)=>{ a(`  driveMotor(CAR${i+1}_AIA, CAR${i+1}_AIB, carLeft${i+1});    // 左輪（A 路）`); a(`  driveMotor(CAR${i+1}_BIA, CAR${i+1}_BIB, carRight${i+1});   // 右輪（B 路）`); });
   if(lcdRich){
     a('  if (lcdMode != shownMode || lcdText != shownText || lcdIcon != shownIcon) {   // 畫面內容改變才重畫（LCD 比較慢）');
     a('    lcdFillRect(0, 0, 240, 240, LCD_BLACK);');
@@ -2913,7 +2955,7 @@ function genCode(){
   }
   a('  if (millis() - lastPrint >= 500) {   // 每 0.5 秒把數值送到序列監控（也是一種輸出）'); a('    lastPrint = millis();');
   const pr=[]; btns.forEach((c,i)=>pr.push([`btn${i+1}=`,`pressed${i+1}`])); pots.forEach((c,i)=>pr.push([`pot${i+1}=`,`pot${i+1}`])); ldrs.forEach((c,i)=>pr.push([`light${i+1}=`,`light${i+1}`]));
-  sonars.forEach((c,i)=>pr.push([`dist${i+1}=`,`dist${i+1}`])); solars.forEach((c,i)=>pr.push([`solarV${i+1}=`,`solarV${i+1}`])); motors.forEach((c,i)=>pr.push([`motor${i+1}=`,`motor${i+1}Speed`])); dhts.forEach((c,i)=>{pr.push([`temp${i+1}=`,`temp${i+1}`]);pr.push([`hum${i+1}=`,`hum${i+1}`]);});
+  sonars.forEach((c,i)=>pr.push([`dist${i+1}=`,`dist${i+1}`])); solars.forEach((c,i)=>pr.push([`solarV${i+1}=`,`solarV${i+1}`])); motors.forEach((c,i)=>pr.push([`motor${i+1}=`,`motor${i+1}Speed`])); cars.forEach((c,i)=>{pr.push([`left${i+1}=`,`carLeft${i+1}`]);pr.push([`right${i+1}=`,`carRight${i+1}`]);}); dhts.forEach((c,i)=>{pr.push([`temp${i+1}=`,`temp${i+1}`]);pr.push([`hum${i+1}=`,`hum${i+1}`]);});
   if(!pr.length) pr.push(['millis=','millis()']);
   pr.forEach(([k,v],i)=>a(`    ${SER}.print("${i?'  ':''}${k}"); ${SER}.print(${v});`));
   a(`    ${SER}.println();`); a('  }'); a(''); a('  delay(20);'); a('}');
