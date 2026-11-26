@@ -206,18 +206,29 @@ body.leftCollapsed.rightCollapsed main{grid-template-columns:44px 1fr 44px}
 .flowbar .btn{padding:6px 9px;font-size:12px}
 .flowbar .btn.on{background:var(--teal);color:#fff}
 .flowhint{font-size:11.5px;color:var(--muted);line-height:1.4;margin:0 0 8px}
-.flowlayout{display:grid;grid-template-columns:minmax(0,1fr) 148px;gap:8px;min-height:430px}
+.flowlayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,34%);gap:8px;min-height:430px}
+.flowside{display:flex;flex-direction:column;gap:8px;min-width:0;max-height:calc(100vh - 210px)}
+.flowside .flowinspect{flex:none;max-height:42%;overflow:auto}
+.flowcode{position:relative;flex:1;min-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:11px}
+.flowcode .fch{position:sticky;top:0;z-index:2;background:#fffdf6;border-bottom:1px solid var(--line);padding:6px 8px}.flowcode .fch b{color:var(--teal-d);font-size:12px}.flowcode .fch div{color:var(--muted);font-size:10.5px;margin-top:2px}
+.flowcode .blk{border-left:4px solid var(--c);background:var(--bg);margin:0 0 4px}.flowcode .hd{background:var(--c);color:#fff;font-weight:700;font-size:11px;padding:2px 6px;cursor:pointer}.flowcode .hd b{background:#fff;color:var(--c);border-radius:3px;padding:0 4px;margin-right:5px;font-family:var(--mono)}
+.flowcode .ln{display:flex;align-items:flex-start;font-family:var(--mono);font-size:10.5px;line-height:1.5;cursor:pointer}.flowcode .ln:hover{background:#0000000a}.flowcode .ln.hit{background:#fde68a}
+.flowcode .no{flex:none;width:28px;text-align:right;color:#94a3b8;padding-right:6px;user-select:none}.flowcode .tx{flex:1;white-space:pre-wrap;word-break:break-all}.flowcode .tx i{font-style:normal;color:#6b7280}
+.nd{flex:none;display:inline-block;margin-left:4px;padding:0 4px;border-radius:9px;color:#fff;font:700 11px/16px sans-serif}
+.flow-node .fnum{position:absolute;left:-11px;top:-11px;width:22px;height:22px;border-radius:50%;background:#0f172a;color:#fff;font:700 13px/22px sans-serif;text-align:center;box-shadow:0 1px 3px #0005;z-index:2}
+.flow-node .fl{position:absolute;left:9px;right:9px;bottom:6px;font-size:10px;color:#0f766e;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flow-node.codehit{box-shadow:0 0 0 4px #fde68a,0 3px 9px #0002}
 .flowcanvas{position:relative;min-height:430px;overflow:auto;border:1px solid var(--line);border-radius:10px;background-color:#fffdf6;background-image:radial-gradient(#d8cfb8 1px,transparent 1px);background-size:16px 16px}
 #flowSvg{position:absolute;inset:0;width:100%;height:100%;min-width:520px;min-height:430px;pointer-events:none}
 #flowLinks{pointer-events:none}
-.flow-node{position:absolute;width:142px;min-height:56px;padding:8px 9px;border:2px solid #64748b;border-radius:10px;background:#fff;box-shadow:0 3px 9px #0002;cursor:grab;user-select:none;touch-action:none;box-sizing:border-box}
+.flow-node{position:absolute;width:142px;height:92px;min-height:92px;padding:8px 9px;border:2px solid #64748b;border-radius:10px;background:#fff;box-shadow:0 3px 9px #0002;cursor:grab;user-select:none;touch-action:none;box-sizing:border-box}
 .flow-node:active{cursor:grabbing}.flow-node.sel{outline:3px solid #f59e0b;outline-offset:2px}.flow-node.connect{outline:3px dashed #0f766e;outline-offset:2px}
 .flow-port{position:absolute;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#64748b;box-shadow:0 0 0 1.5px #64748b;z-index:4;cursor:crosshair;box-sizing:border-box}.flow-port:hover{transform:scale(1.25);background:#f59e0b;box-shadow:0 0 0 1.5px #f59e0b}.flow-port.n{left:calc(50% - 6px);top:-6px}.flow-port.e{right:-6px;top:calc(50% - 6px)}.flow-port.s{left:calc(50% - 6px);bottom:-6px}.flow-port.w{left:-6px;top:calc(50% - 6px)}.flow-port.yes{right:7px;top:25%;background:#16a34a;box-shadow:0 0 0 1.5px #16a34a}.flow-port.no{right:7px;top:63%;background:#dc2626;box-shadow:0 0 0 1.5px #dc2626}.flow-port::after{content:attr(data-label);position:absolute;left:14px;top:-5px;color:#475569;font-size:10px;font-weight:800;white-space:nowrap;pointer-events:none}.flow-port.w::after,.flow-port.n::after{left:auto;right:14px}
-.flow-node .ft{font-weight:800;font-size:12px;display:flex;gap:5px;align-items:center}.flow-node .fb{font-size:10.5px;color:#64748b;margin-top:5px;line-height:1.3;white-space:pre-wrap;overflow:hidden;max-height:29px}
+.flow-node .ft{font-weight:800;font-size:12px;display:flex;gap:5px;align-items:center}.flow-node .fb{font-size:10.5px;color:#64748b;margin-top:5px;line-height:1.3;white-space:pre-wrap;overflow:hidden;max-height:27px}
 .flow-node.I{border-color:#2563eb}.flow-node.P{border-color:#7c3aed}.flow-node.O{border-color:#d9480f}.flow-node.decision{width:132px;height:102px;min-height:102px;border:0;border-radius:0;padding:26px 18px;background:#a16207;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);box-shadow:none}.flow-node.decision::before{content:'';position:absolute;inset:3px;background:#fffbeb;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);z-index:0}.flow-node.decision .ft,.flow-node.decision .fb{position:relative;z-index:1;text-align:center;justify-content:center}.flow-node.loop{border-color:#0f766e;background:#ecfeff}.flow-node.start,.flow-node.end{border-color:#0f766e;background:#ecfdf5}
 .flow-chip{display:inline-flex;color:#fff;border-radius:5px;padding:1px 5px;font:700 10px var(--mono)}.flow-chip.I{background:#2563eb}.flow-chip.P{background:#7c3aed}.flow-chip.O{background:#d9480f}.flow-chip.decision{background:#a16207}.flow-chip.loop,.flow-chip.start,.flow-chip.end{background:#0f766e}
 .flowinspect{border:1px solid var(--line);border-radius:10px;background:#fff;padding:9px;font-size:11.5px}.flowinspect h5{margin:0 0 8px;color:var(--teal-d);font-size:12px}.flowinspect label{display:block;margin:8px 0 3px;color:var(--muted)}.flowinspect input,.flowinspect textarea,.flowinspect select{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:6px;padding:5px;font-size:11.5px}.flowinspect textarea{min-height:72px;resize:vertical}.flowmsg{margin-top:8px;padding:7px;border-radius:7px;background:#f8fafc;color:#475569;line-height:1.45}.flowmsg.bad{background:#fff1f2;color:#be123c}.flowmsg.good{background:#ecfdf5;color:#047857}
-@media(max-width:700px){.flowlayout{grid-template-columns:1fr}.flowinspect{min-height:170px}}
+@media(max-width:900px){.flowlayout{grid-template-columns:1fr}.flowinspect{min-height:120px}.flowside{max-height:none}}
 table{border-collapse:collapse;width:100%;font-size:12.5px}
 th,td{text-align:left;padding:5px 6px;border-bottom:1px solid #eee6cf;vertical-align:top}
 th{font-size:11.5px;color:var(--muted);font-weight:500}
@@ -391,7 +402,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabpane" id="t-flow">
       <div class="flowbar"><button class="btn ghost" id="flowRedraw">⟳ 依 IPO 重新繪製</button><button class="btn ghost" data-flow-add="decision">◇ 判斷</button><button class="btn ghost" data-flow-add="loop">↻ 迴圈</button><button class="btn ghost" id="flowConnect">↔ 連線</button><button class="btn ghost" id="flowCheck">✓ 檢查</button><button class="btn ghost" id="flowExample">載入範例</button><button class="btn ghost" id="flowRestore">－ 縮小視窗</button><button class="btn ghost" data-pane-back>↩ 回到上一步</button></div>
       <p class="flowhint">先新增節點，再拖曳排列；菱形請按右鍵選「連接是／否分支」，要接入菱形則選「指定上游輸入」。一般連線按「連線」後依序點兩個節點。</p>
-      <div class="flowlayout"><div class="flowcanvas" id="flowCanvas"><svg id="flowSvg" viewBox="0 0 600 460" preserveAspectRatio="none"><defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="flowLinks"></g></svg><div id="flowNodes"></div></div><div class="flowinspect" id="flowInspect"><h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div></div></div>
+      <div class="flowlayout"><div class="flowcanvas" id="flowCanvas"><svg id="flowSvg" viewBox="0 0 600 460" preserveAspectRatio="none"><g id="flowLanes"></g><defs><marker id="flowArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#94a3b8"/></marker></defs><g id="flowLinks"></g></svg><div id="flowNodes"></div></div><div class="flowside"><div class="flowinspect" id="flowInspect"><h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div></div><div class="flowcode" id="flowCode"></div></div></div>
     </div>
     <div class="tabpane" id="t-prompt">
       <div class="paneHead"><h4>規則設計</h4><span><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button><button class="paneExpand" data-pane-back>↩ 回到上一步</button></span></div><div class="ipoH"><b>先設計規則，再產生流程圖與程式。</b>硬體元件由接線帶入；你只要說清楚輸入、判斷和輸出。</div>
@@ -1529,13 +1540,13 @@ const flowEsc=s=>String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replac
 function flowNode(id){return state.flow.nodes.find(n=>n.id===id);}
 function flowLabel(n){return n.type==='start'?'開始':n.type==='end'?'結束':n.type==='decision'?'判斷':n.type==='loop'?'迴圈':n.type;}
 function flowPortMarkup(n){if(n.type==='decision')return '<span class="flow-port w" data-side="w" title="判斷輸入"></span><span class="flow-port yes" data-side="yes" data-label="是" title="是分支"></span><span class="flow-port no" data-side="no" data-label="否" title="否分支"></span>';return '<span class="flow-port n" data-side="n" title="輸入"></span><span class="flow-port e" data-side="e" title="輸出"></span><span class="flow-port s" data-side="s" title="輸出"></span><span class="flow-port w" data-side="w" title="輸入"></span>';}
-function flowSize(n){return n.type==='decision'?{w:132,h:102}:{w:142,h:56};}
+function flowSize(n){return n.type==='decision'?{w:132,h:102}:{w:142,h:92};}
 function flowPoint(n,side){const z=flowSize(n);if(side==='n')return {x:n.x+z.w/2,y:n.y};if(side==='e'||side==='yes'||side==='no')return {x:n.x+z.w,y:n.y+(side==='yes'?z.h*.25:side==='no'?z.h*.65:z.h/2)};if(side==='s')return {x:n.x+z.w/2,y:n.y+z.h};return {x:n.x,y:n.y+z.h/2};}
 function flowNearestSide(a,b){const dx=(b.x+flowSize(b).w/2)-(a.x+flowSize(a).w/2),dy=(b.y+flowSize(b).h/2)-(a.y+flowSize(a).h/2);return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'e':'w'):(dy>=0?'s':'n');}
 function flowEdge(a,b,label){const as=a.type==='decision'&&label==='是'?'yes':a.type==='decision'&&label==='否'?'no':flowNearestSide(a,b);const bs=flowNearestSide(b,a);return [flowPoint(a,as),flowPoint(b,bs)];}
 function syncFlowComponents(){const comps=state.comps.filter(c=>['I','O'].includes(IPO_OF[c.type]));const valid=new Set(comps.map(c=>c.id));state.flow.nodes=state.flow.nodes.filter(n=>!n.compId||valid.has(n.compId));const used=new Set(state.flow.nodes.map(n=>n.compId).filter(Boolean));comps.forEach((c,i)=>{if(used.has(c.id))return;const kind=IPO_OF[c.type],slot=state.flow.nodes.find(n=>n.type===kind&&!n.compId);const title=compName(c),pins=Object.values(c.pins||{}).map(pinLabel).join('、');if(slot){slot.compId=c.id;slot.title=title;slot.text=pins?`接線：${pins}`:'依目前接線';used.add(c.id);}else{state.flow.nodes.push({id:'f_'+uid(),type:kind,compId:c.id,title,text:pins?`接線：${pins}`:'依目前接線',x:kind==='I'?300:520,y:40+i*100});used.add(c.id);}});}
-function arrangeFlowComponents(){const ins=state.flow.nodes.filter(n=>n.type==='I'),outs=state.flow.nodes.filter(n=>n.type==='O');ins.forEach((n,i)=>{if(!n.layoutReady){n.x=60;n.y=150+i*100;n.layoutReady=true;}});outs.forEach((n,i)=>{if(!n.layoutReady){n.x=650;n.y=150+i*100;n.layoutReady=true;}});}
-function syncFlowRules(){const rs=validRules(),byRule=new Map(rs.map(r=>[r.id,r])),used=new Set();state.flow.nodes=state.flow.nodes.filter(n=>!n.autoRule||byRule.has(n.autoRule));rs.forEach((r,i)=>{let n=state.flow.nodes.find(x=>x.autoRule===r.id);if(!n){n=state.flow.nodes.find(x=>x.type==='P'&&!x.autoRule&&!x.compId);if(!n){n={id:'f_'+uid(),type:'P',x:350,y:130+i*105};state.flow.nodes.push(n);}}n.autoRule=r.id;n.title=`規則 ${i+1}`;n.text=ruleText(r,true);if(!n.layoutReady){n.x=350;n.y=110+i*105;n.layoutReady=true;}used.add(n.id);});
+function arrangeFlowComponents(){const ins=state.flow.nodes.filter(n=>n.type==='I'),outs=state.flow.nodes.filter(n=>n.type==='O');ins.forEach((n,i)=>{if(!n.layoutReady){n.x=40;n.y=136+i*116;n.layoutReady=true;}});outs.forEach((n,i)=>{if(!n.layoutReady){n.x=550;n.y=136+i*116;n.layoutReady=true;}});}
+function syncFlowRules(){const rs=validRules(),byRule=new Map(rs.map(r=>[r.id,r])),used=new Set();state.flow.nodes=state.flow.nodes.filter(n=>!n.autoRule||byRule.has(n.autoRule));rs.forEach((r,i)=>{let n=state.flow.nodes.find(x=>x.autoRule===r.id);if(!n){n=state.flow.nodes.find(x=>x.type==='P'&&!x.autoRule&&!x.compId);if(!n){n={id:'f_'+uid(),type:'P',x:350,y:130+i*105};state.flow.nodes.push(n);}}n.autoRule=r.id;n.title=`規則 ${i+1}`;n.text=ruleText(r,true);if(!n.layoutReady){n.x=280;n.y=136+i*116;n.layoutReady=true;}used.add(n.id);});
   const nodes=state.flow.nodes, start=nodes.find(n=>n.type==='start'), autoLinks=[]; if(start) nodes.filter(n=>n.compId&&n.type==='I').forEach(n=>autoLinks.push([start.id,n.id,'','auto']));
   rs.forEach(r=>{const p=nodes.find(n=>n.autoRule===r.id),inp=nodes.find(n=>n.compId===r.inp),out=nodes.find(n=>n.compId===r.out);if(!p)return;autoLinks.push([inp?inp.id:(start&&start.id),p.id,'','auto']);if(out)autoLinks.push([p.id,out.id,'成立','auto']);});
   state.flow.links=state.flow.links.filter(x=>x[3]!=='auto');autoLinks.forEach(l=>{if(l[0]&&l[1]&&!state.flow.links.some(x=>x[0]===l[0]&&x[1]===l[1]&&x[3]==='auto'))state.flow.links.push(l);});}
@@ -1544,9 +1555,9 @@ function redrawFlowFromIpo(){
   const ins=state.flow.nodes.filter(n=>n.type==='I'&&n.compId), ps=state.flow.nodes.filter(n=>n.type==='P'&&n.autoRule), outs=state.flow.nodes.filter(n=>n.type==='O'&&n.compId);
   const start=state.flow.nodes.find(n=>n.type==='start'), end=state.flow.nodes.find(n=>n.type==='end');
   if(start){start.x=40;start.y=28;start.layoutReady=true;} if(end){end.x=760;end.y=28;end.layoutReady=true;}
-  ins.forEach((n,i)=>{n.x=40;n.y=125+i*100;n.layoutReady=true;});
-  ps.forEach((n,i)=>{n.x=280;n.y=105+i*110;n.layoutReady=true;});
-  outs.forEach((n,i)=>{n.x=550;n.y=105+i*100;n.layoutReady=true;});
+  ins.forEach((n,i)=>{n.x=40;n.y=136+i*116;n.layoutReady=true;});
+  ps.forEach((n,i)=>{n.x=280;n.y=136+i*116;n.layoutReady=true;});
+  outs.forEach((n,i)=>{n.x=550;n.y=136+i*116;n.layoutReady=true;});
   // 重新繪製只清除手動連線；判斷／迴圈節點保留，方便之後重新接線。
   state.flow.links=state.flow.links.filter(x=>x[3]==='auto'); syncFlowRules(); persist(); renderFlow(); toast('已依目前 IPO 規則重新繪製流程圖');
 }
@@ -1555,12 +1566,27 @@ function renderFlow(){
   const canvas=$('flowCanvas'), nodesEl=$('flowNodes'); if(!canvas||!nodesEl)return;
   state.flow=normFlow(state.flow); syncFlowComponents(); arrangeFlowComponents(); syncFlowRules(); nodesEl.innerHTML='';
   const canvasW=Math.max(900,...state.flow.nodes.map(n=>n.x+190)),canvasH=Math.max(560,...state.flow.nodes.map(n=>n.y+130));
-  canvas.style.minWidth=canvasW+'px'; canvas.style.minHeight=canvasH+'px'; const flowSvg=$('flowSvg'); flowSvg.style.width=canvasW+'px';flowSvg.style.height=canvasH+'px';flowSvg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);
+  canvas.style.minWidth=''; canvas.style.minHeight=''; const flowSvg=$('flowSvg'); flowSvg.style.width=canvasW+'px';flowSvg.style.height=canvasH+'px';flowSvg.setAttribute('viewBox','0 0 '+canvasW+' '+canvasH);
   const by={}; state.flow.nodes.forEach(n=>by[n.id]=n);
-  renderFlowLinks();
-  state.flow.nodes.forEach(n=>{const el=document.createElement('div');el.className=`flow-node ${n.type}${n.id===flowSelected?' sel':''}${flowConnectFrom===n.id?' connect':''}`;el.dataset.flowId=n.id;el.style.left=n.x+'px';el.style.top=n.y+'px';el.innerHTML=`${flowPortMarkup(n)}<div class="ft"><span class="flow-chip ${n.type}">${flowLabel(n)}</span>${flowEsc(n.title)}</div><div class="fb">${flowEsc(n.text)}</div>`;nodesEl.appendChild(el);});
-  renderFlowInspect();
+  renderFlowLanes(canvasW,canvasH); renderFlowLinks(); const nums=flowNumbers(); codeMap();
+  state.flow.nodes.forEach(n=>{const el=document.createElement('div');el.className=`flow-node ${n.type}${n.id===flowSelected?' sel':''}${flowConnectFrom===n.id?' connect':''}`;el.dataset.flowId=n.id;el.style.left=n.x+'px';el.style.top=n.y+'px'; const rt=rangeText(nodeRange(n));
+    el.innerHTML=`${n.type==='decision'?'':`<span class="fnum">${circ(nums[n.id])}</span>`}${flowPortMarkup(n)}<div class="ft">${n.type==='decision'?`<b>${circ(nums[n.id])}</b>`:''}<span class="flow-chip ${n.type}">${flowLabel(n)}</span>${flowEsc(n.title)}</div><div class="fb">${flowEsc(n.text)}</div>${rt?`<div class="fl">${rt}</div>`:''}`;nodesEl.appendChild(el);});
+  renderFlowInspect(); renderFlowCode();
 }
+function flowLaneBounds(){ const L={}; ['I','P','O'].forEach(k=>{ const ns=state.flow.nodes.filter(n=>n.type===k); if(!ns.length) return; L[k]=[Math.min(...ns.map(n=>n.x))-16,Math.max(...ns.map(n=>n.x+flowSize(n).w))+16]; }); return L; }
+function renderFlowLanes(W,H){ const g=$('flowLanes'); if(!g) return; const L=flowLaneBounds(), name={I:'I 輸入：讀取',P:'P 處理：判斷規則',O:'O 輸出：動作'}, col={I:['#2563eb','#2563eb0d'],P:['#7c3aed','#7c3aed0d'],O:['#d9480f','#d9480f0d']};
+  let h=''; Object.entries(L).forEach(([k,[a,b]])=>{ h+=`<rect x="${a}" y="4" width="${b-a}" height="${H-8}" rx="12" fill="${col[k][1]}" stroke="${col[k][0]}" stroke-opacity=".25" stroke-dasharray="6 5"/><text x="${a+10}" y="22" font-size="12" font-weight="800" fill="${col[k][0]}">${name[k]}</text>`; });
+  if(L.I&&L.O){ const y=Math.max(...state.flow.nodes.map(n=>n.y+flowSize(n).h))+34, x1=(L.O[0]+L.O[1])/2, x0=(L.I[0]+L.I[1])/2;
+    h+=`<path d="M${x1},${y-26} V${y} H${x0} V${y-26}" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#flowArrow)"/><text x="${(x0+x1)/2}" y="${y+16}" font-size="11.5" font-weight="700" fill="#0f766e" text-anchor="middle">↻ loop()：O 輸出做完，回到 I 再讀一次，一直重複</text>`; }
+  g.innerHTML=h; }
+function renderFlowCode(){ try{ renderFlowCode0(); }catch(e){ const b=$('flowCode'); if(b) b.innerHTML=''; } }
+function renderFlowCode0(){ const box=$('flowCode'); if(!box) return; const doc=buildIpoDoc();
+  const nums=flowNumbers(), marks={}; state.flow.nodes.forEach(n=>{ const r=nodeRange(n); if(r) (marks[r[0]+1]=marks[r[0]+1]||[]).push(n); });
+  const sel=flowNode(flowSelected), sr=sel?nodeRange(sel):null; const e=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  box.innerHTML=`<div class="fch"><b>程式碼對照</b><div>點流程圖的格子，這裡會亮出對應的程式；點程式也會選到流程圖。圓圈號碼 ① ② ③ 和流程圖相同。</div></div>`+
+    doc.blocks.map(b=>{ const K=DOC_KIND[b.k]; return `<div class="blk" style="--c:#${K.c};--bg:#${K.bg}"><div class="hd" data-ln="${b.lines[0].n}"><b>${K.tag}</b>${e(b.title)}</div>${b.lines.map(l=>{ const [code,cm]=splitComment(l.t); const hit=sr&&l.n>=sr[0]+1&&l.n<=sr[1]+1;
+      return `<div class="ln${hit?' hit':''}" data-ln="${l.n}"><span class="no">${l.n}</span><span class="tx">${e(code)}<i>${e(cm)}</i></span>${(marks[l.n]||[]).map(n=>`<span class="nd" style="background:${FLOW_COLOR[n.type]||'#475569'}" title="${flowEsc(n.title)}">${circ(nums[n.id])}</span>`).join('')}</div>`; }).join('')}</div>`; }).join('');
+  if(sr){ const el=box.querySelector(`.ln[data-ln="${sr[0]+1}"]`); if(el) box.scrollTop=Math.max(0,el.offsetTop-box.clientHeight*.25); } }
 function renderFlowInspect(){const box=$('flowInspect');if(!box)return;const n=flowNode(flowSelected);if(!n){box.innerHTML='<h5>節點設定</h5><div class="flowmsg">點選流程節點後，可在這裡修改名稱與說明。</div>';return;}
   box.innerHTML=`<h5>${flowLabel(n)} 節點</h5><label>名稱</label><input id="flowTitle" value="${flowEsc(n.title)}"><label>說明</label><textarea id="flowText">${flowEsc(n.text)}</textarea><button class="btn wide" id="flowApply" style="margin-top:8px">套用</button><button class="btn ghost wide" id="flowDelete" style="margin-top:5px">刪除節點</button><div class="flowmsg">${n.type==='I'?'I：讀取感測器或按鈕。':n.type==='P'?'P：執行規則處理。':n.type==='O'?'O：控制 LCD、LED 或其他輸出。':n.type==='decision'?'判斷：需要至少兩條路徑，例如「是」與「否」。':n.type==='loop'?'迴圈：把流程連回前面的節點，表示重複執行。':'流程起點或終點。'}</div>`;
   $('flowApply').onclick=()=>{n.title=$('flowTitle').value.trim()||'流程節點';n.text=$('flowText').value.trim();persist();renderFlow();};
@@ -1953,6 +1979,12 @@ function shrinkWorkspace(){document.body.classList.remove('workspaceExpanded');s
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{if(b.dataset.t!==activeTab){previousTab=activeTab;activeTab=b.dataset.t;}document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b));document.querySelectorAll('.tabpane').forEach(p=>p.classList.toggle('on',p.id==='t-'+b.dataset.t));if(b.dataset.t==='flow')document.body.classList.add('workspaceExpanded');});
 document.getElementById('right').addEventListener('click',e=>{const expand=e.target.closest('[data-pane-expand]'),back=e.target.closest('[data-pane-back]');if(back){goBackTab();return;}if(!expand)return;const on=document.body.classList.toggle('workspaceExpanded');syncWorkspaceButtons();if(on)setTimeout(()=>{if(viewMode==='phys')fit();},0);});
 document.querySelectorAll('[data-flow-add]').forEach(b=>b.onclick=()=>addFlowNode(b.dataset.flowAdd));
+$('flowCode').addEventListener('click',e=>{ const ln=e.target.closest('[data-ln]'); if(!ln) return; const L=Number(ln.dataset.ln)-1; let best=null, span=1e9;
+  state.flow.nodes.forEach(n=>{ const r=nodeRange(n); if(r&&L>=r[0]&&L<=r[1]&&r[1]-r[0]<span){ best=n; span=r[1]-r[0]; } });
+  if(!best&&ln.classList.contains('hd')){ const blk=ln.parentElement, last=Number(blk.lastElementChild.dataset.ln)-1; state.flow.nodes.forEach(n=>{ const r=nodeRange(n); if(r&&r[0]>=L&&r[0]<=last&&!best) best=n; }); }
+  if(!best){ toast('這幾行沒有對應的流程節點（例如程式庫、腳位宣告）'); return; }
+  flowSelected=best.id; renderFlow(); const c=$('flowCanvas'); c.scrollTo({left:Math.max(0,best.x-60),top:Math.max(0,best.y-60),behavior:'smooth'});
+  const el=document.querySelector(`.flow-node[data-flow-id="${best.id}"]`); if(el){ el.classList.add('codehit'); setTimeout(()=>el.classList.remove('codehit'),900); } });
 $('flowRedraw').onclick=redrawFlowFromIpo; $('flowExample').onclick=flowExample; $('flowCheck').onclick=checkFlow;
 $('flowRestore').onclick=shrinkWorkspace;
 $('functionTabs').addEventListener('click',e=>{const b=e.target.closest('[data-fid]');if(b){activateFunction(b.dataset.fid);return;}if(e.target.id==='addFunction')addFunction();if(e.target.id==='deleteFunction')deleteActiveFunction();});
@@ -1966,6 +1998,20 @@ $('flowNodes').addEventListener('pointerdown',e=>{const el=e.target.closest('.fl
 $('flowNodes').addEventListener('pointermove',e=>{if(flowWire){const r=$('flowCanvas').getBoundingClientRect();flowWire.x=e.clientX-r.left+$('flowCanvas').scrollLeft;flowWire.y=e.clientY-r.top+$('flowCanvas').scrollTop;renderFlowLinks();return;}if(!flowDrag)return;const n=flowNode(flowDrag.id),el=e.target.closest('.flow-node');if(!n||!el)return;const dx=e.clientX-flowDrag.sx,dy=e.clientY-flowDrag.sy;if(Math.abs(dx)+Math.abs(dy)>4)flowDrag.moved=true;n.x=Math.max(8,flowDrag.ox+dx);n.y=Math.max(8,flowDrag.oy+dy);el.style.left=n.x+'px';el.style.top=n.y+'px';renderFlowLinks();});
 $('flowNodes').addEventListener('pointerup',e=>{if(flowWire){const hit=document.elementFromPoint(e.clientX,e.clientY),target=hit&&hit.closest('.flow-node'),from=flowNode(flowWire.from);if(target&&target.dataset.flowId!==flowWire.from){const label=flowWire.label||'';const exists=state.flow.links.some(x=>x[0]===flowWire.from&&x[1]===target.dataset.flowId&&x[2]===label);if(!exists)state.flow.links.push([flowWire.from,target.dataset.flowId,label]);persist();}flowWire=null;renderFlow();return;}if(!flowDrag)return;const d=flowDrag;flowDrag=null;if(d.moved){persist();renderFlow();}else selectFlowNode(d.id);});
 $('flowNodes').addEventListener('contextmenu',e=>{const el=e.target.closest('.flow-node');if(!el)return;e.preventDefault();showFlowCtx(el.dataset.flowId,e.clientX,e.clientY);});
+function circ(k){ return k<=20?String.fromCharCode(0x245F+k):`(${k})`; }
+var FLOW_COLOR={I:'#2563eb',P:'#7c3aed',O:'#d9480f',start:'#0f766e',decision:'#a16207',loop:'#475569',end:'#475569'};
+function flowOrder(){ const rank={start:0,I:1,decision:2,P:2,loop:3,O:4,end:5}; return state.flow.nodes.slice().sort((a,b)=>((rank[a.type]??6)-(rank[b.type]??6))||(a.y-b.y)||(a.x-b.x)); }
+function flowNumbers(){ const m={}; flowOrder().forEach((n,i)=>m[n.id]=i+1); return m; }
+// 流程節點對應的程式行（0 起算的 [起, 迄]）；找不到就回傳 null
+function nodeRange(n){ if(!n) return null; const mapped=codeMap(), lines=mapped.lines;
+  if(n.type==='P'&&n.autoRule){ const hits=ruleLines(validRules().findIndex(r=>r.id===n.autoRule)); return hits.length?[hits[0],hits.at(-1)]:null; }
+  if((n.type==='I'||n.type==='O')&&n.compId){ const comp=byId(n.compId), sec=mapped[n.type];
+    if(comp&&sec&&/^\s*\/\/\s*=+\s*[IO]\b/.test(lines[sec[0]])){ const hits=uniq(linesWith(sec,compWords(comp))).filter(k=>!/\b(Monitor|Serial)\.print/.test(lines[k])&&!/lastPrint/.test(lines[k])); return hits.length?[hits[0],hits.at(-1)]:null; } return null; }
+  if(n.type==='start'){ const f=codeFunctions(lines).find(f=>f.name==='setup'); return f?[f.start,f.end]:null; }
+  if(n.type==='loop'){ const f=codeFunctions(lines).find(f=>f.name==='loop'); return f?[f.start,f.start]:null; }
+  if(['I','P','O'].includes(n.type)&&mapped[n.type]){ const [a,b]=mapped[n.type]; const hits=Array.from({length:b-a+1},(_,i)=>a+i).filter(okLine); return hits.length?[hits[0],hits.at(-1)]:null; }
+  return null; }
+function rangeText(r){ return r?`程式 第 ${r[0]+1}${r[1]>r[0]?'–'+(r[1]+1):''} 行`:''; }
 function jumpToCodeStage(stage,node){
   const mapped=codeMap();
   let range=null;
@@ -1973,12 +2019,7 @@ function jumpToCodeStage(stage,node){
     const hits=ruleLines(validRules().findIndex(r=>r.id===node.autoRule));
     if(hits.length) range=[hits[0],hits.at(-1)];
   }else if(node?.compId){
-    const component=byId(node.compId);
-    const section=mapped[stage];
-    if(component&&section&&/^\s*\/\/\s*=+\s*[IO]\b/.test(mapped.lines[section[0]])){
-      const hits=uniq(linesWith(section,compWords(component)));
-      if(hits.length) range=[hits[0],hits.at(-1)];
-    }
+    range=nodeRange(node);
   }else if(mapped[stage]){
     const [start,end]=mapped[stage];
     const hits=Array.from({length:end-start+1},(_,i)=>start+i).filter(okLine);
@@ -3055,6 +3096,32 @@ function codeFunctions(lines){ const fns=[]; let depth=0, cur=null;
     for(const ch of t){ if(ch==='{') depth++; else if(ch==='}') depth--; }
     if(cur&&depth===0){ cur.end=i; fns.push(cur); cur=null; } });
   return fns; }
+function flowDocSvg(){ const ns=state.flow.nodes; if(!ns.length) return null; const nums=flowNumbers(), by={}; ns.forEach(n=>by[n.id]=n); codeMap();
+  const L=flowLaneBounds(); const xs=[...ns.map(n=>n.x),...Object.values(L).map(v=>v[0])], xe=[...ns.map(n=>n.x+flowSize(n).w),...Object.values(L).map(v=>v[1])];
+  const bottom=Math.max(...ns.map(n=>n.y+flowSize(n).h)); const x0=Math.min(...xs)-14, y0=Math.min(0,...ns.map(n=>n.y))-4, x1=Math.max(...xe)+14, y1=bottom+(L.I&&L.O?64:20);
+  const E=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;'); const F='Microsoft JhengHei,PingFang TC,Noto Sans TC,sans-serif';
+  const tw=(t,fs)=>[...t].reduce((a,ch)=>a+(ch.charCodeAt(0)>0x2e7f?fs:fs*.58),0);
+  const wrapT=(t,fs,w,max)=>{ const out=[]; let cur=''; for(const ch of String(t)){ if(tw(cur+ch,fs)>w&&cur){ out.push(cur); cur=ch; } else cur+=ch; } if(cur) out.push(cur); if(out.length>max){ out.length=max; out[max-1]=out[max-1].slice(0,-1)+'…'; } return out; };
+  let h=''; const lc={I:'#2563eb',P:'#7c3aed',O:'#d9480f'}, ln={I:'I 輸入：讀取',P:'P 處理：判斷規則',O:'O 輸出：動作'};
+  Object.entries(L).forEach(([k,[a,b]])=>{ h+=`<rect x="${a}" y="${y0+2}" width="${b-a}" height="${bottom-y0+12}" rx="12" fill="${lc[k]}" fill-opacity=".05" stroke="${lc[k]}" stroke-opacity=".35" stroke-dasharray="6 5"/><text x="${a+10}" y="${y0+20}" font-family="${F}" font-size="12" font-weight="800" fill="${lc[k]}">${ln[k]}</text>`; });
+  if(L.I&&L.O){ const y=bottom+30, a=(L.O[0]+L.O[1])/2, b=(L.I[0]+L.I[1])/2; h+=`<path d="M${a},${bottom+16} V${y} H${b} V${bottom+18}" fill="none" stroke="#0f766e" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#da)"/><text x="${(a+b)/2}" y="${y+18}" font-family="${F}" font-size="12" font-weight="700" fill="#0f766e" text-anchor="middle">↻ loop()：O 輸出做完，回到 I 再讀一次，一直重複</text>`; }
+  state.flow.links.forEach(([a,b,label])=>{ const A=by[a],B=by[b]; if(!A||!B) return; const [p,q]=flowEdge(A,B,label); h+=`<line x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}" stroke="#64748b" stroke-width="2.2" marker-end="url(#da)"/>`+(label?`<text x="${(p.x+q.x)/2}" y="${(p.y+q.y)/2-5}" font-family="${F}" font-size="11" font-weight="700" fill="#475569" text-anchor="middle">${E(label)}</text>`:''); });
+  ns.forEach(n=>{ const z=flowSize(n), c=FLOW_COLOR[n.type]||'#475569', r=nodeRange(n), num=circ(nums[n.id]);
+    if(n.type==='decision'){ const cx=n.x+z.w/2, cy=n.y+z.h/2; h+=`<polygon points="${cx},${n.y} ${n.x+z.w},${cy} ${cx},${n.y+z.h} ${n.x},${cy}" fill="#fef3c7" stroke="${c}" stroke-width="2.5"/>`;
+      wrapT(n.title,11,z.w*.55,2).forEach((t,i)=>h+=`<text x="${cx}" y="${cy-4+i*13}" font-family="${F}" font-size="11" font-weight="800" fill="#111" text-anchor="middle">${E(t)}</text>`);
+      h+=`<circle cx="${n.x+10}" cy="${n.y+10}" r="11" fill="#0f172a"/><text x="${n.x+10}" y="${n.y+14.5}" font-family="${F}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">${num}</text>`; return; }
+    h+=`<rect x="${n.x}" y="${n.y}" width="${z.w}" height="${z.h}" rx="10" fill="${n.type==='start'?'#ecfdf5':'#fff'}" stroke="${c}" stroke-width="2.5"/>`;
+    const chip=flowLabel(n), cw=tw(chip,10)+10; h+=`<rect x="${n.x+8}" y="${n.y+8}" width="${cw}" height="15" rx="4" fill="${c}"/><text x="${n.x+13}" y="${n.y+19.5}" font-family="${F}" font-size="10" font-weight="800" fill="#fff">${E(chip)}</text>`;
+    const tl=wrapT(n.title,12,z.w-cw-22,2); tl.forEach((t,i)=>h+=`<text x="${n.x+14+cw}" y="${n.y+20+i*14}" font-family="${F}" font-size="12" font-weight="800" fill="#111">${E(t)}</text>`);
+    const by0=n.y+22+tl.length*14; wrapT(n.text,9.5,z.w-16,tl.length>1?1:2).forEach((t,i)=>h+=`<text x="${n.x+8}" y="${by0+i*12}" font-family="${F}" font-size="9.5" fill="#64748b">${E(t)}</text>`);
+    if(r) h+=`<text x="${n.x+8}" y="${n.y+z.h-7}" font-family="${F}" font-size="10" font-weight="800" fill="#0f766e">${rangeText(r)}</text>`;
+    h+=`<circle cx="${n.x}" cy="${n.y}" r="11" fill="#0f172a"/><text x="${n.x}" y="${n.y+4.5}" font-family="${F}" font-size="12" font-weight="800" fill="#fff" text-anchor="middle">${num}</text>`; });
+  const w=x1-x0+14, hgt=y1-y0+14;
+  return {w,h:hgt,svg:`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0-12} ${y0-12} ${w} ${hgt}" width="${w}" height="${hgt}"><defs><marker id="da" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#64748b"/></marker></defs><rect x="${x0-12}" y="${y0-12}" width="${w}" height="${hgt}" fill="#fff"/>${h}</svg>`}; }
+function flowDocPrep(){ state.flow=normFlow(state.flow); syncFlowComponents(); arrangeFlowComponents(); syncFlowRules(); codeMap();
+  const nums=flowNumbers(), marks={}; state.flow.nodes.forEach(n=>{ const r=nodeRange(n); if(r) (marks[r[0]+1]=marks[r[0]+1]||[]).push({num:circ(nums[n.id]),c:(FLOW_COLOR[n.type]||'#475569').slice(1),title:n.title}); });
+  return {marks,fig:flowDocSvg()}; }
+async function svgToImage(svg){ const img=new Image(); img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); await img.decode(); return img; }
 function buildIpoDoc(){
   const src=$('code').value||''; const lines=src.split('\n'); const m=codeMap(); const fns=codeFunctions(lines);
   const kind=new Array(lines.length).fill('S'), group=new Array(lines.length).fill('top');
@@ -3083,6 +3150,7 @@ function buildIpoDoc(){
   return {title:state.name||'未命名專案',board:BD().name,date:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
     rules:validRules().map((r,k)=>`規則 ${k+1}：${ruleText(r).replace(/[\r\n]+/g,' ')}`),
     comps:state.comps.map(c=>`${IPO_OF[c.type]||''}｜${compName(c)}`),blocks:out,lineCount:lines.length}; }
+function buildHandout(){ const doc=buildIpoDoc(); const f=flowDocPrep(); doc.marks=f.marks; doc.fig=f.fig; return doc; }
 function splitComment(t){ let q=null; for(let i=0;i<t.length-1;i++){ const ch=t[i]; if(q){ if(ch==='\\'){i++;continue;} if(ch===q) q=null; } else if(ch==='"'||ch==="'") q=ch; else if(ch==='/'&&t[i+1]==='/') return [t.slice(0,i),t.slice(i)]; } return [t,'']; }
 const xmlEsc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 
@@ -3091,7 +3159,7 @@ function docPrintHtml(doc){ const e=xmlEsc, w=String(doc.lineCount).length;
   const legend=['I','P','O','S'].map(k=>`<span class="lg"><b style="background:#${DOC_KIND[k].c}">${DOC_KIND[k].tag}</b>${legendText(k)}</span>`).join('');
   const blocks=doc.blocks.map(b=>{ const K=DOC_KIND[b.k];
     return `<div class="blk" style="--c:#${K.c};--bg:#${K.bg}"><div class="hd"><b>${K.tag}</b>${e(b.title)}</div>${b.lines.map(l=>{ const [code,cm]=splitComment(l.t);
-      return `<div class="ln"><span class="no">${String(l.n).padStart(w,' ')}</span><span class="tx">${e(code)}<i>${e(cm)}</i></span></div>`; }).join('')}</div>`; }).join('');
+      return `<div class="ln"><span class="no">${String(l.n).padStart(w,' ')}</span><span class="tx">${e(code)}<i>${e(cm)}</i></span>${((doc.marks||{})[l.n]||[]).map(m=>`<span class="nd" style="background:#${m.c}">${m.num}</span>`).join('')}</div>`; }).join('')}</div>`; }).join('');
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${e(doc.title)}－程式碼（IPO）</title><style>
 @page{size:A4;margin:12mm 11mm 14mm}
 *{box-sizing:border-box}body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;color:#111;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -3101,13 +3169,15 @@ h1{font-size:17pt;margin:0 0 2mm}.meta{font-size:9.5pt;color:#444;margin-bottom:
 .blk{border-left:1.6mm solid var(--c);background:var(--bg);margin:0 0 1.6mm;padding:0 0 0.8mm}
 .hd{background:var(--c);color:#fff;font-weight:700;font-size:9pt;padding:0.8mm 2mm;break-after:avoid;page-break-after:avoid}.hd b{background:#fff;color:var(--c)}
 .ln{display:flex;font-family:Consolas,"Courier New","Microsoft JhengHei",monospace;font-size:8.6pt;line-height:1.38;break-inside:avoid}
-.no{flex:none;color:#94a3b8;padding:0 2mm 0 1.5mm;white-space:pre;user-select:none}.tx{white-space:pre-wrap;word-break:break-all}.tx i{font-style:normal;color:#6b7280}
+.no{flex:none;color:#94a3b8;padding:0 2mm 0 1.5mm;white-space:pre;user-select:none}.tx{flex:1;white-space:pre-wrap;word-break:break-all}.tx i{font-style:normal;color:#6b7280}.nd{flex:none;margin-left:1.5mm;color:#fff;border-radius:3mm;padding:0 1.4mm;font:700 8.5pt sans-serif}
+h2{font-size:12pt;margin:3mm 0 1.5mm}.fig{border:0.3mm solid #ccc;border-radius:2mm;padding:2mm;margin:0 0 3mm;break-inside:avoid}.fig svg{width:100%;height:auto;max-height:200mm}.fig p{font-size:8.5pt;color:#444;margin:1mm 0 0}
 </style></head><body><h1>${e(doc.title)}　程式碼（IPO 標示）</h1>
 <div class="meta">開發板：${e(doc.board)}　｜　日期：${doc.date}　｜　共 ${doc.lineCount} 行</div>
 <div class="legend">${legend}</div>
 ${doc.rules.length?`<div class="rules"><b>規則（P 處理）</b>${doc.rules.map(r=>`<div>${e(r)}</div>`).join('')}</div>`:''}
+${doc.fig?`<h2>流程圖</h2><div class="fig">${doc.fig.svg.replace(/ width="[\d.]+" height="[\d.]+"/,'')}<p>流程圖每一格的圓圈號碼 ① ② ③ 和下面程式碼右邊的號碼相同；格子下方的「程式 第 … 行」就是對應的程式位置。</p></div><h2>程式碼</h2>`:''}
 ${blocks}</body></html>`; }
-function printCodeA4(){ const html=docPrintHtml(buildIpoDoc()); let f=$('printFrame'); if(f) f.remove();
+function printCodeA4(){ const html=docPrintHtml(buildHandout()); let f=$('printFrame'); if(f) f.remove();
   f=document.createElement('iframe'); f.id='printFrame'; f.setAttribute('aria-hidden','true'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
   document.body.appendChild(f); f.onload=()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast('這個環境無法直接列印，請改用「PDF」下載後列印'); } };
   f.srcdoc=html; toast('開啟列印視窗：紙張選 A4；若沒有出現，請改用「PDF」'); }
@@ -3125,7 +3195,7 @@ function zipStore(files){ const enc=new TextEncoder(), parts=[], cen=[]; let off
   const cs=cen.reduce((a,b)=>a+b.length,0);
   const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cs),...u32(off),...u16(0)]);
   return new Blob([...parts,...cen,end],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}); }
-function docxBlob(doc){ const e=xmlEsc, w=String(doc.lineCount).length;
+async function docxBlob(doc){ const e=xmlEsc, w=String(doc.lineCount).length;
   const F='<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:eastAsia="Microsoft JhengHei" w:cs="Consolas"/>', FT='<w:rFonts w:ascii="Microsoft JhengHei" w:hAnsi="Microsoft JhengHei" w:eastAsia="Microsoft JhengHei"/>';
   const run=(t,{font=FT,sz=20,color='',bold=false,shd=''}={})=>`<w:r><w:rPr>${font}${bold?'<w:b/>':''}${color?`<w:color w:val="${color}"/>`:''}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/>${shd?`<w:shd w:val="clear" w:color="auto" w:fill="${shd}"/>`:''}</w:rPr><w:t xml:space="preserve">${e(t)}</w:t></w:r>`;
   const para=(runs,ppr='',before=0,after=0)=>`<w:p><w:pPr>${ppr}<w:spacing w:before="${before}" w:after="${after}" w:line="240" w:lineRule="auto"/></w:pPr>${runs}</w:p>`;
@@ -3133,16 +3203,25 @@ function docxBlob(doc){ const e=xmlEsc, w=String(doc.lineCount).length;
   body+=para(run(`開發板：${doc.board}　｜　日期：${doc.date}　｜　共 ${doc.lineCount} 行`,{sz:18,color:'444444'}))+para('');
   body+=para(['I','P','O','S'].map(k=>run(` ${DOC_KIND[k].tag} `,{font:F,sz:18,bold:true,color:'FFFFFF',shd:DOC_KIND[k].c})+run(` ${legendText(k)}　`,{sz:17})).join(''))+para('');
   if(doc.rules.length){ body+=para(run('規則（P 處理）',{sz:18,bold:true})); doc.rules.forEach(r=>body+=para(run(r,{sz:17}))); body+=para(''); }
+  let png=null, cx=0, cy=0;
+  if(doc.fig){ const img=await svgToImage(doc.fig.svg), sc=Math.min(2.2,1600/doc.fig.w), cv=document.createElement('canvas'); cv.width=Math.round(doc.fig.w*sc); cv.height=Math.round(doc.fig.h*sc); const g=cv.getContext('2d'); g.fillStyle='#fff'; g.fillRect(0,0,cv.width,cv.height); g.drawImage(img,0,0,cv.width,cv.height);
+    png=new Uint8Array(await (await new Promise(r=>cv.toBlob(r,'image/png'))).arrayBuffer()); cx=6696710; cy=Math.round(cx*doc.fig.h/doc.fig.w); const maxCy=8640000; if(cy>maxCy){ cx=Math.round(cx*maxCy/cy); cy=maxCy; }
+    body+=para(run('流程圖',{sz:24,bold:true}),'',60,60);
+    body+=`<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="1" name="flowchart"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="flowchart.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdFlow"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`;
+    body+=para(run('流程圖每一格的圓圈號碼 ① ② ③ 和下面程式碼右邊的號碼相同；格子下方的「程式 第 … 行」就是對應的程式位置。',{sz:17,color:'444444'}),'',40,120);
+    body+=para(run('程式碼',{sz:24,bold:true}),'<w:pageBreakBefore/>',0,60); }
   doc.blocks.forEach(b=>{ const K=DOC_KIND[b.k]; const bdr=`<w:pBdr><w:left w:val="single" w:sz="36" w:space="4" w:color="${K.c}"/></w:pBdr>`;
     body+=para(run(` ${K.tag} `,{font:F,sz:18,bold:true,color:K.c,shd:'FFFFFF'})+run(' '+b.title,{sz:18,bold:true,color:'FFFFFF'}),`<w:keepNext/>${bdr}<w:shd w:val="clear" w:color="auto" w:fill="${K.c}"/>`,100,0);
     b.lines.forEach((l,i)=>{ const [code,cm]=splitComment(l.t);
-      body+=para(run(String(l.n).padStart(w,' ')+'  ',{font:F,sz:16,color:'94A3B8'})+(code?run(code,{font:F,sz:17}):'')+(cm?run(cm,{font:F,sz:17,color:'6B7280'}):''),`${bdr}<w:shd w:val="clear" w:color="auto" w:fill="${K.bg}"/>`);
+      body+=para(run(String(l.n).padStart(w,' ')+'  ',{font:F,sz:16,color:'94A3B8'})+(code?run(code,{font:F,sz:17}):'')+(cm?run(cm,{font:F,sz:17,color:'6B7280'}):'')+((doc.marks||{})[l.n]||[]).map(m=>run(' ',{sz:17})+run(` ${m.num} `,{sz:17,bold:true,color:'FFFFFF',shd:m.c})).join(''),`${bdr}<w:shd w:val="clear" w:color="auto" w:fill="${K.bg}"/>`);
     }); });
-  const xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="680" w:bottom="800" w:left="680" w:header="360" w:footer="400" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  const xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="680" w:bottom="800" w:left="680" w:header="360" w:footer="400" w:gutter="0"/></w:sectPr></w:body></w:document>`;
   return zipStore([
-    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
+    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
     ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
-    ['word/document.xml',xml]]); }
+    ['word/document.xml',xml],
+    ['word/_rels/document.xml.rels',`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${png?'<Relationship Id="rIdFlow" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/flowchart.png"/>':''}</Relationships>`],
+    ...(png?[['word/media/flowchart.png',png]]:[])]); }
 
 /* ---- PDF（A4，每頁用畫布排版，中文不會缺字） ---- */
 async function pdfBlob(doc){
@@ -3163,6 +3242,12 @@ async function pdfBlob(doc){
   if(doc.rules.length){ add(pt(15),(g,y)=>{ g.font=`bold ${pt(8.5)}px ${SANS}`; g.fillStyle='#111'; g.fillText('規則（P 處理）',ML,y+pt(11)); });
     doc.rules.forEach(r=>wrap(r,`${pt(8.5)}px ${SANS}`,PW-ML-MR-pt(8)).forEach(s=>add(pt(12.5),(g,y)=>{ g.font=`${pt(8.5)}px ${SANS}`; g.fillStyle='#333'; g.fillText(s,ML+pt(6),y+pt(9.5)); }))); }
   add(pt(8),()=>{});
+  if(doc.fig){ const img=await svgToImage(doc.fig.svg); const maxW=PW-ML-MR, maxH=PH-MT-MB-pt(120); let fw=maxW, fh=fw*doc.fig.h/doc.fig.w; if(fh>maxH){ fh=maxH; fw=fh*doc.fig.w/doc.fig.h; }
+    add(pt(18),(g,y)=>{ g.font=`bold ${pt(12)}px ${SANS}`; g.fillStyle='#111'; g.fillText('流程圖',ML,y+pt(13)); },{head:true});
+    add(fh+pt(8),(g,y)=>{ g.strokeStyle='#cccccc'; g.lineWidth=2; g.strokeRect(ML,y,maxW,fh+pt(4)); g.drawImage(img,ML+(maxW-fw)/2,y+pt(2),fw,fh); });
+    wrap('流程圖每一格的圓圈號碼 ① ② ③ 和下面程式碼右邊的號碼相同；格子下方的「程式 第 … 行」就是對應的程式位置。',`${pt(8.5)}px ${SANS}`,maxW).forEach(s=>add(pt(12.5),(g,y)=>{ g.font=`${pt(8.5)}px ${SANS}`; g.fillStyle='#444'; g.fillText(s,ML,y+pt(9.5)); }));
+    add(pt(10),()=>{},{pageBreak:true});
+    add(pt(18),(g,y)=>{ g.font=`bold ${pt(12)}px ${SANS}`; g.fillStyle='#111'; g.fillText('程式碼',ML,y+pt(13)); },{head:true}); }
   doc.blocks.forEach(b=>{ const K=DOC_KIND[b.k], hh=pt(15);
     const head=(cont)=>(g,y)=>{ g.fillStyle='#'+K.c; g.fillRect(ML,y,PW-ML-MR,hh); g.font=`bold ${pt(8.5)}px ${MONO}`; const tw=g.measureText(K.tag).width+pt(6); g.fillStyle='#fff'; g.fillRect(ML+pt(4),y+pt(2),tw,hh-pt(4)); g.fillStyle='#'+K.c; g.fillText(K.tag,ML+pt(7),y+pt(11));
       g.font=`bold ${pt(9)}px ${SANS}`; g.fillStyle='#fff'; g.fillText((cont?'（續）':'')+b.title,ML+pt(10)+tw,y+pt(11.2)); };
@@ -3171,11 +3256,13 @@ async function pdfBlob(doc){
       segs.forEach((seg,si)=>{ const from=pos; pos+=seg.length; add(lh,(g,y)=>{ g.fillStyle='#'+K.bg; g.fillRect(ML,y,PW-ML-MR,lh); g.fillStyle='#'+K.c; g.fillRect(ML,y,bar,lh);
         g.font=codeFont; if(si===0){ g.fillStyle='#94a3b8'; g.textAlign='right'; g.fillText(String(l.n),codeX-pt(6),y+lh*0.76); g.textAlign='left'; }
         const cut=Math.max(0,Math.min(seg.length,code.length-from)); const a=seg.slice(0,cut), c2=seg.slice(cut);
-        g.fillStyle='#111'; g.fillText(a,codeX,y+lh*0.76); if(c2){ g.fillStyle='#6b7280'; g.fillText(c2,codeX+g.measureText(a).width,y+lh*0.76); } },{block:b}); }); });
+        g.fillStyle='#111'; g.fillText(a,codeX,y+lh*0.76); if(c2){ g.fillStyle='#6b7280'; g.fillText(c2,codeX+g.measureText(a).width,y+lh*0.76); }
+        if(si===0){ let x=PW-MR-pt(3); ((doc.marks||{})[l.n]||[]).slice().reverse().forEach(m=>{ g.font=`bold ${pt(8)}px ${SANS}`; const tw=g.measureText(m.num).width+pt(6); x-=tw; g.fillStyle='#'+m.c; g.beginPath(); g.roundRect?g.roundRect(x,y+lh*0.1,tw,lh*0.8,lh*0.4):g.rect(x,y+lh*0.1,tw,lh*0.8); g.fill(); g.fillStyle='#fff'; g.fillText(m.num,x+pt(3),y+lh*0.74); x-=pt(2); }); } },{block:b}); }); });
     add(pt(4),()=>{}); });
   // 2) 分頁：區塊標題不要落在頁尾；跨頁的區塊在新頁補「（續）」標題
   const pages=[]; let cur=[], y=MT; const maxY=PH-MB;
   rows.forEach((r,i)=>{ const need=r.head?r.h+lh*2:r.h;
+    if(r.pageBreak){ if(cur.length){ pages.push(cur); cur=[]; y=MT; } return; }
     if(y+need>maxY&&cur.length){ pages.push(cur); cur=[]; y=MT; if(!r.head&&r.block){ cur.push({y,draw:r.block&&rows.find(x=>x.head&&x.block===r.block).contHead}); y+=rows.find(x=>x.head&&x.block===r.block).contH; } }
     cur.push({y,draw:r.draw}); y+=r.h; });
   if(cur.length) pages.push(cur);
@@ -3198,8 +3285,8 @@ async function pdfBlob(doc){
   return new Blob(chunks,{type:'application/pdf'}); }
 const docFileName=ext=>`${(state.name||'unoq').replace(/[\\/:*?"<>|]/g,'_')}-程式碼IPO.${ext}`;
 $('bPrintCode').onclick=()=>printCodeA4();
-$('bWordCode').onclick=()=>{ try{ download(docFileName('docx'),docxBlob(buildIpoDoc())); }catch(e){ toast('Word 產生失敗：'+(e&&e.message||e)); } };
-$('bPdfCode').onclick=async()=>{ const b=$('bPdfCode'); b.disabled=true; const t=b.textContent; b.textContent='產生中…'; try{ download(docFileName('pdf'),await pdfBlob(buildIpoDoc())); }catch(e){ toast('PDF 產生失敗：'+(e&&e.message||e)); } finally{ b.disabled=false; b.textContent=t; } };
+$('bWordCode').onclick=async()=>{ try{ download(docFileName('docx'),await docxBlob(buildHandout())); }catch(e){ toast('Word 產生失敗：'+(e&&e.message||e)); } };
+$('bPdfCode').onclick=async()=>{ const b=$('bPdfCode'); b.disabled=true; const t=b.textContent; b.textContent='產生中…'; try{ download(docFileName('pdf'),await pdfBlob(buildHandout())); }catch(e){ toast('PDF 產生失敗：'+(e&&e.message||e)); } finally{ b.disabled=false; b.textContent=t; } };
 
 /* ================= 啟動 ================= */
 (function init(){
