@@ -222,6 +222,7 @@ table{border-collapse:collapse;width:100%;font-size:12.5px}
 th,td{text-align:left;padding:5px 6px;border-bottom:1px solid #eee6cf;vertical-align:top}
 th{font-size:11.5px;color:var(--muted);font-weight:500}
 #t-wiring td:first-child{width:30%}
+.codeExport{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 6px;font-size:12px;color:var(--muted)}.codeExport span{flex:1;min-width:140px}.codeExport .btn{padding:4px 10px;font-size:12px}
 .shopBox{margin-top:8px;padding:6px 8px;border:1px dashed var(--line);border-radius:8px;background:#fffdf6;font-size:12px}
 .shop{display:flex;justify-content:space-between;gap:8px;padding:3px 0;font-size:12px;border-bottom:1px dotted var(--line)}.shop:last-child{border-bottom:0}
 .shop .sl{white-space:nowrap}.shop a{color:var(--teal);text-decoration:none;font-weight:700}.shop a:hover{text-decoration:underline}
@@ -414,6 +415,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
       <div class="paneHead"><h4>程式碼與模擬</h4><span><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button><button class="paneExpand" data-pane-back>↩ 回到上一步</button></span></div><div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕；上下拖曳旋鈕、超音波（距離）、太陽能板（電壓），或用下方「互動控制」的拉桿。</div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
+      <div class="codeExport"><span>程式碼講義（A4・標示 I P O）</span><button class="btn ghost" id="bPrintCode" title="用瀏覽器列印，紙張選 A4">🖨 列印</button><button class="btn ghost" id="bWordCode" title="下載 Word（.docx）">Word</button><button class="btn ghost" id="bPdfCode" title="下載 PDF">PDF</button></div>
       <div class="codewrap"><div id="codeGutter" aria-hidden="true"></div><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
       <h5>互動控制</h5><div id="simCtrls" class="simCtrlBox"></div>
       <p class="note">模擬器支援常用的 Arduino 語法與函式（pinMode、digitalWrite/Read、analogRead/Write、delay、millis、tone、pulseIn、Servo／AmebaServo、Adafruit_SSD1306、DHT、Monitor／Serial）。類別、指標、static 區域變數等進階語法不支援；整數除法會以小數計算。</p>
@@ -3038,6 +3040,166 @@ function genCode(){
   generatedCodeMap={src:sketch,rules:ruleRanges};
   return sketch;
 }
+
+/* ================= 程式碼講義：列印 A4／Word／PDF（標示 I P O） ================= */
+const DOC_KIND={
+  S:{tag:'準備',name:'準備',desc:'宣告腳位、變數，setup() 只執行一次',c:'64748B',bg:'F1F5F9'},
+  I:{tag:'I',name:'I 輸入',desc:'讀取感測器、按鈕，存進變數',c:'2563EB',bg:'EFF6FF'},
+  P:{tag:'P',name:'P 處理',desc:'依規則判斷，決定要做什麼',c:'7C3AED',bg:'F5F3FF'},
+  O:{tag:'O',name:'O 輸出',desc:'驅動 LED、馬達、螢幕等元件',c:'D9480F',bg:'FFF7ED'}};
+const legendText=k=>k==='S'?DOC_KIND.S.desc:`${DOC_KIND[k].name.replace(/^[IPO] /,'')}：${DOC_KIND[k].desc}`;
+function codeFunctions(lines){ const fns=[]; let depth=0, cur=null;
+  const strip=l=>l.replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,'""').replace(/\/\/.*$/,'');
+  lines.forEach((l,i)=>{ const t=strip(l);
+    if(depth===0&&!cur){ const m=t.match(/^\s*[A-Za-z_][\w\s\*&<>:,]*?\b([A-Za-z_]\w*)\s*\([^;]*\)\s*\{/); if(m&&!/^(if|for|while|switch)$/.test(m[1])) cur={name:m[1],start:i}; }
+    for(const ch of t){ if(ch==='{') depth++; else if(ch==='}') depth--; }
+    if(cur&&depth===0){ cur.end=i; fns.push(cur); cur=null; } });
+  return fns; }
+function buildIpoDoc(){
+  const src=$('code').value||''; const lines=src.split('\n'); const m=codeMap(); const fns=codeFunctions(lines);
+  const kind=new Array(lines.length).fill('S'), group=new Array(lines.length).fill('top');
+  const loopFn=fns.find(f=>f.name==='loop');
+  ['I','P','O'].forEach(k=>{ const r=m[k]; if(!r) return; for(let i=r[0];i<=r[1]&&i<lines.length;i++){ if(loopFn&&(i<=loopFn.start||i>=loopFn.end)) continue; kind[i]=k; group[i]='loop'+k; } });
+  // 函式：看它在哪一段被呼叫，就歸到那一段（被呼叫的函式再往下傳）
+  const fk={}; const callRe=n=>new RegExp('(^|[^\\w])'+n+'\\s*\\(');
+  for(let pass=0;pass<5;pass++) fns.forEach(f=>{ if(f.name==='loop'||f.name==='setup'||fk[f.name]) return;
+    const used=new Set(); lines.forEach((l,i)=>{ if(i>=f.start&&i<=f.end) return; if(!callRe(f.name).test(l.replace(/\/\/.*$/,''))) return;
+      if(group[i].startsWith('loop')) used.add(kind[i]); else { const host=fns.find(g=>i>g.start&&i<=g.end); if(host&&fk[host.name]) used.add(fk[host.name]); } });
+    const order=['O','I','P']; const k=order.find(x=>used.has(x)); if(k) fk[f.name]=k; });
+  fns.forEach(f=>{ if(f.name==='loop') return; const k=f.name==='setup'?'S':(fk[f.name]||'S'); for(let i=f.start;i<=f.end;i++){ kind[i]=k; group[i]='fn:'+f.name; }
+    // 函式前面緊貼的註解也算這個函式
+    for(let i=f.start-1;i>=0&&/^\s*\/\//.test(lines[i]);i--){ kind[i]=k; group[i]='fn:'+f.name; } });
+  if(loopFn){ kind[loopFn.start]='S'; group[loopFn.start]='loopEdge'; kind[loopFn.end]='S'; group[loopFn.end]='loopEnd'; }
+  // 空白行跟著前一行
+  for(let i=1;i<lines.length;i++) if(!lines[i].trim()&&group[i]==='top'&&group[i-1]!=='top'){ kind[i]=kind[i-1]; group[i]=group[i-1]; }
+  const blocks=[]; lines.forEach((t,i)=>{ const g=group[i]; let b=blocks[blocks.length-1];
+    if(!b||b.g!==g){ const k=kind[i]; const fn=g.startsWith('fn:')?g.slice(3):'';
+      const title=g==='loopEdge'?'loop()：一直重複執行 I → P → O':g==='loopEnd'?'loop() 結束 → 回到 I 再跑一次':fn==='setup'?'setup()：開機時只執行一次':fn?`${DOC_KIND[k].name}用的函式：${fn}()`:k==='S'?'程式庫、腳位、變數':`${DOC_KIND[k].name}：${DOC_KIND[k].desc}`;
+      b={g,k,title,lines:[]}; blocks.push(b); }
+    b.lines.push({n:i+1,t}); });
+  // 尾端空白行不要單獨成段
+  const out=blocks.filter(b=>b.lines.some(l=>l.t.trim()));
+  const d=new Date(); const pad=n=>String(n).padStart(2,'0');
+  return {title:state.name||'未命名專案',board:BD().name,date:`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`,
+    rules:validRules().map((r,k)=>`規則 ${k+1}：${ruleText(r).replace(/[\r\n]+/g,' ')}`),
+    comps:state.comps.map(c=>`${IPO_OF[c.type]||''}｜${compName(c)}`),blocks:out,lineCount:lines.length}; }
+function splitComment(t){ let q=null; for(let i=0;i<t.length-1;i++){ const ch=t[i]; if(q){ if(ch==='\\'){i++;continue;} if(ch===q) q=null; } else if(ch==='"'||ch==="'") q=ch; else if(ch==='/'&&t[i+1]==='/') return [t.slice(0,i),t.slice(i)]; } return [t,'']; }
+const xmlEsc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+/* ---- 列印（A4） ---- */
+function docPrintHtml(doc){ const e=xmlEsc, w=String(doc.lineCount).length;
+  const legend=['I','P','O','S'].map(k=>`<span class="lg"><b style="background:#${DOC_KIND[k].c}">${DOC_KIND[k].tag}</b>${legendText(k)}</span>`).join('');
+  const blocks=doc.blocks.map(b=>{ const K=DOC_KIND[b.k];
+    return `<div class="blk" style="--c:#${K.c};--bg:#${K.bg}"><div class="hd"><b>${K.tag}</b>${e(b.title)}</div>${b.lines.map(l=>{ const [code,cm]=splitComment(l.t);
+      return `<div class="ln"><span class="no">${String(l.n).padStart(w,' ')}</span><span class="tx">${e(code)}<i>${e(cm)}</i></span></div>`; }).join('')}</div>`; }).join('');
+  return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${e(doc.title)}－程式碼（IPO）</title><style>
+@page{size:A4;margin:12mm 11mm 14mm}
+*{box-sizing:border-box}body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;color:#111;margin:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+h1{font-size:17pt;margin:0 0 2mm}.meta{font-size:9.5pt;color:#444;margin-bottom:3mm}
+.legend{display:flex;flex-wrap:wrap;gap:2mm 5mm;font-size:8.5pt;margin:0 0 3mm}.lg b,.hd b{display:inline-block;min-width:5.5mm;text-align:center;color:#fff;border-radius:1.2mm;padding:0 1.2mm;margin-right:1.5mm;font-family:Consolas,monospace}
+.rules{font-size:8.5pt;margin:0 0 4mm;padding:2mm 3mm;border:0.3mm solid #ccc;border-radius:2mm}.rules div{margin:0.6mm 0}
+.blk{border-left:1.6mm solid var(--c);background:var(--bg);margin:0 0 1.6mm;padding:0 0 0.8mm}
+.hd{background:var(--c);color:#fff;font-weight:700;font-size:9pt;padding:0.8mm 2mm;break-after:avoid;page-break-after:avoid}.hd b{background:#fff;color:var(--c)}
+.ln{display:flex;font-family:Consolas,"Courier New","Microsoft JhengHei",monospace;font-size:8.6pt;line-height:1.38;break-inside:avoid}
+.no{flex:none;color:#94a3b8;padding:0 2mm 0 1.5mm;white-space:pre;user-select:none}.tx{white-space:pre-wrap;word-break:break-all}.tx i{font-style:normal;color:#6b7280}
+</style></head><body><h1>${e(doc.title)}　程式碼（IPO 標示）</h1>
+<div class="meta">開發板：${e(doc.board)}　｜　日期：${doc.date}　｜　共 ${doc.lineCount} 行</div>
+<div class="legend">${legend}</div>
+${doc.rules.length?`<div class="rules"><b>規則（P 處理）</b>${doc.rules.map(r=>`<div>${e(r)}</div>`).join('')}</div>`:''}
+${blocks}</body></html>`; }
+function printCodeA4(){ const html=docPrintHtml(buildIpoDoc()); let f=$('printFrame'); if(f) f.remove();
+  f=document.createElement('iframe'); f.id='printFrame'; f.setAttribute('aria-hidden','true'); f.style.cssText='position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden';
+  document.body.appendChild(f); f.onload=()=>{ try{ f.contentWindow.focus(); f.contentWindow.print(); }catch(e){ toast('這個環境無法直接列印，請改用「PDF」下載後列印'); } };
+  f.srcdoc=html; toast('開啟列印視窗：紙張選 A4；若沒有出現，請改用「PDF」'); }
+
+/* ---- Word（.docx，A4） ---- */
+const CRC_T=(()=>{ const t=new Uint32Array(256); for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } return t; })();
+function crc32(u){ let c=0xFFFFFFFF; for(let i=0;i<u.length;i++) c=CRC_T[(c^u[i])&255]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+function zipStore(files){ const enc=new TextEncoder(), parts=[], cen=[]; let off=0;
+  const u16=v=>[v&255,(v>>8)&255], u32=v=>[v&255,(v>>8)&255,(v>>16)&255,(v>>>24)&255];
+  files.forEach(([name,data])=>{ const nb=enc.encode(name), db=typeof data==='string'?enc.encode(data):data, crc=crc32(db);
+    const lh=new Uint8Array([...u32(0x04034b50),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(db.length),...u32(db.length),...u16(nb.length),...u16(0)]);
+    parts.push(lh,nb,db);
+    cen.push(new Uint8Array([...u32(0x02014b50),...u16(20),...u16(20),...u16(0x0800),...u16(0),...u16(0),...u16(0x21),...u32(crc),...u32(db.length),...u32(db.length),...u16(nb.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(off)]),nb);
+    off+=lh.length+nb.length+db.length; });
+  const cs=cen.reduce((a,b)=>a+b.length,0);
+  const end=new Uint8Array([...u32(0x06054b50),...u16(0),...u16(0),...u16(files.length),...u16(files.length),...u32(cs),...u32(off),...u16(0)]);
+  return new Blob([...parts,...cen,end],{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'}); }
+function docxBlob(doc){ const e=xmlEsc, w=String(doc.lineCount).length;
+  const F='<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas" w:eastAsia="Microsoft JhengHei" w:cs="Consolas"/>', FT='<w:rFonts w:ascii="Microsoft JhengHei" w:hAnsi="Microsoft JhengHei" w:eastAsia="Microsoft JhengHei"/>';
+  const run=(t,{font=FT,sz=20,color='',bold=false,shd=''}={})=>`<w:r><w:rPr>${font}${bold?'<w:b/>':''}${color?`<w:color w:val="${color}"/>`:''}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/>${shd?`<w:shd w:val="clear" w:color="auto" w:fill="${shd}"/>`:''}</w:rPr><w:t xml:space="preserve">${e(t)}</w:t></w:r>`;
+  const para=(runs,ppr='',before=0,after=0)=>`<w:p><w:pPr>${ppr}<w:spacing w:before="${before}" w:after="${after}" w:line="240" w:lineRule="auto"/></w:pPr>${runs}</w:p>`;
+  let body=para(run(`${doc.title}　程式碼（IPO 標示）`,{sz:32,bold:true}),'',0,80);
+  body+=para(run(`開發板：${doc.board}　｜　日期：${doc.date}　｜　共 ${doc.lineCount} 行`,{sz:18,color:'444444'}))+para('');
+  body+=para(['I','P','O','S'].map(k=>run(` ${DOC_KIND[k].tag} `,{font:F,sz:18,bold:true,color:'FFFFFF',shd:DOC_KIND[k].c})+run(` ${legendText(k)}　`,{sz:17})).join(''))+para('');
+  if(doc.rules.length){ body+=para(run('規則（P 處理）',{sz:18,bold:true})); doc.rules.forEach(r=>body+=para(run(r,{sz:17}))); body+=para(''); }
+  doc.blocks.forEach(b=>{ const K=DOC_KIND[b.k]; const bdr=`<w:pBdr><w:left w:val="single" w:sz="36" w:space="4" w:color="${K.c}"/></w:pBdr>`;
+    body+=para(run(` ${K.tag} `,{font:F,sz:18,bold:true,color:K.c,shd:'FFFFFF'})+run(' '+b.title,{sz:18,bold:true,color:'FFFFFF'}),`<w:keepNext/>${bdr}<w:shd w:val="clear" w:color="auto" w:fill="${K.c}"/>`,100,0);
+    b.lines.forEach((l,i)=>{ const [code,cm]=splitComment(l.t);
+      body+=para(run(String(l.n).padStart(w,' ')+'  ',{font:F,sz:16,color:'94A3B8'})+(code?run(code,{font:F,sz:17}):'')+(cm?run(cm,{font:F,sz:17,color:'6B7280'}):''),`${bdr}<w:shd w:val="clear" w:color="auto" w:fill="${K.bg}"/>`);
+    }); });
+  const xml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="720" w:right="680" w:bottom="800" w:left="680" w:header="360" w:footer="400" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+  return zipStore([
+    ['[Content_Types].xml','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>'],
+    ['_rels/.rels','<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+    ['word/document.xml',xml]]); }
+
+/* ---- PDF（A4，每頁用畫布排版，中文不會缺字） ---- */
+async function pdfBlob(doc){
+  const DPI=150, mm=DPI/25.4, PW=Math.round(210*mm), PH=Math.round(297*mm), ML=Math.round(11*mm), MR=Math.round(11*mm), MT=Math.round(12*mm), MB=Math.round(14*mm);
+  const pt=p=>p*DPI/72, MONO='Consolas,"Courier New","Microsoft JhengHei","PingFang TC","Noto Sans Mono CJK TC",monospace', SANS='"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif';
+  const meas=document.createElement('canvas').getContext('2d');
+  const wrap=(text,font,width)=>{ meas.font=font; const out=[]; let cur=''; for(const ch of text){ if(meas.measureText(cur+ch).width>width&&cur){ out.push(cur); cur=ch; } else cur+=ch; } out.push(cur); return out; };
+  const codeFont=`${pt(8.6)}px ${MONO}`, lh=Math.round(pt(8.6)*1.42), nw=String(doc.lineCount).length;
+  meas.font=codeFont; const numW=meas.measureText('0'.repeat(nw)).width+pt(10), bar=Math.round(1.6*mm), codeX=ML+bar+numW, codeW=PW-MR-codeX-pt(4);
+  // 1) 排成一列一列
+  const rows=[]; const add=(h,draw,opt={})=>rows.push({h,draw,...opt});
+  add(pt(22),(g,y)=>{ g.font=`bold ${pt(17)}px ${SANS}`; g.fillStyle='#111'; g.fillText(`${doc.title}　程式碼（IPO 標示）`,ML,y+pt(16)); });
+  add(pt(16),(g,y)=>{ g.font=`${pt(9.5)}px ${SANS}`; g.fillStyle='#444'; g.fillText(`開發板：${doc.board}　｜　日期：${doc.date}　｜　共 ${doc.lineCount} 行`,ML,y+pt(11)); });
+  { const items=['I','P','O','S'].map(k=>{ const K=DOC_KIND[k]; meas.font=`bold ${pt(8.5)}px ${MONO}`; const tw=meas.measureText(K.tag).width+pt(6); meas.font=`${pt(8.5)}px ${SANS}`; const s=legendText(k); return {K,tw,s,w:tw+pt(3)+meas.measureText(s).width+pt(10)}; });
+    const lines=[[]]; let x=0; items.forEach(it=>{ if(x+it.w>PW-ML-MR&&lines.at(-1).length){ lines.push([]); x=0; } lines.at(-1).push(it); x+=it.w; });
+    lines.forEach(row=>add(pt(17),(g,y)=>{ let x=ML; row.forEach(({K,tw,s,w})=>{ g.font=`bold ${pt(8.5)}px ${MONO}`; g.fillStyle='#'+K.c; g.fillRect(x,y+pt(3),tw,pt(12)); g.fillStyle='#fff'; g.fillText(K.tag,x+pt(3),y+pt(12.5));
+      g.font=`${pt(8.5)}px ${SANS}`; g.fillStyle='#222'; g.fillText(s,x+tw+pt(3),y+pt(12.5)); x+=w; }); })); }
+  if(doc.rules.length){ add(pt(15),(g,y)=>{ g.font=`bold ${pt(8.5)}px ${SANS}`; g.fillStyle='#111'; g.fillText('規則（P 處理）',ML,y+pt(11)); });
+    doc.rules.forEach(r=>wrap(r,`${pt(8.5)}px ${SANS}`,PW-ML-MR-pt(8)).forEach(s=>add(pt(12.5),(g,y)=>{ g.font=`${pt(8.5)}px ${SANS}`; g.fillStyle='#333'; g.fillText(s,ML+pt(6),y+pt(9.5)); }))); }
+  add(pt(8),()=>{});
+  doc.blocks.forEach(b=>{ const K=DOC_KIND[b.k], hh=pt(15);
+    const head=(cont)=>(g,y)=>{ g.fillStyle='#'+K.c; g.fillRect(ML,y,PW-ML-MR,hh); g.font=`bold ${pt(8.5)}px ${MONO}`; const tw=g.measureText(K.tag).width+pt(6); g.fillStyle='#fff'; g.fillRect(ML+pt(4),y+pt(2),tw,hh-pt(4)); g.fillStyle='#'+K.c; g.fillText(K.tag,ML+pt(7),y+pt(11));
+      g.font=`bold ${pt(9)}px ${SANS}`; g.fillStyle='#fff'; g.fillText((cont?'（續）':'')+b.title,ML+pt(10)+tw,y+pt(11.2)); };
+    add(hh+pt(3),head(false),{head:true,block:b,contHead:head(true),contH:hh+pt(3),gap:pt(3)});
+    b.lines.forEach(l=>{ const [code,cm]=splitComment(l.t); const segs=wrap(l.t||' ',codeFont,codeW); let pos=0;
+      segs.forEach((seg,si)=>{ const from=pos; pos+=seg.length; add(lh,(g,y)=>{ g.fillStyle='#'+K.bg; g.fillRect(ML,y,PW-ML-MR,lh); g.fillStyle='#'+K.c; g.fillRect(ML,y,bar,lh);
+        g.font=codeFont; if(si===0){ g.fillStyle='#94a3b8'; g.textAlign='right'; g.fillText(String(l.n),codeX-pt(6),y+lh*0.76); g.textAlign='left'; }
+        const cut=Math.max(0,Math.min(seg.length,code.length-from)); const a=seg.slice(0,cut), c2=seg.slice(cut);
+        g.fillStyle='#111'; g.fillText(a,codeX,y+lh*0.76); if(c2){ g.fillStyle='#6b7280'; g.fillText(c2,codeX+g.measureText(a).width,y+lh*0.76); } },{block:b}); }); });
+    add(pt(4),()=>{}); });
+  // 2) 分頁：區塊標題不要落在頁尾；跨頁的區塊在新頁補「（續）」標題
+  const pages=[]; let cur=[], y=MT; const maxY=PH-MB;
+  rows.forEach((r,i)=>{ const need=r.head?r.h+lh*2:r.h;
+    if(y+need>maxY&&cur.length){ pages.push(cur); cur=[]; y=MT; if(!r.head&&r.block){ cur.push({y,draw:r.block&&rows.find(x=>x.head&&x.block===r.block).contHead}); y+=rows.find(x=>x.head&&x.block===r.block).contH; } }
+    cur.push({y,draw:r.draw}); y+=r.h; });
+  if(cur.length) pages.push(cur);
+  // 3) 畫成 JPEG
+  const cv=document.createElement('canvas'); cv.width=PW; cv.height=PH; const g=cv.getContext('2d'); g.textBaseline='alphabetic';
+  const imgs=[]; for(let p=0;p<pages.length;p++){ g.fillStyle='#fff'; g.fillRect(0,0,PW,PH); pages[p].forEach(it=>it.draw&&it.draw(g,it.y));
+    g.font=`${pt(8)}px ${SANS}`; g.fillStyle='#888'; g.textAlign='center'; g.fillText(`${doc.title}　｜　第 ${p+1} / ${pages.length} 頁`,PW/2,PH-pt(14)); g.textAlign='left';
+    const url=cv.toDataURL('image/jpeg',0.9); const bin=atob(url.split(',')[1]); const u=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) u[i]=bin.charCodeAt(i); imgs.push(u); await new Promise(r=>setTimeout(r,0)); }
+  // 4) 組 PDF
+  const enc=new TextEncoder(), chunks=[], offs=[]; let len=0; const put=x=>{ const b=typeof x==='string'?enc.encode(x):x; chunks.push(b); len+=b.length; };
+  const obj=(n,body)=>{ offs[n]=len; put(`${n} 0 obj\n`); body(); put('\nendobj\n'); };
+  put('%PDF-1.4\n%\xE2\xE3\xCF\xD3\n'); const N=imgs.length, kids=[]; for(let i=0;i<N;i++) kids.push(`${3+i*3} 0 R`);
+  obj(1,()=>put('<< /Type /Catalog /Pages 2 0 R >>')); obj(2,()=>put(`<< /Type /Pages /Kids [${kids.join(' ')}] /Count ${N} >>`));
+  imgs.forEach((im,i)=>{ const pg=3+i*3, ct=pg+1, xo=pg+2, cs=`q 595.28 0 0 841.89 0 0 cm /Im${i} Do Q`;
+    obj(pg,()=>put(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595.28 841.89] /Resources << /XObject << /Im${i} ${xo} 0 R >> >> /Contents ${ct} 0 R >>`));
+    obj(ct,()=>{ put(`<< /Length ${cs.length} >>\nstream\n`); put(cs); put('\nendstream'); });
+    obj(xo,()=>{ put(`<< /Type /XObject /Subtype /Image /Width ${PW} /Height ${PH} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${im.length} >>\nstream\n`); put(im); put('\nendstream'); }); });
+  const total=3+N*3, xref=len; let x=`xref\n0 ${total}\n0000000000 65535 f \n`; for(let n=1;n<total;n++) x+=String(offs[n]).padStart(10,'0')+' 00000 n \n';
+  put(x); put(`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+  return new Blob(chunks,{type:'application/pdf'}); }
+const docFileName=ext=>`${(state.name||'unoq').replace(/[\\/:*?"<>|]/g,'_')}-程式碼IPO.${ext}`;
+$('bPrintCode').onclick=()=>printCodeA4();
+$('bWordCode').onclick=()=>{ try{ download(docFileName('docx'),docxBlob(buildIpoDoc())); }catch(e){ toast('Word 產生失敗：'+(e&&e.message||e)); } };
+$('bPdfCode').onclick=async()=>{ const b=$('bPdfCode'); b.disabled=true; const t=b.textContent; b.textContent='產生中…'; try{ download(docFileName('pdf'),await pdfBlob(buildIpoDoc())); }catch(e){ toast('PDF 產生失敗：'+(e&&e.message||e)); } finally{ b.disabled=false; b.textContent=t; } };
 
 /* ================= 啟動 ================= */
 (function init(){
