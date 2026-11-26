@@ -291,9 +291,11 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
 .hold{flex:1;border:1.5px solid var(--line);background:#fff;border-radius:9px;padding:8px;cursor:pointer;user-select:none;touch-action:none}
 .hold.on{background:var(--accent);color:#fff;border-color:var(--accent)}
 #canvasCtrls{right:12px;top:12px;display:none;flex-direction:column;gap:0;width:290px;max-width:calc(100% - 24px);max-height:calc(100% - 90px);padding:0;z-index:12;overflow:hidden}
-#canvasCtrls .cch{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 10px;background:#0f766e;color:#fff;font-size:13px;cursor:move;user-select:none;touch-action:none}
-#canvasCtrls .cch b{flex:1}#canvasCtrls .ccTip{font-size:11px;opacity:.75}
-#canvasCtrls .cch button{border:0;background:#ffffff26;color:#fff;border-radius:6px;width:26px;height:22px;cursor:pointer;font-size:13px}
+#ipoFloat{left:12px;top:58px;display:none;flex-direction:column;gap:0;width:340px;max-width:calc(100% - 24px);max-height:calc(100% - 140px);padding:0;z-index:11;overflow:hidden}
+#ipoFloat .fwBody{padding:6px;overflow:auto}#ipoFloat.min .fwBody{display:none}#ipoFloat #ipoSec h5{display:none}
+#ipoFloat .cch,#canvasCtrls .cch{display:flex;align-items:center;gap:6px;padding:6px 6px 6px 10px;background:#0f766e;color:#fff;font-size:13px;cursor:move;user-select:none;touch-action:none}
+#ipoFloat .cch b,#canvasCtrls .cch b{flex:1}#ipoFloat .ccTip,#canvasCtrls .ccTip{font-size:11px;opacity:.75}
+#ipoFloat .cch button,#canvasCtrls .cch button{border:0;background:#ffffff26;color:#fff;border-radius:6px;width:26px;height:22px;cursor:pointer;font-size:13px}
 #canvasCtrls #simCtrls2{padding:2px 10px 6px;overflow:auto}
 #canvasCtrls.min #simCtrls2{display:none}
 #canvasCtrls .ctl label{width:96px}#canvasCtrls .hold{padding:6px}
@@ -371,6 +373,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </svg>
     <div class="floatbar" id="simBanner"><span class="rec">●</span><span id="simBannerTxt">模擬中・點住按鈕；上下拖曳旋鈕、超音波、太陽能板</span><button id="bStop2">■ 停止</button></div>
     <div class="floatbar" id="canvasCtrls"><div class="cch" id="ccHead" title="拖曳可移動"><b>互動控制</b><span class="ccTip">拖曳移動</span><button id="ccToggle" title="收合／展開">▾</button></div><div id="simCtrls2" class="simCtrlBox"></div></div>
+    <div class="floatbar" id="ipoFloat"><div class="cch" id="ipoHead" title="拖曳可移動"><b>IPO 即時狀態</b><span class="ccTip">拖曳移動</span><button id="ipoToggle" title="收合／展開">▾</button></div><div class="fwBody"><div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div></div></div>
     <div class="floatbar" id="selBanner"><span id="selText"></span><button id="bShowAll">顯示全部</button></div>
     <div class="floatbar" id="zoomBar">
       <button id="zOut" title="縮小">－</button><span class="z" id="zVal">100%</span><button id="zIn" title="放大">＋</button><button id="zFit">重設視角</button>
@@ -410,7 +413,6 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     <div class="tabpane" id="t-sim">
       <div class="paneHead"><h4>程式碼與模擬</h4><span><button class="paneExpand" data-pane-expand>⛶ 放大閱讀</button><button class="paneExpand" data-pane-back>↩ 回到上一步</button></span></div><div class="simbar"><button class="btn" id="bRun">▶ 執行</button><button class="btn ghost" id="bStop" disabled>■ 停止</button><button class="btn ghost" id="bGen">依接線產生程式</button><label class="mute" title="關掉後輸出會立即反應"><input type="checkbox" id="ipoFlow" checked>IPO 流動</label><label class="mute" style="margin-left:0"><input type="checkbox" id="mute">靜音</label></div>
       <div class="note" id="simStatus">按「執行」開始模擬。執行中可以點住畫面上的按鈕；上下拖曳旋鈕、超音波（距離）、太陽能板（電壓），或用下方「互動控制」的拉桿。</div>
-      <div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div>
       <h5>程式碼（Arduino）<span style="font-weight:400;color:var(--muted)" id="codeTag"></span></h5>
       <div class="codewrap"><div id="codeGutter" aria-hidden="true"></div><div id="codeHL"></div><textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea></div>
       <h5>互動控制</h5><div id="simCtrls" class="simCtrlBox"></div>
@@ -1297,7 +1299,7 @@ function ioValue(c){ const v=inp(c);
     case 'oled': return SIM.oled[c.id]?'顯示中':'—'; case 'lcd': { const L=SIM.lcd&&SIM.lcd[c.id]; return L&&L.on&&!L.sleep?'顯示中':'未開啟'; } }
   return '—'; }
 function updateIpoBar(){
-  const sec=$('ipoSec'); if(!SIM.running){ sec.style.display='none'; return; } sec.style.display='';
+  const sec=$('ipoSec'); $('ipoFloat').style.display=SIM.running?'flex':'none'; if(!SIM.running){ sec.style.display='none'; return; } sec.style.display='';
   const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
   let stage='I', stageText='I 輸入：等待輸入', stageReason='等待輸入條件改變', inSetup=SIM.phase==='setup';
   if(inSetup){ stage='I'; stageText='setup() 初始化：準備硬體'; }
@@ -2516,7 +2518,7 @@ function updateSimUI(){
   $('simBanner').style.display=r?'flex':'none';
   const boot=r&&SIM.phase==='setup';
   $('simBannerTxt').textContent=boot?'開機中：正在執行 setup()，完成後 loop() 才會讀取輸入':'模擬中・點住按鈕；上下拖曳旋鈕、超音波、太陽能板，或用右上角「互動控制」';
-  $('simBanner').classList.toggle('boot',boot); updateCanvasCtrls();
+  $('simBanner').classList.toggle('boot',boot); updateCanvasCtrls(); $('ipoFloat').style.display=r?'flex':'none';
   $('simStatus').textContent=boot?'開機中：程式正在執行 setup()（例如 LCD 初始化、畫第一個畫面）。setup() 跑完、開始 loop() 之後，才會讀取按鈕等輸入。':r?'模擬中：點住畫面上的按鈕、上下拖曳旋鈕，或用下方控制項。':'按「執行」開始模擬。執行中可以點住畫面上的按鈕；上下拖曳旋鈕、超音波（距離）、太陽能板（電壓），或用下方「互動控制」的拉桿。';
 }
 
@@ -2551,12 +2553,13 @@ function syncHold(){ document.querySelectorAll('.simCtrlBox [data-hold]').forEac
   ['pointerup','pointercancel'].forEach(t=>$(box).addEventListener(t,e=>{ const b=e.target.closest('[data-hold]'); if(!b) return; SIM.pressed[b.dataset.hold]=false; syncHold(); schedule(); }));
 });
 // 畫布上的互動控制：可收合、可拖曳移動
-$('ccToggle').addEventListener('click',e=>{ e.stopPropagation(); const m=$('canvasCtrls').classList.toggle('min'); $('ccToggle').textContent=m?'▸':'▾'; });
-(()=>{ let d=null; const box=$('canvasCtrls'), head=$('ccHead');
+function makeFloatWin(boxId,headId,toggleId){ const box=$(boxId), head=$(headId), tg=$(toggleId); let d=null;
+  tg.addEventListener('click',e=>{ e.stopPropagation(); const m=box.classList.toggle('min'); tg.textContent=m?'▸':'▾'; });
   head.addEventListener('pointerdown',e=>{ if(e.target.closest('button')) return; const r=box.getBoundingClientRect(), pr=box.offsetParent.getBoundingClientRect(); d={dx:e.clientX-r.left,dy:e.clientY-r.top,pr}; head.setPointerCapture(e.pointerId); });
   head.addEventListener('pointermove',e=>{ if(!d) return; const w=box.offsetWidth,h=box.offsetHeight; const x=Math.max(0,Math.min(d.pr.width-w,e.clientX-d.pr.left-d.dx)), y=Math.max(0,Math.min(d.pr.height-h,e.clientY-d.pr.top-d.dy)); box.style.left=x+'px'; box.style.top=y+'px'; box.style.right='auto'; });
   ['pointerup','pointercancel'].forEach(t=>head.addEventListener(t,()=>{ d=null; }));
-})();
+}
+makeFloatWin('canvasCtrls','ccHead','ccToggle'); makeFloatWin('ipoFloat','ipoHead','ipoToggle');
 
 /* ---------- 接線變更 → 自動更新程式 ---------- */
 function compsChanged(){ stopSim(); pruneRules(); if(state.codeAuto){ state.code=genCode(); $('code').value=state.code; } ctrlSig=''; updateCodeTag(); }
