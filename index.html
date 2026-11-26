@@ -83,7 +83,7 @@ header{height:56px;display:flex;align-items:center;gap:10px;padding:0 14px;backg
 #ipoBar .iv.dim{color:var(--muted);white-space:normal}
 #ipoBar .ic{position:relative}
 #ipoBar .ic{flex-wrap:wrap}
-#ipoBar .ic[data-ipo-stage]{cursor:pointer}
+#ipoBar .ic[data-ipo-stage]{cursor:pointer;border-radius:8px;transition:box-shadow .15s}#ipoBar .ic[data-ipo-stage]:hover{box-shadow:0 0 0 2px #0f766e55}#ipoBar .ic[data-ipo-stage] *{cursor:pointer}
 #ipoBar .ic.current{outline:2px solid currentColor;outline-offset:1px}
 #ipoBar .ic.current{animation:ipoRowPulse .85s ease-in-out infinite}
 #ipoBar .ic.current:nth-child(1){background:#dbeafe;color:#1e40af}
@@ -373,7 +373,7 @@ svg text{font-family:'JetBrains Mono',ui-monospace,monospace}
     </svg>
     <div class="floatbar" id="simBanner"><span class="rec">●</span><span id="simBannerTxt">模擬中・點住按鈕；上下拖曳旋鈕、超音波、太陽能板</span><button id="bStop2">■ 停止</button></div>
     <div class="floatbar" id="canvasCtrls"><div class="cch" id="ccHead" title="拖曳可移動"><b>互動控制</b><span class="ccTip">拖曳移動</span><button id="ccToggle" title="收合／展開">▾</button></div><div id="simCtrls2" class="simCtrlBox"></div></div>
-    <div class="floatbar" id="ipoFloat"><div class="cch" id="ipoHead" title="拖曳可移動"><b>IPO 即時狀態</b><span class="ccTip">拖曳移動</span><button id="ipoToggle" title="收合／展開">▾</button></div><div class="fwBody"><div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div></div></div>
+    <div class="floatbar" id="ipoFloat"><div class="cch" id="ipoHead" title="拖曳可移動"><b>IPO 即時狀態</b><span class="ccTip">拖曳移動</span><button id="ipoToggle" title="收合／展開">▾</button></div><div class="fwBody"><div id="ipoSec" style="display:none"><h5>IPO 即時狀態</h5><div id="ipoBar"><div class="ic" data-ipo-stage="I" title="點一下跳到程式碼的 I 輸入區塊"><span class="ipo I">I</span><div id="ibI"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 I 輸入">●</span><div class="stageReason" id="ipoReasonI"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="P" title="點一下跳到程式碼的 P 處理區塊"><span class="ipo P">P</span><div id="ibP"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 P 處理">●</span><div class="stageReason" id="ipoReasonP"></div></div><span class="ar">↓</span><div class="ic" data-ipo-stage="O" title="點一下跳到程式碼的 O 輸出區塊"><span class="ipo O">O</span><div id="ibO"></div><span class="stageNow">目前</span><span class="stageLamp" title="目前運作到 O 輸出">●</span><div class="stageReason" id="ipoReasonO"></div></div></div></div></div></div>
     <div class="floatbar" id="selBanner"><span id="selText"></span><button id="bShowAll">顯示全部</button></div>
     <div class="floatbar" id="zoomBar">
       <button id="zOut" title="縮小">－</button><span class="z" id="zVal">100%</span><button id="zIn" title="放大">＋</button><button id="zFit">重設視角</button>
@@ -1986,7 +1986,8 @@ function jumpToCodeStage(stage,node){
   SIM.focusLine=range[0]; SIM.focusRange=range; SIM.focusStage=stage; runScrollLine=range[0]; hlSig='';
   selectCodeLine(range[0],range[1]); updateIpoBar(); updateCodeHL();
 }
-$('ipoBar').addEventListener('click',e=>{const row=e.target.closest('[data-ipo-stage]');if(row)jumpToCodeStage(row.dataset.ipoStage);});
+// 用 pointerdown：模擬時 IPO 內容一直重畫，click 會因為元素被換掉而遺失；按下就跳，整個區塊都能點
+$('ipoBar').addEventListener('pointerdown',e=>{ if(e.button!==0) return; const row=e.target.closest('[data-ipo-stage]'); if(!row) return; e.preventDefault(); jumpToCodeStage(row.dataset.ipoStage); });
 $('lvl').addEventListener('click',e=>{ const b=e.target.closest('button'); if(!b) return; state.ipo.level=b.dataset.l; ipoChanged(false); });
 ['i','p','o'].forEach(k=>$('ipo'+k.toUpperCase()).addEventListener('input',e=>{ state.ipo[k]=e.target.value; persist(); $('promptTxt').value=promptText(); if(k==='p') $('ruleErr').textContent=''; }));
 [['fnName','name'],['fnPurpose','purpose']].forEach(([id,k])=>$(id).addEventListener('input',e=>{state.ipo.function[k]=e.target.value;persist();$('promptTxt').value=promptText();}));
